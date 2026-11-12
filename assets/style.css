@@ -1,0 +1,453 @@
+/* ==========================================================================
+   PrimeGuard Suite v1.0 - Dark Cyber-Security Glassmorphism Theme
+   Designed for Air-Gapped Secure Environments (Strictly Zero CDN Dependencies)
+   ========================================================================== */
+
+/* 1. Global Reset & Offline Font Stacks */
+:root {
+  --bg-primary: #0B0F19;
+  --bg-card: rgba(17, 24, 39, 0.85);
+  --bg-card-hover: rgba(24, 34, 53, 0.95);
+  --bg-sidebar: rgba(13, 19, 33, 0.95);
+  --border-neon: rgba(0, 245, 212, 0.25);
+  --border-neon-bright: rgba(0, 245, 212, 0.6);
+  --accent-cyan: #00F5D4;
+  --accent-prime: #10B981;
+  --accent-composite: #F43F5E;
+  --accent-carmichael: #F59E0B;
+  --text-primary: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-subtle: #64748B;
+  --font-mono: 'JetBrains Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --shadow-neon-cyan: 0 0 15px rgba(0, 245, 212, 0.2);
+  --shadow-neon-prime: 0 0 15px rgba(16, 185, 129, 0.25);
+  --shadow-neon-composite: 0 0 15px rgba(244, 63, 94, 0.25);
+  --shadow-neon-amber: 0 0 15px rgba(245, 158, 11, 0.25);
+}
+
+/* Base Body and Streamlit Container */
+html, body, [data-testid="stAppViewContainer"] {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  font-family: var(--font-sans) !important;
+  scroll-behavior: smooth;
+}
+
+[data-testid="stHeader"] {
+  background: transparent !important;
+}
+
+/* 2. Custom Cyber Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #060911;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 245, 212, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* 3. Sidebar Styling */
+[data-testid="stSidebar"] {
+  background-color: var(--bg-sidebar) !important;
+  border-right: 1px solid var(--border-neon) !important;
+  backdrop-filter: blur(16px);
+}
+
+[data-testid="stSidebar"] hr {
+  border-color: var(--border-neon) !important;
+  opacity: 0.3;
+}
+
+/* 4. Streamlit Tabs */
+[data-testid="stTabs"] {
+  margin-top: 1rem;
+}
+
+button[data-baseweb="tab"] {
+  font-family: var(--font-mono) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  background-color: transparent !important;
+  border-bottom: 2px solid transparent !important;
+  padding: 0.6rem 1.2rem !important;
+  transition: all 0.25s ease-in-out !important;
+}
+
+button[data-baseweb="tab"]:hover {
+  color: var(--accent-cyan) !important;
+  background: rgba(0, 245, 212, 0.05) !important;
+  border-radius: 6px 6px 0 0;
+}
+
+button[data-baseweb="tab"][aria-selected="true"] {
+  color: var(--accent-cyan) !important;
+  border-bottom: 2px solid var(--accent-cyan) !important;
+  text-shadow: 0 0 10px rgba(0, 245, 212, 0.6);
+  background: rgba(0, 245, 212, 0.08) !important;
+  border-radius: 6px 6px 0 0;
+}
+
+/* 5. Cyber Buttons */
+.stButton > button {
+  font-family: var(--font-mono) !important;
+  font-weight: 600 !important;
+  background: rgba(17, 24, 39, 0.9) !important;
+  color: var(--accent-cyan) !important;
+  border: 1px solid var(--border-neon-bright) !important;
+  border-radius: 8px !important;
+  padding: 0.55rem 1.25rem !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 0 8px rgba(0, 245, 212, 0.15) !important;
+}
+
+.stButton > button:hover {
+  background: rgba(0, 245, 212, 0.15) !important;
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 18px rgba(0, 245, 212, 0.45) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+.stButton > button:active {
+  transform: translateY(1px);
+}
+
+/* Download button */
+.stDownloadButton > button {
+  font-family: var(--font-mono) !important;
+  font-weight: 600 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  color: var(--accent-prime) !important;
+  border: 1px solid rgba(16, 185, 129, 0.5) !important;
+  border-radius: 8px !important;
+  padding: 0.5rem 1.2rem !important;
+  transition: all 0.25s ease !important;
+}
+
+.stDownloadButton > button:hover {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: var(--accent-prime) !important;
+  box-shadow: var(--shadow-neon-prime) !important;
+  color: #FFFFFF !important;
+}
+
+/* 6. Form Inputs & Text Areas */
+[data-baseweb="textarea"] textarea,
+[data-baseweb="input"] input {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  color: #FFFFFF !important;
+  font-family: var(--font-mono) !important;
+  border: 1px solid var(--border-neon) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease;
+}
+
+[data-baseweb="textarea"] textarea:focus,
+[data-baseweb="input"] input:focus {
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 12px rgba(0, 245, 212, 0.3) !important;
+}
+
+/* Selectbox & Dropdowns */
+[data-baseweb="select"] {
+  font-family: var(--font-mono) !important;
+}
+
+[data-baseweb="select"] > div {
+  background-color: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid var(--border-neon) !important;
+  border-radius: 8px !important;
+  color: #FFFFFF !important;
+}
+
+/* 7. Sliders */
+[data-testid="stSlider"] [role="slider"] {
+  background-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 10px var(--accent-cyan) !important;
+}
+
+/* 8. Custom Glassmorphism Cards */
+.cyber-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-neon);
+  border-radius: 12px;
+  padding: 1.4rem;
+  margin-bottom: 1.2rem;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.cyber-card:hover {
+  border-color: var(--border-neon-bright);
+}
+
+/* 9. Specialized Neon KPI Cards (Audit & Comparison) */
+.kpi-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card {
+  flex: 1;
+  background: var(--bg-card);
+  border-radius: 12px;
+  padding: 1.3rem;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+/* Prime State KPI */
+.kpi-card-prime {
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  box-shadow: var(--shadow-neon-prime);
+}
+.kpi-card-prime::before {
+  background: var(--accent-prime);
+  box-shadow: 0 0 10px var(--accent-prime);
+}
+
+/* Composite State KPI */
+.kpi-card-composite {
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  box-shadow: var(--shadow-neon-composite);
+}
+.kpi-card-composite::before {
+  background: var(--accent-composite);
+  box-shadow: 0 0 10px var(--accent-composite);
+}
+
+/* Carmichael / Warning State KPI */
+.kpi-card-warning {
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: var(--shadow-neon-amber);
+}
+.kpi-card-warning::before {
+  background: var(--accent-carmichael);
+  box-shadow: 0 0 10px var(--accent-carmichael);
+}
+
+/* Neutral State KPI */
+.kpi-card-neutral {
+  border: 1px solid var(--border-neon);
+  box-shadow: var(--shadow-neon-cyan);
+}
+.kpi-card-neutral::before {
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
+}
+
+/* KPI Typography */
+.kpi-algo-name {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-status-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.kpi-status-prime {
+  color: var(--accent-prime);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.kpi-status-composite {
+  color: var(--accent-composite);
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  text-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+}
+
+.kpi-status-warning {
+  color: var(--accent-carmichael);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+.kpi-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.88rem;
+}
+
+.kpi-metric-row:last-child {
+  border-bottom: none;
+}
+
+.kpi-metric-label {
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+.kpi-metric-val {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* 10. Cyber Alert Cards (Graceful Input Validation - Zero Traceback) */
+.cyber-alert {
+  border-radius: 10px;
+  padding: 1rem 1.4rem;
+  margin: 1rem 0;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  backdrop-filter: blur(10px);
+}
+
+.cyber-alert-error {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #FFE4E6;
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.15);
+}
+
+.cyber-alert-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #FEF3C7;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.15);
+}
+
+.cyber-alert-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #D1FAE5;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+.cyber-alert-info {
+  background: rgba(0, 245, 212, 0.08);
+  border: 1px solid rgba(0, 245, 212, 0.35);
+  color: #CCFBF1;
+  box-shadow: 0 0 15px rgba(0, 245, 212, 0.15);
+}
+
+.cyber-alert-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.cyber-alert-content {
+  flex: 1;
+}
+
+.cyber-alert-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  font-size: 0.98rem;
+}
+
+.cyber-alert-msg {
+  font-size: 0.9rem;
+  opacity: 0.92;
+}
+
+/* 11. Headers & Subheaders */
+.cyber-header {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 1.85rem;
+  color: #FFFFFF;
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.02em;
+}
+
+.cyber-header-accent {
+  color: var(--accent-cyan);
+  text-shadow: 0 0 12px rgba(0, 245, 212, 0.4);
+}
+
+.cyber-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+}
+
+/* 12. Monospace Code & Numbers */
+code, pre, .mono-text {
+  font-family: var(--font-mono) !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* 13. Data Tables in Dark Theme */
+.stDataFrame, [data-testid="stTable"] {
+  border: 1px solid var(--border-neon) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+/* 14. Badges */
+.cyber-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  border-radius: 4px;
+}
+.cyber-badge-cyan {
+  background: rgba(0, 245, 212, 0.15);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 245, 212, 0.35);
+}
+.cyber-badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent-carmichael);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+.cyber-badge-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-prime);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.cyber-badge-red {
+  background: rgba(244, 63, 94, 0.15);
+  color: var(--accent-composite);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+}
