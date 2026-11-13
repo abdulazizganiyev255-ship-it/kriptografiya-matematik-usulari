@@ -580,20 +580,16 @@ with tab2:
             st.markdown("### 📐 Korselt Mezoni va Matematik Fosh Qilish")
 
             factors_list = carm_report.get("factors", [])
-            if not factors_list:
-                temp_val = n_carm
-                d_val = 2
-                while d_val * d_val <= temp_val and len(factors_list) < 15:
-                    if temp_val % d_val == 0:
-                        factors_list.append(d_val)
-                        while temp_val % d_val == 0:
-                            temp_val //= d_val
-                    d_val += 1
-                if temp_val > 1:
-                    factors_list.append(temp_val)
+            factorization_complete = carm_report.get("factorization_complete", False)
+            factors_str = " × ".join(map(str, factors_list)) if factors_list else "To'liq ajratilmadi"
+            korselt_sat = carm_report.get("korselt_satisfied")
 
-            factors_str = " × ".join(map(str, factors_list)) if factors_list else "Aniqlanmoqda..."
-            korselt_sat = carm_report.get("korselt_satisfied", True)
+            if not factorization_complete:
+                st.warning("Sonning tub ko'paytuvchilarga ajratilishi hisoblash limiti ichida tugamadi. Korselt mezoni bo'yicha yakuniy xulosa berilmaydi.")
+            elif korselt_sat is True:
+                st.success("Korselt mezoni bajarildi: bu son Karmaykl soni.")
+            else:
+                st.info("Korselt mezoni bajarilmadi: bu son Karmaykl soni emas.")
 
             st.markdown(rf"""
             <div class="cyber-card">
