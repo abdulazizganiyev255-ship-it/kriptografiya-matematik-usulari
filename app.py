@@ -510,6 +510,7 @@ with tab2:
                 card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
                 badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
                 title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
+                ss_summary = "Karmayklni fosh qildi" if not ss_passed else "Euler yolg'onchisi"
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style_ss}">
@@ -523,7 +524,7 @@ with tab2:
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
                         <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
-                            {'Karmayklni fosh qildi' if not ss_passed else 'Euler yolg\'onchisi'}
+                            {ss_summary}
                         </span>
                     </div>
                     <div class="kpi-metric-row">
