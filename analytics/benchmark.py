@@ -1,4 +1,6 @@
+import statistics
 import time
+
 import pandas as pd
 
 from analytics.prime_generator import generate_prime
@@ -7,78 +9,87 @@ from core.miller_rabin import miller_rabin_test
 from core.solovay_strassen import solovay_strassen_test
 
 
+ALGORITHMS = (
+    ("Fermat", fermat_test),
+    ("Solovay-Strassen", solovay_strassen_test),
+    ("Miller-Rabin", miller_rabin_test),
+)
+
+
+def _make_semiprime(bits: int, k: int) -> int:
+    """Create a composite product with exactly the requested bit length."""
+    p_bits = bits // 2
+    q_bits = bits - p_bits
+    p, _, _ = generate_prime(p_bits, k=k)
+    for _ in range(10_000):
+        q, _, _ = generate_prime(q_bits, k=k)
+        if p != q:
+            candidate = p * q
+            if candidate.bit_length() == bits:
+                return candidate
+    raise RuntimeError(f"{bits}-bit semiprime nomzodini yaratib bo'lmadi")
+
+
 def run_benchmark(
-    bit_sizes: list[int] = [64, 128, 256, 512, 1024, 2048],
+    bit_sizes: list[int] | None = None,
     k: int = 20,
     trials: int = 3,
 ) -> pd.DataFrame:
     """
-    Runs comprehensive performance benchmark across primality testing algorithms.
-    Evaluates Fermat, Solovay-Strassen, and Miller-Rabin tests for various bit sizes.
+    Compare primality-test timing on the same prime and semiprime candidates.
 
-    Columns:
-      - Bit_Length
-      - Algorithm
-      - Avg_Time_ms
-      - Min_Time_ms
-      - Max_Time_ms
-      - Error_Bound
+    Candidate generation and one warm-up call are excluded from timed samples.
+    Reports mean, median, population standard deviation, min/max and verdict.
+    Timings are empirical and machine/load dependent; they are not complexity proofs.
     """
     if bit_sizes is None:
         bit_sizes = [64, 128, 256, 512, 1024, 2048]
-    if not bit_sizes or any(not isinstance(bits, int) or bits < 2 for bits in bit_sizes):
-        raise ValueError("bit_sizes kamida bitta 2 yoki undan katta butun qiymatdan iborat bo'lishi kerak")
-    if not isinstance(k, int) or k < 1:
-        raise ValueError("k kamida 1 bo'lishi kerak")
-    if not isinstance(trials, int) or trials < 1:
-        raise ValueError("trials kamida 1 bo'lishi kerak")
+    if (
+        not isinstance(bit_sizes, (list, tuple))
+        or not bit_sizes
+        or any(not isinstance(bits, int) or isinstance(bits, bool) or bits < 8 or bits > 4096 for bits in bit_sizes)
+    ):
+        raise ValueError("bit_sizes 8 dan 4096 gacha bo'lgan butun sonlar ro'yxati bo'lishi kerak")
+    if len(set(bit_sizes)) != len(bit_sizes):
+        raise ValueError("bit_sizes ichida takroriy qiymatlar bo'lmasligi kerak")
+    if not isinstance(k, int) or isinstance(k, bool) or not 1 <= k <= 256:
+        raise ValueError("k 1 dan 256 gacha bo'lgan butun son bo'lishi kerak")
+    if not isinstance(trials, int) or isinstance(trials, bool) or not 1 <= trials <= 100:
+        raise ValueError("trials 1 dan 100 gacha bo'lgan butun son bo'lishi kerak")
 
-    algorithms = [
-        ("Fermat", fermat_test),
-        ("Solovay-Strassen", solovay_strassen_test),
-        ("Miller-Rabin", miller_rabin_test),
-    ]
-
-    rows = []
-
+    rows: list[dict] = []
     for bits in bit_sizes:
-        # Generate a candidate prime for this bit size to benchmark k-round execution
-        test_prime, _, _ = generate_prime(bits, k=20)
+        prime, _, _ = generate_prime(bits, k=max(k, 20))
+        composite = _make_semiprime(bits, k=max(k, 20))
 
-        for algo_name, algo_func in algorithms:
-            times_ms: list[float] = []
-            last_res = None
+        for candidate_type, candidate in (("Tub nomzod", prime), ("Murakkab (semiprime)", composite)):
+            for algorithm_name, algorithm in ALGORITHMS:
+                algorithm(candidate, k=k, skip_prefilter=True)  # warm-up, not timed
 
-            for _ in range(trials):
-                t0 = time.perf_counter()
-                # Run with skip_prefilter=True to measure actual mathematical rounds
-                last_res = algo_func(test_prime, k=k, skip_prefilter=True)
-                t1 = time.perf_counter()
-                times_ms.append((t1 - t0) * 1000.0)
+                samples: list[float] = []
+                last_result = None
+                for _ in range(trials):
+                    started = time.perf_counter()
+                    last_result = algorithm(candidate, k=k, skip_prefilter=True)
+                    samples.append((time.perf_counter() - started) * 1000.0)
 
-            avg_time = round(sum(times_ms) / len(times_ms), 3)
-            min_time = round(min(times_ms), 3)
-            max_time = round(max(times_ms), 3)
-
-            rows.append(
-                {
+                rows.append({
                     "Bit_Length": bits,
-                    "Algorithm": algo_name,
-                    "Avg_Time_ms": avg_time,
-                    "Min_Time_ms": min_time,
-                    "Max_Time_ms": max_time,
-                    "Error_Bound": last_res.error_bound if last_res else "N/A",
-                }
-            )
+                    "Candidate_Type": candidate_type,
+                    "Algorithm": algorithm_name,
+                    "Trials": trials,
+                    "Rounds": k,
+                    "Avg_Time_ms": round(statistics.mean(samples), 4),
+                    "Median_Time_ms": round(statistics.median(samples), 4),
+                    "Std_Dev_ms": round(statistics.pstdev(samples), 4),
+                    "Min_Time_ms": round(min(samples), 4),
+                    "Max_Time_ms": round(max(samples), 4),
+                    "Verdict": last_result.verdict if last_result else "Unknown",
+                    "Error_Bound": last_result.error_bound if last_result else "N/A",
+                })
 
-    return pd.DataFrame(
-        rows,
-        columns=[
-            "Bit_Length",
-            "Algorithm",
-            "Avg_Time_ms",
-            "Min_Time_ms",
-            "Max_Time_ms",
-            "Error_Bound",
-        ],
-    )
+    return pd.DataFrame(rows, columns=[
+        "Bit_Length", "Candidate_Type", "Algorithm", "Trials", "Rounds",
+        "Avg_Time_ms", "Median_Time_ms", "Std_Dev_ms", "Min_Time_ms",
+        "Max_Time_ms", "Verdict", "Error_Bound",
+    ])
