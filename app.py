@@ -94,6 +94,7 @@ def safe_extract_result(res: PrimalityResult) -> Dict[str, Any]:
         "algorithm": res.algorithm,
         "pre_filtered": res.pre_filtered,
         "verdict": res.verdict,
+        "error_bound": res.error_bound,
     }
 
 # ==============================================================================
@@ -467,7 +468,7 @@ with tab1:
 
 
 # ==============================================================================
-# TAB 2: ⚠️ KARMAYKL TUZOG‘I (CARMICHAEL PARADOX)
+# TAB 2: KARMAYKL SONLARI VA KORSELT MEZONI
 # ==============================================================================
 with tab2:
     st.markdown(r"""
@@ -686,7 +687,7 @@ with tab2:
 
 
 # ==============================================================================
-# TAB 3: 📊 KOMPLEKS BENCHMARK
+# TAB 3: ALGORITMLAR TEZLIGINI TAQQOSLASH
 # ==============================================================================
 with tab3:
     st.markdown("""
@@ -825,7 +826,7 @@ with tab3:
 
 
 # ==============================================================================
-# TAB 4: 🔐 RSA TUB SON GENERATOR
+# TAB 4: RSA UCHUN O'QUV PARAMETRLARI
 # ==============================================================================
 with tab4:
     st.markdown(r"""
