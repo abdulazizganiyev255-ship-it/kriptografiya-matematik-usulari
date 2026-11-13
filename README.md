@@ -33,7 +33,7 @@
 6. Algoritmlarning bajarilish vaqtini bir xil sharoitda o'lchash va taqqoslash.
 7. Natijalarni avtomatik testlar va deterministik etalon bilan tekshirish.
 
-**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval, CSV va JSON ko'rinishida saqlaydi.
+**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval, CSV va JSON ko'rinishida saqlaydi. 64-bit diapazonida deterministik Miller–Rabin etaloni ham umumiy xulosani mustaqil tekshiradi.
 
 **Ilmiy cheklov:** probabilistik test barcha raundlardan o'tgan sonni avtomatik ravishda isbotlangan tub son deb hisoblamaydi. Natija "ehtimoliy tub" deb ko'rsatiladi. Ushbu loyihada alohida deterministik etalon faqat n < 2^64 diapazoni uchun mavjud.
 
