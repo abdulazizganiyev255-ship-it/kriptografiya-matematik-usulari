@@ -1,7 +1,7 @@
 # PrimeGuard: akademik validatsiya protokoli
 
 ## Maqsad
-Uch ehtimoliy tublik testini (Fermat, Solovay–Strassen, Miller–Rabin) bir xil sinov sharoitida solishtirish va ularning xulosalarini mustaqil etalon tekshiruv bilan baholash.
+Uch ehtimoliy tublik testini (Fermat, Solovay–Strassen, Miller–Rabin) bir xil sinov sharoitida solishtirish va ularning xulosalarini deterministik etalon tekshiruv bilan baholash.
 
 ## Natija semantikasi
 - `Composite`: algoritm murakkablik guvohini topdi; son aniq murakkab.
@@ -18,7 +18,7 @@ Uch ehtimoliy tublik testini (Fermat, Solovay–Strassen, Miller–Rabin) bir xi
 
 Bu chegaralar mustaqil va tegishli taqsimotdan tanlangan asoslar shartida qo'llanadi. Amaliy implementatsiyada bazalar qanday tanlanishi ham qayd etilishi lozim.
 
-## Mustaqil etalon
+## Deterministik etalon tekshiruv
 `is_prime_deterministic_64(n)` faqat `0 <= n < 2**64` diapazonida deterministik Miller–Rabin bazalar to'plamidan foydalanadi. `n >= 2**64` uchun funksiya aniq natija deb da'vo qilmaydi va `ValueError` chiqaradi.
 
 ## Test matritsasi
