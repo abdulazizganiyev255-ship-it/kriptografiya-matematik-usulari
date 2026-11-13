@@ -1,4 +1,4 @@
-# 🛡️ PrimeGuard Suite v1.0
+# 🛡️ PrimeGuard — Akademik dasturiy loyiha
 ### Kriptografik Tublik Auditi, Karmaykl Tuzog‘i Tahlili va RSA Kalitlar Laboratoriyasi
 
 ---
@@ -6,10 +6,10 @@
 ## 📌 Loyiha Pasporti
 
 * **Loyiha nomi:** `PrimeGuard Suite`
-* **Versiya:** `1.0.0 (Production Release)`
+* **Versiya:** `1.0.0 (Academic Prototype)`
 * **Yo'nalish:** Kriptografiyaning Matematik Usullari / Kiberxavfsizlik
-* **Standartlar Muvofiqligi:** FIPS 186-5 (Digital Signature Standard), RFC 3447 (Public-Key Cryptography Standards #1: RSA Cryptography Specifications Version 2.2), ISO/IEC 18031 (Random bit generation).
-* **Ishlash Rejimi:** Air-Gapped (Internetdan to'liq uzilgan maxfiy muhitlar uchun 100% oflayn barqaror, tashqi CDN bog'liqliklaridan xoli).
+* **Standartlar:** FIPS 186-5, RFC 8017 va ISO/IEC 18031 hujjatlari nazariy taqqoslash manbalari sifatida ko'rib chiqiladi; ushbu loyiha hozircha ularga muvofiqlik sertifikatiga ega emas.
+* **Ishlash Rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
 * **Mas'uliyat Zonasi:** 
   * **Agent A:** Matematik Algoritmlar Yadrosi (`core/`), Analitika va Benchmark Generatorlari (`analytics/`), Sinov Testlari (`tests/`), Qaramliklar (`requirements.txt`).
   * **Agent B:** Kiberxavfsizlik Frontend Arxitekturasi (`assets/style.css`), Interaktiv Dashboard (`app.py`), Akademik Loyiha Pasporti va Nazariy Hujjatlashtirish (`README.md`).
@@ -78,7 +78,7 @@ $$a^{p-1} \equiv 1 \pmod p$$
 3. Agar $a^{n-1} \not\equiv 1 \pmod n$ bo'lsa, $a$ soni $n$ ning **Fermat guvohi (Fermat witness)** hisoblanadi va $n$ ning murakkabligi qat'iy isbotlanadi.
 4. Agar $a^{n-1} \equiv 1 \pmod n$ bo'lsa, son ehtimoliy tub deb hisoblanadi.
 
-Oddiy murakkab sonlar uchun $k$ ta mustaqil raunddan keyin xatolik ehtimoli:
+Karmaykl sonlari bundan mustasno bo'lgan murakkab sonlar uchun, mustaqil va bir tekis tasodifiy asoslar tanlanganda, $k$ raund uchun klassik yuqori chegara:
 
 $$P(\text{Xatolik}) \le \left(\frac{1}{2}\right)^k = 2^{-k}$$
 
