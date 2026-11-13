@@ -128,7 +128,7 @@ with st.sidebar:
     )
 
     # Jonli Xatolik Ehtimoli Hisob-kitobi
-    err_fermat_ss = 2 ** (-global_k)
+    err_ss = 2 ** (-global_k)
     err_mr = 4 ** (-global_k)
 
     st.markdown(f"""
@@ -137,9 +137,10 @@ with st.sidebar:
             📊 JONLI XATOLIK CHEGARASI
         </div>
         <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD5E1;">
-            <b>Fermat & Solovay-Strassen:</b><br>
+            <b>Fermat:</b> universal xatolik chegarasi yo'q (Karmaykl sonlari sababli).<br>
+            <b>Solovay–Strassen:</b><br>
             <span style="font-family: 'JetBrains Mono', monospace; color: #F59E0B;">
-                2<sup>-{global_k}</sup> ≈ {err_fermat_ss:.2e}
+                2<sup>-{global_k}</sup> ≈ {err_ss:.2e}
             </span>
         </div>
         <div style="font-size: 0.82rem; color: #CBD5E1;">
@@ -190,9 +191,9 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("""
     <div style="font-size: 0.75rem; color: #64748B; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
-        Offline Air-Gapped Certified<br>
-        FIPS 186-5 & RFC 3447 Standard<br>
-        TDI TUUIT Kriptografiya Kafedrasi
+        Akademik dasturiy prototip<br>
+        Ehtimoliy tublik algoritmlari laboratoriyasi<br>
+        Natijalar mustaqil testlar bilan tekshiriladi
     </div>
     """, unsafe_allow_html=True)
 
@@ -206,7 +207,7 @@ st.markdown("""
         <span class="cyber-header-accent">PrimeGuard</span> Suite v1.0
     </div>
     <div class="cyber-subtitle">
-        Kriptografik Tublik Auditi, Karmaykl Tuzog'i Tahlili va RSA Kalitlar Laboratoriyasi
+        Ehtimoliy tublik algoritmlari, Karmaykl sonlari va benchmark laboratoriyasi
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -215,7 +216,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "🔍 Tublik Auditi",
     "⚠️ Karmaykl Tuzog‘i",
     "📊 Kompleks Benchmark",
-    "🔐 RSA Tub Son Generator"
+    "🔐 RSA uchun tub parametrlar"
 ])
 
 # ==============================================================================
@@ -296,16 +297,17 @@ with tab1:
             col1, col2, col3 = st.columns(3)
 
             cards_data = [
-                ("Fermat Testi", res_f, f"≤ 2⁻{global_k}", "O(k · log² n)"),
-                ("Solovay-Strassen", res_ss, f"≤ 2⁻{global_k}", "O(k · log³ n)"),
-                ("Miller-Rabin Strong", res_mr, f"≤ 4⁻{global_k}", "O(k · log³ n)")
+                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "O(k · log² n)"),
+                ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "O(k · log³ n)"),
+                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "O(k · log³ n)")
             ]
 
             for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
                 is_p = r_data["is_prime"]
                 card_class = "kpi-card-prime" if is_p else "kpi-card-composite"
                 badge_class = "kpi-status-prime" if is_p else "kpi-status-composite"
-                status_text = "EHTIMOLIY TUB" if is_p else "ANIQ MURAKKAB"
+                status_text = ("ANIQ TUB" if r_data["verdict"] == "Prime" else "EHTIMOLIY TUB") if is_p else "ANIQ MURAKKAB"
+                shown_error = "0 (elak bilan aniq)" if r_data["pre_filtered"] else err_bound
 
                 with col:
                     st.markdown(f"""
@@ -323,7 +325,7 @@ with tab1:
                         </div>
                         <div class="kpi-metric-row">
                             <span class="kpi-metric-label">Xatolik chegarasi:</span>
-                            <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{err_bound if is_p else '0 (Aniq)'}</span>
+                            <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{shown_error if is_p else '0 (Aniq)'}</span>
                         </div>
                         <div class="kpi-metric-row">
                             <span class="kpi-metric-label">O'tkazilgan raundlar:</span>
@@ -767,11 +769,11 @@ with tab4:
     st.markdown(r"""
     <div class="cyber-card">
         <div style="font-weight: 700; font-size: 1.15rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            Sanoat Darajasidagi RSA Tub Sonlar va Kalitlar Generatori
+            RSA uchun tub parametrlar generatori (qo'shimcha modul)
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            Kriptografik xavfsiz tasodifiy sonlar generatori (CSPRNG) va <b>Miller-Rabin Strong</b> testi asosida
-            haqiqiy RSA kalit juftligining negizlari (\( p, q, N, \phi(N) \)) hisoblanadi. Bosh sonlar teoremasi
+            O'quv tajribasi uchun <b>Miller–Rabin</b> yordamida ikkita ehtimoliy tub son \(p, q\),
+            modul \(N\) va Eyler funksiyasi \(\phi(N)\) hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Bosh sonlar teoremasi
             (PNT) bo'yicha nazariy kutilgan sinovlar soni bilan amaliy nomzodlar statistikasi taqqoslanadi.
         </div>
     </div>
@@ -795,10 +797,10 @@ with tab4:
             max_value=64,
             value=global_k,
             step=1,
-            help="FIPS 186-5 standarti bo'yicha kamida k=20 tavsiya etiladi."
+            help="Raundlar soni oshgani sari Miller–Rabin testining nazariy xatolik chegarasi kamayadi."
         )
 
-    if st.button("🔑 RSA Kalit Juftligi va Tub Sonlarni Generatsiya Qilish", type="primary", use_container_width=True):
+    if st.button("🔑 RSA uchun p va q tub sonlarini yaratish", type="primary", use_container_width=True):
         with st.spinner(f"Kriptografik xavfsiz {rsa_bit_choice}-bit tub sonlar generatsiya qilinmoqda..."):
             try:
                 # key_bits moduli o'lchami: p va q ning har biri rsa_bit_choice bit bo'lishi uchun key_bits = rsa_bit_choice * 2
