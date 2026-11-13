@@ -175,7 +175,7 @@ def fermat_test(
         verdict="Probably Prime",
         rounds_requested=k,
         rounds_run=k,
-        error_bound=f"<= (1/2)^{k}",
+        error_bound="No universal bound: Carmichael numbers can pass every coprime base",
         elapsed_ms=round(elapsed, 4),
         pre_filtered=False,
         logs=logs,
