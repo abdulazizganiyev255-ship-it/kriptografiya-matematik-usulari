@@ -12,6 +12,7 @@ from core.number_theory import (
     check_small_primes,
     gcd,
     jacobi_symbol,
+    is_prime_deterministic_64,
 )
 from core.solovay_strassen import solovay_strassen_test
 
@@ -65,6 +66,33 @@ def test_small_primes():
     for p in SMALL_PRIMES[:50]:
         for d in range(2, int(p**0.5) + 1):
             assert p % d != 0
+
+
+def test_deterministic_miller_rabin_64():
+    def trial_division_is_prime(n):
+        if n < 2:
+            return False
+        divisor = 2
+        while divisor * divisor <= n:
+            if n % divisor == 0:
+                return False
+            divisor += 1
+        return True
+
+    for value in range(10_000):
+        assert is_prime_deterministic_64(value) is trial_division_is_prime(value)
+
+    assert is_prime_deterministic_64(2**61 - 1) is True
+    assert is_prime_deterministic_64(341550071728321) is False
+    assert is_prime_deterministic_64(561) is False
+    assert is_prime_deterministic_64(0) is False
+    assert is_prime_deterministic_64(1) is False
+    assert is_prime_deterministic_64(-7) is False
+
+
+def test_deterministic_miller_rabin_64_rejects_out_of_range():
+    with pytest.raises(ValueError):
+        is_prime_deterministic_64(2**64)
 
 
 def test_gcd():
@@ -154,6 +182,10 @@ def test_fermat_primes():
         res = fermat_test(p, k=10)
         assert res.is_prime is True
         assert res.verdict in ("Prime", "Probably Prime")
+
+
+    probable = fermat_test(1009, k=10, skip_prefilter=True)
+    assert "No universal bound" in probable.error_bound
 
 
 def test_fermat_composites_without_prefilter():
