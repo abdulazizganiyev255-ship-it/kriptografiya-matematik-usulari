@@ -277,6 +277,9 @@ def test_korselt_criterion():
     assert check_korselt_criterion(15)["is_carmichael"] is False
     assert check_korselt_criterion(9)["is_carmichael"] is False
     assert check_korselt_criterion(2)["is_carmichael"] is False
+    assert check_korselt_criterion(561, max_steps=1)["complete"] is False
+    with pytest.raises(ValueError):
+        check_korselt_criterion(561, max_steps=0)
 
 
 def test_analyze_carmichael():
@@ -308,6 +311,8 @@ def test_generate_prime_invalid():
         generate_prime(True)
     with pytest.raises(ValueError):
         generate_prime(16, k=0)
+    with pytest.raises(ValueError):
+        generate_prime(16, max_attempts=0)
 
 
 def test_generate_prime():
@@ -323,6 +328,8 @@ def test_generate_prime():
 def test_generate_rsa_pair_invalid():
     with pytest.raises(ValueError):
         generate_rsa_pair(key_bits=4)
+    with pytest.raises(ValueError):
+        generate_rsa_pair(key_bits=8)
     with pytest.raises(ValueError):
         generate_rsa_pair(key_bits=True)
 
