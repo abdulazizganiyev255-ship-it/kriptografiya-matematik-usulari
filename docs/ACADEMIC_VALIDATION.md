@@ -31,11 +31,13 @@ Bu chegaralar mustaqil va tegishli taqsimotdan tanlangan asoslar shartida qo'lla
 7. Kichik diapazonda mustaqil trial-division oracle bilan to'liq solishtirish.
 
 ## Benchmark metodologiyasi
-- Har bir bit uzunligi uchun bir xil nomzod sonni uch algoritmda tekshirish.
-- Har bir tajriba uchun algoritm, bit uzunligi, raundlar, asoslar tanlash usuli va vaqtni yozish.
-- Warm-up va takroriy tajribalarni ajratish; medianani ham ko'rsatish.
-- Tub nomzodlar bilan birga murakkab va pseudoprime to'plamlarida aniqlash samaradorligini alohida o'lchash.
-- Turli algoritmlarning xatolik chegaralarini to'g'ridan-to'g'ri bir xil metrika deb taqdim etmaslik.
+- Har bir bit uzunligi uchun aynan shu tub nomzod va aynan shu semiprime nomzod uch algoritmda tekshiriladi.
+- Nomzodlarni yaratish va bitta warm-up chaqiruvi o'lchangan vaqtga kiritilmaydi.
+- Har bir algoritm uchun takroriy o'lchovlar olinadi; o'rtacha, median, standart og'ish, minimum va maksimum qayd etiladi.
+- Tub va murakkab nomzodlar natijalari alohida ko'rsatiladi; turli turdagi nomzodlarning vaqtlarini bitta guruhga aralashtirib talqin qilinmaydi.
+- Benchmark natijalari apparat, Python versiyasi va tizim yuklamasiga bog'liq; ular asimptotik murakkablik isboti emas.
+- Karmaykl sonlari alohida tajriba bo'lib qoladi; ularni tasodifiy semiprime to'plamining o'rniga qo'ymaslik kerak.
+- Turli algoritmlarning xatolik chegaralari to'g'ridan-to'g'ri bir xil metrika deb taqdim etilmaydi.
 
 ## Cheklovlar
 Ushbu loyiha o'quv va ilmiy tajriba prototipidir. U ishlab chiqarish kriptografik kalitlarini yaratish yoki standartlarga muvofiqlik sertifikati sifatida ishlatilmasligi kerak.
