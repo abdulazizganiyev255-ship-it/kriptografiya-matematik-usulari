@@ -352,6 +352,15 @@ def test_generate_rsa_pair():
 # ==========================================
 # 8. Benchmark Tests
 # ==========================================
+def test_run_benchmark_rejects_invalid_settings():
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[], k=5, trials=1)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[64], k=0, trials=1)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[64], k=5, trials=0)
+
+
 def test_run_benchmark():
     df = run_benchmark(bit_sizes=[64, 128], k=5, trials=1)
     assert isinstance(df, pd.DataFrame)
