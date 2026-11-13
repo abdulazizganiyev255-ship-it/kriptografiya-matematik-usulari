@@ -22,7 +22,7 @@ Skript virtual muhit yaratadi, kutubxonalarni o'rnatadi, testlarni bajaradi va S
 
 ### Natijalarni qanday tushunish kerak?
 
-- **Aniq tub:** son kichik tub sonlar jadvali orqali tekshirilgan.
+- **Aniq tub:** kichik tub sonlar jadvali yoki n < 2⁶⁴ bo'lsa deterministik Miller–Rabin etaloni bilan tasdiqlangan.
 - **Ehtimoliy tub:** algoritm tanlangan raundlarda murakkablik guvohini topmagan. Bu matematik isbot emas.
 - **Aniq murakkab:** kamida bitta algoritm murakkablik guvohini topgan yoki son kichik bo'luvchi bilan aniqlangan.
 
