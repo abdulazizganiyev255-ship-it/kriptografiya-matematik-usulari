@@ -17,6 +17,7 @@ from core.models import PrimalityResult, RoundLog
 from core.fermat import fermat_test
 from core.solovay_strassen import solovay_strassen_test
 from core.miller_rabin import miller_rabin_test
+from core.number_theory import is_prime_deterministic_64
 from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
 from analytics.benchmark import run_benchmark
 from analytics.prime_generator import generate_prime, generate_rsa_pair
@@ -301,9 +302,9 @@ with tab1:
             col1, col2, col3 = st.columns(3)
 
             cards_data = [
-                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "O(k · log³ n)"),
-                ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "O(k · log³ n)"),
-                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "O(k · log³ n)")
+                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k modul darajaga oshirish"),
+                ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "k raund + Yakobi belgisi"),
+                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "k kuchli tublik raundi")
             ]
 
             for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
@@ -344,14 +345,19 @@ with tab1:
                     </div>
                     """, unsafe_allow_html=True)
 
-            # Qisqa va tushunarli yakuniy xulosa
+            # Mustaqil deterministik etalon faqat 64-bit diapazonida kafolatlangan.
             audit_results = [res_f, res_ss, res_mr]
+            deterministic_reference = (
+                is_prime_deterministic_64(val) if val < (1 << 64) else None
+            )
             if any(not result["is_prime"] for result in audit_results):
                 st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
-            elif all(result["verdict"] == "Prime" for result in audit_results):
-                st.success("Yakuniy xulosa: SON ANIQ TUB. Natija kichik tub sonlar tekshiruvi bilan tasdiqlandi.")
+            elif deterministic_reference is True:
+                st.success("Yakuniy xulosa: SON ANIQ TUB. n < 2⁶⁴ uchun deterministik Miller–Rabin etaloni bilan tasdiqlandi.")
+            elif deterministic_reference is False:
+                st.error("Yakuniy xulosa: SON MURAKKAB. 64-bit deterministik etalon murakkablikni tasdiqladi.")
             else:
-                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham murakkablik guvohini topmadi, ammo bu matematik isbot emas.")
+                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
 
             # Raundma-raund audit jurnali
             st.markdown("### 📋 Tekshiruv bosqichlari")
@@ -456,6 +462,8 @@ with tab1:
                 "bit_length": bit_len,
                 "decimal_digits": digit_len,
                 "rounds": global_k,
+                "deterministic_64_reference": deterministic_reference,
+                "deterministic_reference_scope": "n < 2**64",
                 "results": json_results,
             }
             st.download_button(
@@ -696,9 +704,9 @@ with tab3:
             Algoritmlar Samaradorligi va Tezlik Benchmarki
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            Kriptografik kalitlar (64 bitdan 2048 bitgacha) miqyosida tublik testlarining hisoblash
-            murakkabligini empirik o'lchash. Plotly orqali asimptotik o'sish dinamikasi va guruhlangan
-            taqqoslama grafiklar hosil qilinadi.
+            Bir xil bit uzunligidagi tub va murakkab semiprime nomzodlarda uch algoritmning
+            bajarilish vaqtini empirik taqqoslash. Warm-up va nomzod yaratish vaqti o'lchovdan
+            chiqariladi; median, o'rtacha va tarqalish ko'rsatkichlari alohida beriladi.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -986,7 +994,8 @@ with tab4:
                 "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "algorithm": "Miller-Rabin Strong Pseudoprime",
                 "rounds_k": rsa_security_k,
-                "bit_length_each": p.bit_length(),
+                "p_bit_length": p.bit_length(),
+                "q_bit_length": q.bit_length(),
                 "rsa_modulus_bits": n_mod.bit_length(),
                 "target_modulus_bits": rsa_bit_choice,
                 "modulus_length_exact": n_mod.bit_length() == rsa_bit_choice
