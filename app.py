@@ -1256,6 +1256,6 @@ st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #64748B; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; padding: 1rem 0;">
     PrimeGuard Suite v1.0 • Kriptografiya Matematik Usullari • Agent B (Cyber-Security Frontend Architect & Technical Writer)<br>
-    FIPS 186-5 & RFC 3447 Talablariga Muofiq Ishlab Chiqilgan
+    Akademik prototip • Algoritmlar va testlar bo'yicha mustaqil validatsiya talab etiladi
 </div>
 """, unsafe_allow_html=True)
