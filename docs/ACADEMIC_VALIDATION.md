@@ -39,3 +39,11 @@ Bu chegaralar mustaqil va tegishli taqsimotdan tanlangan asoslar shartida qo'lla
 
 ## Cheklovlar
 Ushbu loyiha o'quv va ilmiy tajriba prototipidir. U ishlab chiqarish kriptografik kalitlarini yaratish yoki standartlarga muvofiqlik sertifikati sifatida ishlatilmasligi kerak.
+
+## Akademik manbalar
+
+1. G. L. Miller, "Riemann's Hypothesis and Tests for Primality", *Journal of Computer and System Sciences*, 13(3), 1976, pp. 300–317.
+2. R. Solovay and V. Strassen, "A Fast Monte-Carlo Test for Primality", *SIAM Journal on Computing*, 6(1), 1977, pp. 84–85.
+3. M. O. Rabin, "Probabilistic Algorithm for Testing Primality", *Journal of Number Theory*, 12, 1980, pp. 128–138.
+4. A. Korselt, "Sur le théorème de Fermat", *Comptes rendus de l'Académie des Sciences de Paris*, 129, 1899, pp. 438–440.
+5. A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, *Handbook of Applied Cryptography*, CRC Press, 1996.
