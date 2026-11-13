@@ -269,3 +269,34 @@ pytest tests/ -v
 * **Agent B:** Cyber-Security Frontend Architect & Technical Documentation Writer
 * **Kafedra:** Axborot Xavfsizligi va Kriptografiya Kafedrasi
 * **Litsenziya:** MIT Academic License 2026
+
+
+## Windows 10/11 — tez ishga tushirish
+
+**Muhim:** PowerShell ochilganda `C:\Windows\System32` ichida turmang. Avval loyihani foydalanuvchi papkasiga klonlang:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\Projects" | Out-Null
+Set-Location "$HOME\Projects"
+git clone -b academic/math-core-corrections https://github.com/abdulazizganiyev255-ship-it/kriptografiya-matematik-usulari.git PrimeGuard
+Set-Location .\PrimeGuard
+```
+
+Keyin bitta buyruq bilan muhitni tayyorlang, kutubxonalarni o'rnating, testlarni bajaring va dasturni ishga tushiring:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_primeguard.ps1
+```
+
+Skript virtual muhitni loyiha ichidagi `.venv` papkasida yaratadi. Global Python paketlarini o'zgartirmaydi. Testlardan biri yiqilsa, Streamlit ishga tushirilmaydi va xato terminalda ko'rsatiladi.
+
+Brauzer manzili: http://localhost:8501
+
+**Qo'lda ishga tushirish (ixtiyoriy):**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```
