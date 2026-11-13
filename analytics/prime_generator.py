@@ -57,8 +57,8 @@ def generate_rsa_pair(key_bits: int = 1024, k: int = 40, max_pair_attempts: int 
     p and q are independently generated probable primes. This function does
     not create e/d, CRT parameters, a serialized key, or a production RSA key.
     """
-    if not isinstance(key_bits, int) or isinstance(key_bits, bool) or key_bits < 8:
-        raise ValueError("RSA modul uzunligi key_bits >= 8 butun son bo'lishi kerak")
+    if not isinstance(key_bits, int) or isinstance(key_bits, bool) or key_bits < 16:
+        raise ValueError("RSA modul uzunligi key_bits >= 16 butun son bo'lishi kerak")
     _validate_rounds(k)
     if not isinstance(max_pair_attempts, int) or isinstance(max_pair_attempts, bool) or max_pair_attempts < 1:
         raise ValueError("max_pair_attempts kamida 1 bo'lishi kerak")
