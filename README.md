@@ -207,6 +207,12 @@ $n$ nomzod sonining bit uzunligi $b = \lfloor \log_2 n \rfloor + 1$, $k$ — aud
 
 ---
 
+## Kodni o'rganish
+
+Papka va fayllarning sodda izohi uchun [CODE_GUIDE.md](docs/CODE_GUIDE.md) faylini o'qing. Matematik validatsiya va test metodikasi [ACADEMIC_VALIDATION.md](docs/ACADEMIC_VALIDATION.md) faylida berilgan.
+
+---
+
 ## 🚀 O'rnatish va Ishga Tushirish
 
 ### 1. Tizim Talablari
