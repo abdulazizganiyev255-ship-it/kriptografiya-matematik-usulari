@@ -171,7 +171,6 @@ with st.sidebar:
     if st.button("127-bit tub son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_MERSENNE
         st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
-        st.session_state["active_tab_intent"] = 0
         st.rerun()
 
     if st.button("Karmaykl soni: 8911", use_container_width=True):
@@ -183,13 +182,11 @@ with st.sidebar:
     if st.button("512-bit tub son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_512_PRIME
         st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
-        st.session_state["active_tab_intent"] = 0
         st.rerun()
 
     if st.button("128-bit murakkab son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_COMPOSITE
         st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
-        st.session_state["active_tab_intent"] = 0
         st.rerun()
 
     st.markdown("---")
