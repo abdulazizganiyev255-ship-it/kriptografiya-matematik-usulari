@@ -335,36 +335,29 @@ def test_generate_rsa_pair_invalid():
 
 
 def test_generate_rsa_pair():
-    rsa = generate_rsa_pair(key_bits=128, k=20)
-    required_keys = [
-        "p",
-        "q",
-        "N",
-        "phi",
-        "total_candidates_tested",
-        "theoretical_expected_tests",
-        "elapsed_ms",
-    ]
-    for key in required_keys:
-        assert key in rsa
+    for requested_bits in (64, 65, 128):
+        rsa = generate_rsa_pair(key_bits=requested_bits, k=12)
+        required_keys = [
+            "p", "q", "N", "phi", "target_modulus_bits", "modulus_bits",
+            "p_bits", "q_bits", "attempts_p", "attempts_q",
+            "total_candidates_tested", "theoretical_expected_tests", "elapsed_ms",
+        ]
+        for key in required_keys:
+            assert key in rsa
 
-    p = rsa["p"]
-    q = rsa["q"]
-    N = rsa["N"]
-    phi = rsa["phi"]
-
-    assert p != q
-    assert N == p * q
-    assert phi == (p - 1) * (q - 1)
-    assert N.bit_length() == 128
-    assert rsa["target_modulus_bits"] == 128
-    assert rsa["modulus_bits"] == 128
-    assert rsa["p_bits"] == p.bit_length()
-    assert rsa["q_bits"] == q.bit_length()
-    assert rsa["attempts_q"] >= 1
-    assert rsa["total_candidates_tested"] >= 2
-    assert rsa["theoretical_expected_tests"] > 0
-    assert rsa["elapsed_ms"] >= 0
+        p, q, N, phi = rsa["p"], rsa["q"], rsa["N"], rsa["phi"]
+        assert p != q
+        assert N == p * q
+        assert phi == (p - 1) * (q - 1)
+        assert N.bit_length() == requested_bits
+        assert rsa["target_modulus_bits"] == requested_bits
+        assert rsa["modulus_bits"] == requested_bits
+        assert rsa["p_bits"] == p.bit_length()
+        assert rsa["q_bits"] == q.bit_length()
+        assert rsa["attempts_q"] >= 1
+        assert rsa["total_candidates_tested"] >= 2
+        assert rsa["theoretical_expected_tests"] > 0
+        assert rsa["elapsed_ms"] >= 0
 
 
 # ==========================================
