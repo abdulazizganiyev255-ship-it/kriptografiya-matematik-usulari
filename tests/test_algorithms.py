@@ -304,6 +304,10 @@ def test_analyze_carmichael():
 def test_generate_prime_invalid():
     with pytest.raises(ValueError):
         generate_prime(1)
+    with pytest.raises(ValueError):
+        generate_prime(True)
+    with pytest.raises(ValueError):
+        generate_prime(16, k=0)
 
 
 def test_generate_prime():
@@ -319,6 +323,8 @@ def test_generate_prime():
 def test_generate_rsa_pair_invalid():
     with pytest.raises(ValueError):
         generate_rsa_pair(key_bits=4)
+    with pytest.raises(ValueError):
+        generate_rsa_pair(key_bits=True)
 
 
 def test_generate_rsa_pair():
@@ -343,7 +349,12 @@ def test_generate_rsa_pair():
     assert p != q
     assert N == p * q
     assert phi == (p - 1) * (q - 1)
-    assert abs(N.bit_length() - 128) <= 1
+    assert N.bit_length() == 128
+    assert rsa["target_modulus_bits"] == 128
+    assert rsa["modulus_bits"] == 128
+    assert rsa["p_bits"] == p.bit_length()
+    assert rsa["q_bits"] == q.bit_length()
+    assert rsa["attempts_q"] >= 1
     assert rsa["total_candidates_tested"] >= 2
     assert rsa["theoretical_expected_tests"] > 0
     assert rsa["elapsed_ms"] >= 0
@@ -359,20 +370,24 @@ def test_run_benchmark_rejects_invalid_settings():
         run_benchmark(bit_sizes=[64], k=0, trials=1)
     with pytest.raises(ValueError):
         run_benchmark(bit_sizes=[64], k=5, trials=0)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[64, 64], k=5, trials=1)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[True], k=5, trials=1)
 
 
 def test_run_benchmark():
-    df = run_benchmark(bit_sizes=[64, 128], k=5, trials=1)
+    df = run_benchmark(bit_sizes=[64], k=5, trials=2)
     assert isinstance(df, pd.DataFrame)
     expected_cols = [
-        "Bit_Length",
-        "Algorithm",
-        "Avg_Time_ms",
-        "Min_Time_ms",
-        "Max_Time_ms",
-        "Error_Bound",
+        "Bit_Length", "Candidate_Type", "Algorithm", "Trials", "Rounds",
+        "Avg_Time_ms", "Median_Time_ms", "Std_Dev_ms", "Min_Time_ms",
+        "Max_Time_ms", "Verdict", "Error_Bound",
     ]
     assert list(df.columns) == expected_cols
-    assert len(df) == 6  # 2 bit sizes * 3 algorithms
-    algorithms = set(df["Algorithm"])
-    assert algorithms == {"Fermat", "Solovay-Strassen", "Miller-Rabin"}
+    assert len(df) == 6  # 1 bit size * 2 candidate types * 3 algorithms
+    assert set(df["Candidate_Type"]) == {"Tub nomzod", "Murakkab (semiprime)"}
+    assert set(df["Algorithm"]) == {"Fermat", "Solovay-Strassen", "Miller-Rabin"}
+    assert (df["Median_Time_ms"] >= 0).all()
+    assert (df["Std_Dev_ms"] >= 0).all()
+    assert (df["Trials"] == 2).all()
