@@ -976,7 +976,7 @@ with tab4:
         # JSON Eksport
         export_payload = {
             "metadata": {
-                "system": "PrimeGuard v1.0",
+                "system": "PrimeGuard v1.1",
                 "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "algorithm": "Miller-Rabin Strong Pseudoprime",
                 "rounds_k": rsa_security_k,
