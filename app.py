@@ -64,7 +64,10 @@ def validate_number_input(raw_str: str) -> Tuple[Optional[int], Optional[str], s
     if not clean_str:
         return None, "Kiritish maydoni bo'sh. Iltimos, tekshiruv uchun natural son kiriting.", "error"
 
-    if not clean_str.isdigit():
+    if len(clean_str.lstrip("-")) > 2048:
+        return None, "Kiritilgan son juda uzun (maksimal 2048 ta raqam). Hisoblash resurslarini himoya qilish uchun qisqaroq son kiriting.", "error"
+
+    if not clean_str.isascii() or not clean_str.isdigit():
         if clean_str.startswith("-"):
             return None, "Manfiy sonlar kiritilishi mumkin emas. Kriptografik tublik faqat natural sonlar (n ≥ 2) uchun aniqlanadi.", "error"
         return None, "Kiritilgan satrda begona belgilar yoki harflar mavjud. Faqat natural son (raqamlar) kiriting.", "error"
@@ -749,9 +752,10 @@ with tab3:
                 # Normalize column names if needed
                 col_map = {
                     "Bit_Length": "bit_length", "bits": "bit_length", "Bit Length": "bit_length",
-                    "Algorithm": "algorithm", "algo": "algorithm", "Algoritm": "algorithm",
-                    "Avg_Time_ms": "execution_time_ms", "time": "execution_time_ms",
-                    "time_ms": "execution_time_ms", "Vaqt (ms)": "execution_time_ms"
+                    "Candidate_Type": "candidate_type", "Algorithm": "algorithm", "algo": "algorithm", "Algoritm": "algorithm",
+                    "Median_Time_ms": "execution_time_ms", "Avg_Time_ms": "average_time_ms",
+                    "Std_Dev_ms": "std_dev_ms", "Min_Time_ms": "min_time_ms", "Max_Time_ms": "max_time_ms",
+                    "time": "execution_time_ms", "time_ms": "execution_time_ms", "Vaqt (ms)": "execution_time_ms"
                 }
                 df_bench.rename(columns=col_map, inplace=True)
 
@@ -773,8 +777,9 @@ with tab3:
                     y="execution_time_ms",
                     color="algorithm",
                     markers=True,
-                    title="Bit Uzunligi bo'yicha Vaqt (O(k·log³ n) Trendi)",
-                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Vaqt (ms)", "algorithm": "Algoritm"},
+                    line_dash="candidate_type",
+                    title="Tub va murakkab nomzodlarda median vaqt",
+                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Median vaqt (ms)", "algorithm": "Algoritm", "candidate_type": "Nomzod turi"},
                     template="plotly_dark",
                     color_discrete_map=color_map
                 )
@@ -795,8 +800,9 @@ with tab3:
                     y="execution_time_ms",
                     color="algorithm",
                     barmode="group",
-                    title="Algoritmlararo Samaradorlik Taqqoslashi",
-                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Vaqt (ms)", "algorithm": "Algoritm"},
+                    facet_col="candidate_type",
+                    title="Algoritmlararo median vaqt taqqoslashi",
+                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Median vaqt (ms)", "algorithm": "Algoritm", "candidate_type": "Nomzod turi"},
                     template="plotly_dark",
                     color_discrete_map=color_map
                 )
@@ -930,8 +936,8 @@ with tab4:
         p_q_diff = abs(p - q)
         diff_bits = p_q_diff.bit_length()
         min_prime_bits = min(p.bit_length(), q.bit_length())
-        fermat_distance_threshold = max(1, min_prime_bits - 100)
-        is_fermat_safe = diff_bits >= fermat_distance_threshold
+        fermat_distance_threshold = max(1, min_prime_bits // 2)
+        is_fermat_safe = p_q_diff > (1 << fermat_distance_threshold)
 
         st.markdown(f"""
         <div class="cyber-alert {'cyber-alert-success' if is_fermat_safe else 'cyber-alert-warning'}">
@@ -940,7 +946,7 @@ with tab4:
                 <div class="cyber-alert-title">Tub sonlar orasidagi masofa (o'quv ko'rsatkichi)</div>
                 <div class="cyber-alert-msg">
                     |p - q| masofasi: <b>{diff_bits} bit</b>. 
-                    {f"Masofa o'quv mezonidan yuqori (|p - q| ≥ 2^{fermat_distance_threshold}). Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: p va q juda yaqin bo'lishi mumkin; bu o'quv tekshiruvini qayta ko'rib chiqing."}
+                    {f"Masofa oddiy Fermat faktorizatsiyasi uchun yaqinlik chegarasidan yuqori (|p - q| > 2^{fermat_distance_threshold}). Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: p va q juda yaqin bo'lishi mumkin; bu o'quv tekshiruvini qayta ko'rib chiqing."}
                 </div>
             </div>
         </div>
@@ -981,7 +987,9 @@ with tab4:
                 "algorithm": "Miller-Rabin Strong Pseudoprime",
                 "rounds_k": rsa_security_k,
                 "bit_length_each": p.bit_length(),
-                "rsa_modulus_bits": n_mod.bit_length()
+                "rsa_modulus_bits": n_mod.bit_length(),
+                "target_modulus_bits": rsa_bit_choice,
+                "modulus_length_exact": n_mod.bit_length() == rsa_bit_choice
             },
             "performance": {
                 "execution_time_ms": t_ms,
