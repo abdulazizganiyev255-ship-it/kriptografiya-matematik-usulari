@@ -170,11 +170,13 @@ with st.sidebar:
     if st.button("🔢 Mersenne 2^127 - 1", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_MERSENNE
         st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
+        st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
         st.session_state["active_tab_intent"] = 0
         st.rerun()
 
     if st.button("⚠️ Karmaykl 8911", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
+        st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["carmichael_select"] = 8911
         st.session_state["active_tab_intent"] = 1
@@ -183,11 +185,13 @@ with st.sidebar:
     if st.button("🔐 512-bit Tub Son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_512_PRIME
         st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
+        st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
         st.session_state["active_tab_intent"] = 0
         st.rerun()
 
     if st.button("🧱 Yirik Murakkab Son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_COMPOSITE
+        st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
         st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
         st.session_state["active_tab_intent"] = 0
         st.rerun()
