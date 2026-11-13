@@ -461,19 +461,10 @@ with tab2:
             """, unsafe_allow_html=True)
         else:
             with st.spinner("Karmaykl va Korselt tahlili o'tkazilmoqda..."):
-                try:
-                    carm_report = analyze_carmichael(n_carm, global_k)
-                except TypeError:
-                    carm_report = analyze_carmichael(n_carm)
-
-                if isinstance(carm_report, dict) and "fermat" in carm_report:
-                    c_f = safe_extract_result(carm_report["fermat"])
-                    c_ss = safe_extract_result(carm_report["solovay_strassen"])
-                    c_mr = safe_extract_result(carm_report["miller_rabin"])
-                else:
-                    c_f = safe_extract_result(fermat_test(n_carm, global_k))
-                    c_ss = safe_extract_result(solovay_strassen_test(n_carm, global_k))
-                    c_mr = safe_extract_result(miller_rabin_test(n_carm, global_k))
+                carm_report = analyze_carmichael(n_carm, global_k)
+                c_f = safe_extract_result(carm_report["fermat"])
+                c_ss = safe_extract_result(carm_report["solovay_strassen"])
+                c_mr = safe_extract_result(carm_report["miller_rabin"])
 
             st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
 
@@ -804,13 +795,11 @@ with tab4:
     if st.button("🔑 RSA uchun p va q tub sonlarini yaratish", type="primary", use_container_width=True):
         with st.spinner(f"Kriptografik xavfsiz {rsa_bit_choice}-bit tub sonlar generatsiya qilinmoqda..."):
             try:
-                # key_bits moduli o'lchami: p va q ning har biri rsa_bit_choice bit bo'lishi uchun key_bits = rsa_bit_choice * 2
+                # key_bits — N modulining maqsadli bit uzunligi.
                 rsa_res = generate_rsa_pair(rsa_bit_choice * 2, rsa_security_k)
-            except Exception:
-                try:
-                    rsa_res = generate_rsa_pair(rsa_bit_choice, rsa_security_k)
-                except Exception:
-                    rsa_res = generate_rsa_pair(rsa_bit_choice)
+            except Exception as exc:
+                st.error(f"RSA parametrlarini yaratishda xatolik: {exc}")
+                st.stop()
 
         p = rsa_res["p"]
         q = rsa_res["q"]
