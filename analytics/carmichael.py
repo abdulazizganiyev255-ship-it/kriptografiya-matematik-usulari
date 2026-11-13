@@ -43,12 +43,14 @@ def check_korselt_criterion(n: int, max_steps: int = 1_000_000) -> dict:
         return {"is_carmichael": None, "complete": False, "factors": factor_values, "factor_powers": factors, "details": ["Faktorizatsiya limitiga yetildi; Korselt mezoni to'liq tekshirilmadi."]}
     is_composite = len(factors) >= 2
     square_free = all(power == 1 for _, power in factors)
-    details = [f"Square-free: {'ha' if square_free else 'yo\'q'}"]
+    square_free_label = "ha" if square_free else "yo'q"
+    details = [f"Square-free: {square_free_label}"]
     divisibility_ok = True
     for p, _ in factors:
         divides = (n - 1) % (p - 1) == 0
         divisibility_ok = divisibility_ok and divides
-        details.append(f"{p}-1 = {p - 1}; n-1 = {n - 1}; bo'linadi: {'ha' if divides else 'yo\'q'}")
+        division_label = "ha" if divides else "yo'q"
+        details.append(f"{p}-1 = {p - 1}; n-1 = {n - 1}; bo'linadi: {division_label}")
     is_carmichael = is_composite and square_free and divisibility_ok
     return {
         "is_carmichael": is_carmichael,
