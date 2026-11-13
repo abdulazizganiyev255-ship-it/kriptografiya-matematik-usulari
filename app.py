@@ -1,8 +1,4 @@
-"""
-PrimeGuard Suite v1.0 - Cyber-Security Primality Audit & Cryptographic Laboratory
-Author: Agent B (Cyber-Security Frontend Architect & Technical Writer)
-Strict single import contract with Agent A (core & analytics modules)
-"""
+"""PrimeGuard: ehtimollik asosidagi tublik algoritmlari laboratoriyasi."""
 
 import os
 import json
@@ -10,290 +6,20 @@ import time
 import math
 import secrets
 from typing import Any, Tuple, Optional, List, Dict
+
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
-# ==============================================================================
-# YAGONA IMPORT KONTRAKTI (Agent A modullari bilan integratsiya)
-# ==============================================================================
-try:
-    from core.models import PrimalityResult, RoundLog
-    from core.fermat import fermat_test
-    from core.solovay_strassen import solovay_strassen_test
-    from core.miller_rabin import miller_rabin_test
-    from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
-    from analytics.benchmark import run_benchmark
-    from analytics.prime_generator import generate_prime, generate_rsa_pair
-except ImportError:
-    # --------------------------------------------------------------------------
-    # Parallel ishlayotgan Agent A modullari ulanmagan vaqtda
-    # UI mustaqil va xatosiz ishlashi uchun to'liq mos fallback implementatsiya
-    # --------------------------------------------------------------------------
-    from dataclasses import dataclass, field
-
-    @dataclass
-    class RoundLog:
-        round: int
-        base: int
-        result: bool
-        witness: Optional[int] = None
-        details: str = ""
-
-    @dataclass
-    class PrimalityResult:
-        is_prime: bool
-        execution_time_ms: float
-        confidence: float
-        rounds_performed: int
-        rounds_log: List[RoundLog] = field(default_factory=list)
-        witness: Optional[int] = None
-        algorithm: str = ""
-        error_probability: float = 0.0
-
-    CARMICHAEL_NUMBERS = [
-        561, 1105, 1729, 2465, 2821, 6601, 8911, 10585,
-        15841, 29341, 41041, 46657, 52633, 62745, 63973, 75361
-    ]
-
-    def _pow_mod(base: int, exp: int, mod: int) -> int:
-        return pow(base, exp, mod)
-
-    def _jacobi(a: int, n: int) -> int:
-        if n <= 0 or n % 2 == 0:
-            return 0
-        a = a % n
-        t = 1
-        while a != 0:
-            while a % 2 == 0:
-                a //= 2
-                r = n % 8
-                if r == 3 or r == 5:
-                    t = -t
-            a, n = n, a
-            if a % 4 == 3 and n % 4 == 3:
-                t = -t
-            a = a % n
-        return t if n == 1 else 0
-
-    def fermat_test(n: int, k: int = 20) -> PrimalityResult:
-        start_time = time.perf_counter()
-        if n < 2:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], None, "Fermat", 1.0)
-        if n in (2, 3):
-            return PrimalityResult(True, 0.0, 1.0, 0, [], None, "Fermat", 0.0)
-        if n % 2 == 0:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], 2, "Fermat", 1.0)
-
-        logs: List[RoundLog] = []
-        is_p = True
-        wit = None
-        for r in range(1, k + 1):
-            a = secrets.randbelow(n - 3) + 2
-            g = math.gcd(a, n)
-            if g > 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"gcd({a}, {n}) = {g} > 1 (Bo'luvchi topildi)"))
-                break
-            val = _pow_mod(a, n - 1, n)
-            if val != 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"{a}^(n-1) mod n = {val} != 1 (Fermat guvohi)"))
-                break
-            else:
-                logs.append(RoundLog(r, a, True, None, f"{a}^(n-1) ≡ 1 (mod n) [Muvaffaqiyatli]"))
-
-        elapsed = (time.perf_counter() - start_time) * 1000.0
-        err_prob = (0.5 ** k) if is_p else 0.0
-        return PrimalityResult(is_p, elapsed, 1.0 - err_prob, len(logs), logs, wit, "Fermat", err_prob)
-
-    def solovay_strassen_test(n: int, k: int = 20) -> PrimalityResult:
-        start_time = time.perf_counter()
-        if n < 2:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], None, "Solovay-Strassen", 1.0)
-        if n in (2, 3):
-            return PrimalityResult(True, 0.0, 1.0, 0, [], None, "Solovay-Strassen", 0.0)
-        if n % 2 == 0:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], 2, "Solovay-Strassen", 1.0)
-
-        logs: List[RoundLog] = []
-        is_p = True
-        wit = None
-        for r in range(1, k + 1):
-            a = secrets.randbelow(n - 3) + 2
-            g = math.gcd(a, n)
-            if g > 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"gcd({a}, {n}) = {g} > 1"))
-                break
-            j = _jacobi(a, n)
-            j_mod = j % n
-            val = _pow_mod(a, (n - 1) // 2, n)
-            if j == 0 or val != j_mod:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"Euler mezoniga zid: a^((n-1)/2)={val}, Jacobi={j}"))
-                break
-            else:
-                logs.append(RoundLog(r, a, True, None, f"{a}^((n-1)/2) ≡ Jacobi({a}/{n}) ≡ {j} (mod n)"))
-
-        elapsed = (time.perf_counter() - start_time) * 1000.0
-        err_prob = (0.5 ** k) if is_p else 0.0
-        return PrimalityResult(is_p, elapsed, 1.0 - err_prob, len(logs), logs, wit, "Solovay-Strassen", err_prob)
-
-    def miller_rabin_test(n: int, k: int = 20) -> PrimalityResult:
-        start_time = time.perf_counter()
-        if n < 2:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], None, "Miller-Rabin", 1.0)
-        if n in (2, 3):
-            return PrimalityResult(True, 0.0, 1.0, 0, [], None, "Miller-Rabin", 0.0)
-        if n % 2 == 0:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], 2, "Miller-Rabin", 1.0)
-
-        # n - 1 = 2^s * d
-        s = 0
-        d = n - 1
-        while d % 2 == 0:
-            s += 1
-            d //= 2
-
-        logs: List[RoundLog] = []
-        is_p = True
-        wit = None
-
-        for r in range(1, k + 1):
-            a = secrets.randbelow(n - 3) + 2
-            g = math.gcd(a, n)
-            if g > 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"gcd({a}, {n}) = {g} > 1"))
-                break
-
-            x = _pow_mod(a, d, n)
-            if x == 1 or x == n - 1:
-                logs.append(RoundLog(r, a, True, None, f"a^d mod n = {x} (Tublik sharti bajarildi)"))
-                continue
-
-            composite_found = True
-            for _ in range(s - 1):
-                x = _pow_mod(x, 2, n)
-                if x == n - 1:
-                    composite_found = False
-                    logs.append(RoundLog(r, a, True, None, f"Ketma-ket kvadratlashda -1 ga erishildi"))
-                    break
-
-            if composite_found:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"{a} kuchli murakkablik guvohi (trivial bo'lmagan kvadrat ildiz)"))
-                break
-
-        elapsed = (time.perf_counter() - start_time) * 1000.0
-        err_prob = (0.25 ** k) if is_p else 0.0
-        return PrimalityResult(is_p, elapsed, 1.0 - err_prob, len(logs), logs, wit, "Miller-Rabin", err_prob)
-
-    def analyze_carmichael(n: int, k: int = 20) -> Dict[str, Any]:
-        temp = n
-        factors = []
-        d = 2
-        while d * d <= temp and len(factors) < 10:
-            if temp % d == 0:
-                factors.append(d)
-                while temp % d == 0:
-                    temp //= d
-            d += 1
-        if temp > 1:
-            factors.append(temp)
-
-        korselt_satisfied = True
-        korselt_details = []
-        for p in factors:
-            divides = ((n - 1) % (p - 1) == 0)
-            if not divides:
-                korselt_satisfied = False
-            korselt_details.append(f"({p}-1)={p-1} | (n-1)={n-1} -> {'Bajarildi' if divides else 'Bajarilmadi'}")
-
-        return {
-            "n": n,
-            "is_carmichael": korselt_satisfied and len(factors) >= 3,
-            "factors": factors,
-            "korselt_satisfied": korselt_satisfied,
-            "korselt_details": korselt_details,
-            "explanation": (
-                f"Karmaykl soni n={n} barcha o'zaro tub asoslar uchun a^(n-1) ≡ 1 mod n "
-                f"shartini qanoatlantiradi, biroq u murakkab son ({' × '.join(map(str, factors))})."
-            )
-        }
-
-    def run_benchmark(bit_lengths: List[int], k: int = 20) -> pd.DataFrame:
-        records = []
-        for bits in bit_lengths:
-            test_num = (1 << bits) - 1
-            if test_num % 2 == 0:
-                test_num += 1
-
-            for name, func in [("Fermat", fermat_test), ("Solovay-Strassen", solovay_strassen_test), ("Miller-Rabin", miller_rabin_test)]:
-                times = []
-                for _ in range(3):
-                    t0 = time.perf_counter()
-                    func(test_num, k)
-                    times.append((time.perf_counter() - t0) * 1000.0)
-                avg_time = sum(times) / len(times)
-                records.append({
-                    "bit_length": bits,
-                    "algorithm": name,
-                    "execution_time_ms": round(avg_time, 4),
-                    "rounds": k
-                })
-        return pd.DataFrame(records)
-
-    def generate_prime(bits: int, k: int = 20) -> int:
-        while True:
-            candidate = secrets.randbits(bits) | (1 << (bits - 1)) | 1
-            res = miller_rabin_test(candidate, k)
-            if res.is_prime:
-                return candidate
-
-    def generate_rsa_pair(bits: int, k: int = 20) -> Dict[str, Any]:
-        t0 = time.perf_counter()
-        candidates_tested = 0
-
-        def get_prime():
-            nonlocal candidates_tested
-            while True:
-                candidates_tested += 1
-                cand = secrets.randbits(bits) | (1 << (bits - 1)) | 1
-                if cand % 3 == 0 or cand % 5 == 0 or cand % 7 == 0:
-                    continue
-                if miller_rabin_test(cand, k).is_prime:
-                    return cand
-
-        p = get_prime()
-        while True:
-            q = get_prime()
-            if p != q and abs(p - q) > (1 << (bits - 100)):
-                break
-
-        n = p * q
-        phi = (p - 1) * (q - 1)
-        elapsed = (time.perf_counter() - t0) * 1000.0
-        expected_tests = int(bits * 0.693147)
-
-        return {
-            "p": p,
-            "q": q,
-            "n": n,
-            "phi": phi,
-            "bit_length": bits,
-            "execution_time_ms": round(elapsed, 2),
-            "total_candidates_tested": candidates_tested,
-            "theoretical_expected_tests": expected_tests
-        }
+# Asosiy matematik algoritmlar va tahlil modullari.
+from core.models import PrimalityResult, RoundLog
+from core.fermat import fermat_test
+from core.solovay_strassen import solovay_strassen_test
+from core.miller_rabin import miller_rabin_test
+from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
+from analytics.benchmark import run_benchmark
+from analytics.prime_generator import generate_prime, generate_rsa_pair
 
 # ==============================================================================
 # STREAMLIT CONFIG & OFFLINE STYLING
@@ -356,42 +82,18 @@ def validate_number_input(raw_str: str) -> Tuple[Optional[int], Optional[str], s
     return val, None, "valid"
 
 
-def safe_extract_result(res: Any) -> Dict[str, Any]:
-    """Agent A qaytargan PrimalityResult obyektidan ma'lumotlarni xavfsiz ajratib oladi."""
-    is_prime = getattr(res, "is_prime", getattr(res, "is_probable_prime", False))
-    exec_time = getattr(
-        res, "elapsed_ms",
-        getattr(res, "execution_time_ms",
-        getattr(res, "elapsed_time_ms",
-        getattr(res, "time_ms", 0.0)))
-    )
-    conf = getattr(res, "confidence", 1.0)
-    err_prob = getattr(res, "error_bound", getattr(res, "error_probability", 0.0))
-    rounds = getattr(res, "rounds_run", getattr(res, "rounds_performed", getattr(res, "rounds", 0)))
-    wit = getattr(res, "witness", getattr(res, "composite_witness", getattr(res, "witness_a", None)))
-    logs = getattr(res, "logs", getattr(res, "rounds_log", getattr(res, "round_logs", [])))
-    algo = getattr(res, "algorithm", "Algoritm")
-    pre_filtered = getattr(res, "pre_filtered", False)
-    verdict = getattr(res, "verdict", "Prime" if is_prime else "Composite")
-
-    # Agar murakkab bo'lib, guvoh asosiy obyektda ko'rsatilmagan bo'lsa, loglardan qidirish
-    if not is_prime and wit is None and logs:
-        for item in logs:
-            if not getattr(item, "passed", getattr(item, "result", True)):
-                wit = getattr(item, "witness_a", getattr(item, "base", getattr(item, "witness", None)))
-                break
-
+def safe_extract_result(res: PrimalityResult) -> Dict[str, Any]:
+    """Algoritm natijasini interfeys ko'rsatadigan oddiy lug'atga o'tkazadi."""
+    witness = next((log.witness_a for log in res.logs if not log.passed), None)
     return {
-        "is_prime": bool(is_prime),
-        "execution_time_ms": float(exec_time),
-        "confidence": float(conf),
-        "error_probability": err_prob,
-        "rounds": int(rounds),
-        "witness": wit,
-        "logs": logs,
-        "algorithm": str(algo),
-        "pre_filtered": bool(pre_filtered),
-        "verdict": str(verdict)
+        "is_prime": res.is_prime,
+        "execution_time_ms": res.elapsed_ms,
+        "rounds": res.rounds_run,
+        "witness": witness,
+        "logs": res.logs,
+        "algorithm": res.algorithm,
+        "pre_filtered": res.pre_filtered,
+        "verdict": res.verdict,
     }
 
 # ==============================================================================
