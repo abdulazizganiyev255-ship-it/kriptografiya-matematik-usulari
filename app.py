@@ -177,7 +177,6 @@ with st.sidebar:
         st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
         st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["carmichael_select"] = 8911
-        st.session_state["active_tab_intent"] = 1
         st.rerun()
 
     if st.button("512-bit tub son", use_container_width=True):
@@ -208,7 +207,7 @@ with st.sidebar:
 st.markdown("""
 <div style="margin-bottom: 1.2rem;">
     <div class="cyber-header">
-        <span class="cyber-header-accent">PrimeGuard</span> Suite v1.0
+        <span class="cyber-header-accent">PrimeGuard</span> v1.1
     </div>
     <div class="cyber-subtitle">
         Ehtimoliy tublik algoritmlari, Karmaykl sonlari va benchmark laboratoriyasi
@@ -230,12 +229,12 @@ with tab1:
     st.markdown("""
     <div class="cyber-card">
         <div style="font-weight: 700; font-size: 1.1rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            Matematik Tublik Audit Laboratoriyasi
+            Sonni tekshirish laboratoriyasi
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
             Istalgan o'lchamdagi katta natural sonni kiriting. Tizim bir vaqtning o'zida uchta mustaqil
             probabilistik algoritm (<b>Kichik Fermat</b>, <b>Solovay-Strassen</b> va <b>Miller-Rabin Strong</b>)
-            yordamida raundma-raund xavfsizlik auditini o'tkazadi.
+            yordamida har bir algoritm bo'yicha tekshiruv o'tkazadi.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -246,7 +245,7 @@ with tab1:
         "Tekshiriladigan son (n)",
         value=default_input,
         height=110,
-        help="O'nlik (decimal) formatdagi ixtiyoriy katta butun sonni kiriting.",
+        help="Faqat natural son kiriting. O'qish qulayligi uchun raqamlarni bo'sh joy bilan guruhlash mumkin.",
         key="tab1_text_area"
     )
 
@@ -291,9 +290,9 @@ with tab1:
 
             st.markdown(f"""
             <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
-                <span class="cyber-badge cyber-badge-cyan">Bit Uzunligi: {bit_len} bit</span>
-                <span class="cyber-badge cyber-badge-cyan">O'nlik Raqamlar Soni: {digit_len} ta</span>
-                <span class="cyber-badge cyber-badge-cyan">Audit Raundlari: {global_k}</span>
+                <span class="cyber-badge cyber-badge-cyan">Uzunligi: {bit_len} bit</span>
+                <span class="cyber-badge cyber-badge-cyan">Raqamlar: {digit_len} ta</span>
+                <span class="cyber-badge cyber-badge-cyan">Raundlar: {global_k}</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -328,7 +327,7 @@ with tab1:
                             <span class="kpi-metric-val">{r_data['execution_time_ms']:.4f} ms</span>
                         </div>
                         <div class="kpi-metric-row">
-                            <span class="kpi-metric-label">Xatolik chegarasi:</span>
+                            <span class="kpi-metric-label">Nazariy xatolik chegarasi:</span>
                             <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{shown_error if is_p else '0 (Aniq)'}</span>
                         </div>
                         <div class="kpi-metric-row">
@@ -438,7 +437,8 @@ with tab2:
             "Tayyor Karmaykl sonini tanlang:",
             options=CARMICHAEL_NUMBERS,
             index=CARMICHAEL_NUMBERS.index(8911) if 8911 in CARMICHAEL_NUMBERS else 0,
-            help="Tarixiy va kriptografik tahlillarda keng qo'llaniladigan universal psevdotub sonlar."
+            key="carmichael_select",
+            help="Fermat testining cheklovini ko'rsatadigan mashhur murakkab sonlar."
         )
 
     with col_custom:
@@ -762,7 +762,7 @@ with tab3:
 
             csv_bench_data = df_bench.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Benchmark Natijalarini CSV Formatida Yuklab Olish",
+                label="⬇ Tezlik natijalarini CSV formatida yuklab olish",
                 data=csv_bench_data,
                 file_name="primeguard_benchmark_results.csv",
                 mime="text/csv",
@@ -800,7 +800,7 @@ with tab4:
 
     with col_r2:
         rsa_security_k = st.slider(
-            "Miller-Rabin xavfsizlik raundi (k):",
+            "Miller–Rabin raundlari (k):",
             min_value=10,
             max_value=64,
             value=global_k,
@@ -866,7 +866,7 @@ with tab4:
         with col_m4:
             st.markdown(f"""
             <div class="kpi-card kpi-card-prime">
-                <div class="kpi-metric-label">Xatolik Ehtimoli</div>
+                <div class="kpi-metric-label">Nazariy xatolik chegarasi</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #10B981; margin: 0.3rem 0;">
                     ≤ 4⁻{rsa_security_k}
                 </div>
@@ -950,7 +950,7 @@ with tab4:
 
         json_bytes = json.dumps(export_payload, indent=2).encode('utf-8')
         st.download_button(
-            label="📥 RSA Kalit Ma'lumotlarini JSON Formatida Yuklab Olish",
+            label="⬇ RSA parametrlarini JSON formatida yuklab olish",
             data=json_bytes,
             file_name=f"primeguard_rsa_{n_mod.bit_length()}bit_keys.json",
             mime="application/json",
