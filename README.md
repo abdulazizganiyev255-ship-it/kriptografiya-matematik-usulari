@@ -18,6 +18,33 @@
 
 ---
 
+## Loyiha maqsadi va vazifalari
+
+**Maqsad:** sonlarning tubligini ehtimollikka asoslangan algoritmlar yordamida tekshiruvchi, hisoblash jarayonini ko'rsatuvchi va algoritmlar natijalarini taqqoslovchi kompleks dasturiy ta'minot ishlab chiqish.
+
+**Asosiy vazifalar:**
+1. Fermat, Solovay–Strassen va Miller–Rabin algoritmlarining matematik asoslarini o'rganish.
+2. Uch algoritmni Python tilida alohida modullarda amalga oshirish.
+3. Foydalanuvchiga son va test raundlari sonini tanlash imkonini beruvchi interfeys yaratish.
+4. Har bir raundning tasodifiy asosi, hisoblangan qiymati va natijasini ko'rsatish.
+5. Karmaykl sonlari orqali Fermat testining cheklovini namoyish etish.
+6. Algoritmlarning bajarilish vaqtini bir xil sharoitda o'lchash va taqqoslash.
+7. Natijalarni avtomatik testlar va deterministik etalon bilan tekshirish.
+
+**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval va CSV ko'rinishida oladi.
+
+**Ilmiy cheklov:** probabilistik test barcha raundlardan o'tgan sonni avtomatik ravishda isbotlangan tub son deb hisoblamaydi. Natija "ehtimoliy tub" deb ko'rsatiladi. Ushbu loyihada alohida deterministik etalon faqat n < 2^64 diapazoni uchun mavjud.
+
+---
+
+## Natija atamalari
+
+| Dasturdagi xulosa | Ma'nosi |
+|---|---|
+| **Composite** / Murakkab | Murakkablik guvohi topildi; son aniq murakkab |
+| **Probably Prime** / Ehtimoliy tub | Tanlangan raundlardan o'tdi; bu isbot emas |
+| **Prime** / Aniq tub | Kichik tub sonlar jadvali yoki deterministik etalon bilan tekshirildi |
+
 ## 🏛️ Tizim Arxitekturasi
 
 Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu esa tizimning kengaytiriluvchanligi, testlanuvchanligi va mustaqilligini kafolatlaydi:
