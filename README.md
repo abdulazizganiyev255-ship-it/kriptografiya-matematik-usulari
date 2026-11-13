@@ -1,6 +1,8 @@
 # 🛡️ PrimeGuard — Tub sonlar laboratoriyasi
 ### Fermat, Solovay–Strassen va Miller–Rabin algoritmlari laboratoriyasi
 
+**Foydalanuvchi qo'llanmasi:** [Dasturni ishlatish bo'yicha yo'riqnoma](docs/USER_GUIDE.md) · [Kod tuzilmasi](docs/CODE_GUIDE.md) · [Akademik tekshiruv](docs/ACADEMIC_VALIDATION.md)
+
 ---
 
 ## 📌 Loyiha Pasporti
@@ -47,7 +49,7 @@
 
 ## 🏛️ Tizim Arxitekturasi
 
-Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu esa tizimning kengaytiriluvchanligi, testlanuvchanligi va mustaqilligini kafolatlaydi:
+Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu yondashuv kodni kengaytirish, testlash va tushuntirishni osonlashtiradi:
 
 ```mermaid
 flowchart TD
