@@ -10,6 +10,10 @@ CARMICHAEL_NUMBERS: list[int] = [
 
 def factorize_distinct(n: int, max_steps: int = 1_000_000) -> tuple[list[tuple[int, int]], bool]:
     """Return (prime_factors_with_powers, complete). Limited trial division avoids UI freezes."""
+    if not isinstance(n, int) or isinstance(n, bool):
+        raise TypeError("n butun son bo'lishi kerak")
+    if not isinstance(max_steps, int) or isinstance(max_steps, bool) or max_steps < 1:
+        raise ValueError("max_steps kamida 1 bo'lishi kerak")
     if n < 2:
         return [], True
     remaining = n
@@ -35,6 +39,10 @@ def factorize_distinct(n: int, max_steps: int = 1_000_000) -> tuple[list[tuple[i
 
 def check_korselt_criterion(n: int, max_steps: int = 1_000_000) -> dict:
     """Check Korselt's criterion. None means factorization was not completed within the limit."""
+    if not isinstance(n, int) or isinstance(n, bool):
+        raise TypeError("n butun son bo'lishi kerak")
+    if not isinstance(max_steps, int) or isinstance(max_steps, bool) or max_steps < 1:
+        raise ValueError("max_steps kamida 1 bo'lishi kerak")
     if n < 3 or n % 2 == 0:
         return {"is_carmichael": False, "complete": True, "factors": [], "details": ["n musbat toq murakkab son bo'lishi kerak"]}
     factors, complete = factorize_distinct(n, max_steps=max_steps)
