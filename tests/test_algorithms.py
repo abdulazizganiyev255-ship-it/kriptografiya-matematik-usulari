@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from analytics.benchmark import run_benchmark
-from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
+from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael, check_korselt_criterion
 from analytics.prime_generator import generate_prime, generate_rsa_pair
 from core.fermat import fermat_test
 from core.miller_rabin import miller_rabin_test
@@ -270,6 +270,15 @@ def test_carmichael_constants():
     assert CARMICHAEL_NUMBERS == expected
 
 
+def test_korselt_criterion():
+    assert check_korselt_criterion(561)["is_carmichael"] is True
+    assert check_korselt_criterion(1105)["is_carmichael"] is True
+    assert check_korselt_criterion(1729)["is_carmichael"] is True
+    assert check_korselt_criterion(15)["is_carmichael"] is False
+    assert check_korselt_criterion(9)["is_carmichael"] is False
+    assert check_korselt_criterion(2)["is_carmichael"] is False
+
+
 def test_analyze_carmichael():
     analysis = analyze_carmichael(561, k=20)
     assert analysis["n"] == 561
@@ -284,6 +293,9 @@ def test_analyze_carmichael():
     assert analysis["solovay_strassen"].is_prime is False
     assert analysis["miller_rabin"].is_prime is False
     assert analysis["fermat_fooled"] is True
+    assert analysis["is_carmichael"] is True
+    assert analysis["factors"] == [3, 11, 17]
+    assert analysis["factorization_complete"] is True
 
 
 # ==========================================
