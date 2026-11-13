@@ -25,7 +25,7 @@ from analytics.prime_generator import generate_prime, generate_rsa_pair
 # STREAMLIT CONFIG & OFFLINE STYLING
 # ==============================================================================
 st.set_page_config(
-    page_title="PrimeGuard Suite v1.0 | Kriptografik Tublik Auditi",
+    page_title="PrimeGuard | Tub sonlar laboratoriyasi",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -105,10 +105,10 @@ with st.sidebar:
         <span style="font-size: 1.8rem;">🛡️</span>
         <div>
             <div style="font-weight: 800; font-size: 1.25rem; color: #00F5D4; letter-spacing: -0.01em;">
-                PrimeGuard Suite
+                PrimeGuard
             </div>
             <div style="font-size: 0.75rem; color: #94A3B8; font-family: 'JetBrains Mono', monospace;">
-                v1.0 • Cyber-Security Lab
+                v1.1 • Number Theory Lab
             </div>
         </div>
     </div>
@@ -117,9 +117,9 @@ with st.sidebar:
     st.markdown("---")
 
     # Global Rounds Slider
-    st.markdown("### ⚙️ Global Audit Parametrlari")
+    st.markdown("### ⚙️ Tekshiruv sozlamalari")
     global_k = st.slider(
-        "Audit raundlari soni (k):",
+        "Raundlar soni (k):",
         min_value=1,
         max_value=64,
         value=20,
@@ -134,7 +134,7 @@ with st.sidebar:
     st.markdown(f"""
     <div class="cyber-card" style="padding: 1rem; margin: 1rem 0; border-color: rgba(0, 245, 212, 0.3);">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #00F5D4; font-weight: 700; margin-bottom: 0.5rem;">
-            📊 JONLI XATOLIK CHEGARASI
+            📊 NAZARIY XATOLIK CHEGARASI
         </div>
         <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD5E1;">
             <b>Fermat:</b> universal xatolik chegarasi yo'q (Karmaykl sonlari sababli).<br>
@@ -155,7 +155,7 @@ with st.sidebar:
     st.markdown("---")
 
     # Tezkor Namuna Tugmalari
-    st.markdown("### ⚡ Tezkor Namunalar")
+    st.markdown("### ⚡ Tayyor misollar")
     st.caption("Bir marta bosish orqali sinov sonini yuklang:")
 
     SAMPLE_MERSENNE = "170141183460469231731687303715884105727"  # 2^127 - 1
@@ -167,31 +167,27 @@ with st.sidebar:
     )
     SAMPLE_COMPOSITE = "340282366920938463463374607431768211455"  # 2^128 - 1
 
-    if st.button("🔢 Mersenne 2^127 - 1", use_container_width=True):
+    if st.button("127-bit tub son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_MERSENNE
-        st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
         st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
         st.session_state["active_tab_intent"] = 0
         st.rerun()
 
-    if st.button("⚠️ Karmaykl 8911", use_container_width=True):
+    if st.button("Karmaykl soni: 8911", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
-        st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["carmichael_select"] = 8911
         st.session_state["active_tab_intent"] = 1
         st.rerun()
 
-    if st.button("🔐 512-bit Tub Son", use_container_width=True):
+    if st.button("512-bit tub son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_512_PRIME
-        st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
         st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
         st.session_state["active_tab_intent"] = 0
         st.rerun()
 
-    if st.button("🧱 Yirik Murakkab Son", use_container_width=True):
+    if st.button("128-bit murakkab son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_COMPOSITE
-        st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
         st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
         st.session_state["active_tab_intent"] = 0
         st.rerun()
@@ -200,7 +196,7 @@ with st.sidebar:
     st.markdown("""
     <div style="font-size: 0.75rem; color: #64748B; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
         Akademik dasturiy prototip<br>
-        Ehtimoliy tublik algoritmlari laboratoriyasi<br>
+        Tub sonlarni tekshirish va algoritmlarni taqqoslash laboratoriyasi<br>
         Natijalar mustaqil testlar bilan tekshiriladi
     </div>
     """, unsafe_allow_html=True)
@@ -221,10 +217,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🔍 Tublik Auditi",
-    "⚠️ Karmaykl Tuzog‘i",
-    "📊 Kompleks Benchmark",
-    "🔐 RSA uchun tub parametrlar"
+    "🔍 Sonni tekshirish",
+    "🧩 Karmaykl tahlili",
+    "📈 Tezlik taqqoslash",
+    "🔐 RSA parametrlari"
 ])
 
 # ==============================================================================
@@ -247,7 +243,7 @@ with tab1:
     default_input = st.session_state.get("input_candidate", SAMPLE_MERSENNE)
 
     raw_candidate = st.text_area(
-        "Tekshiriluvchi nomzod son (n):",
+        "Tekshiriladigan son (n)",
         value=default_input,
         height=110,
         help="O'nlik (decimal) formatdagi ixtiyoriy katta butun sonni kiriting.",
@@ -256,7 +252,7 @@ with tab1:
 
     col_btn, col_info = st.columns([1, 3])
     with col_btn:
-        start_audit = st.button("🛡️ Tublik Auditini Boshlash", use_container_width=True, type="primary")
+        start_audit = st.button("▶ Sonni tekshirish", use_container_width=True, type="primary")
 
     if start_audit:
         val, msg, alert_type = validate_number_input(raw_candidate)
@@ -349,10 +345,10 @@ with tab1:
                     """, unsafe_allow_html=True)
 
             # Raundma-raund audit jurnali
-            st.markdown("### 📋 Raundma-raund Audit Jurnali")
+            st.markdown("### 📋 Tekshiruv bosqichlari")
 
             tab_log_f, tab_log_ss, tab_log_mr = st.tabs([
-                "Fermat Raundlari", "Solovay-Strassen Raundlari", "Miller-Rabin Raundlari"
+                "Fermat bosqichlari", "Solovay–Strassen bosqichlari", "Miller–Rabin bosqichlari"
             ])
 
             all_csv_rows = []
@@ -385,16 +381,16 @@ with tab1:
                             status_str = "O'tdi (Tublikka mos)" if res_bool else "Yiqildi (Murakkablik guvohi)"
 
                             table_rows.append({
-                                "Raund": r_num,
-                                "Tasodifiy Asos (a)": str(base_a),
+                                "Bosqich": r_num,
+                                "Tanlangan asos (a)": str(base_a),
                                 "Holat": status_str,
-                                "Tafsilot / Matematik Izoh": str(details)
+                                "Hisoblash tafsiloti": str(details)
                             })
 
                             all_csv_rows.append({
                                 "Nomzod_Son": str(val)[:50] + ("..." if len(str(val)) > 50 else ""),
                                 "Algoritm": algo_name,
-                                "Raund": r_num,
+                                "Bosqich": r_num,
                                 "Asos_a": str(base_a),
                                 "Holat": status_str,
                                 "Bajarilish_ms": r_data['execution_time_ms'],
@@ -409,7 +405,7 @@ with tab1:
                 df_export = pd.DataFrame(all_csv_rows)
                 csv_data = df_export.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label="📥 Audit Jurnalini CSV Formatida Yuklab Olish",
+                    label="⬇ Tekshiruv jurnalini CSV formatida yuklab olish",
                     data=csv_data,
                     file_name=f"primeguard_audit_log_{val.bit_length()}bit.csv",
                     mime="text/csv",
@@ -439,7 +435,7 @@ with tab2:
 
     with col_select:
         carm_selected = st.selectbox(
-            "Mashhur Karmaykl sonini tanlang:",
+            "Tayyor Karmaykl sonini tanlang:",
             options=CARMICHAEL_NUMBERS,
             index=CARMICHAEL_NUMBERS.index(8911) if 8911 in CARMICHAEL_NUMBERS else 0,
             help="Tarixiy va kriptografik tahlillarda keng qo'llaniladigan universal psevdotub sonlar."
@@ -447,13 +443,13 @@ with tab2:
 
     with col_custom:
         custom_carm = st.text_input(
-            "Yoki maxsus son kiriting (ixtiyoriy):",
+            "Boshqa son kiritish (ixtiyoriy):",
             value="",
             placeholder="Masalan: 561, 8911, 1105...",
             help="Bo'sh qoldirsangiz, chapdagi tanlangan son tahlil qilinadi."
         )
 
-    if st.button("⚠️ Karmaykl Tuzog'ini Tahlil Qilish", type="primary", use_container_width=True):
+    if st.button("▶ Karmaykl sonini tahlil qilish", type="primary", use_container_width=True):
         target_str = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
         n_carm, err_m, a_type = validate_number_input(target_str)
 
@@ -656,7 +652,7 @@ with tab3:
 
     with col_b1:
         chosen_bits = st.multiselect(
-            "Sinov bit uzunliklarini tanlang:",
+            "Son uzunliklarini tanlang (bit):",
             options=[64, 128, 256, 512, 1024, 2048],
             default=[64, 128, 256, 512],
             help="Katta bitlar (1024, 2048) ko'proq hisoblash vaqtini talab qilishi mumkin."
@@ -664,14 +660,14 @@ with tab3:
 
     with col_b2:
         bench_rounds = st.number_input(
-            "Benchmark raundlar soni (k):",
+            "Har bir algoritm uchun raundlar (k):",
             min_value=5,
             max_value=64,
             value=global_k,
             step=1
         )
 
-    if st.button("🚀 Benchmarkni Ishga Tushirish", type="primary", use_container_width=True):
+    if st.button("▶ Tezlik sinovini boshlash", type="primary", use_container_width=True):
         if not chosen_bits:
             st.warning("Iltimos, kamida bitta bit uzunligini tanlang.")
         else:
@@ -785,11 +781,11 @@ with tab4:
 
     with col_r1:
         rsa_bit_choice = st.radio(
-            "Har bir tub son (p va q) uchun bit o'lchami:",
-            options=[512, 1024, 2048],
-            index=0,
+            "RSA moduli N ning bit uzunligi:",
+            options=[1024, 2048, 4096],
+            index=1,
             horizontal=True,
-            help="512 bit -> RSA-1024 moduli; 1024 bit -> RSA-2048 moduli (Standart); 2048 bit -> RSA-4096 moduli."
+            help="1024, 2048 yoki 4096 bitli N modulini yaratadi. p va q taxminan modul uzunligining yarmiga teng bo‘ladi."
         )
 
     with col_r2:
@@ -802,11 +798,11 @@ with tab4:
             help="Raundlar soni oshgani sari Miller–Rabin testining nazariy xatolik chegarasi kamayadi."
         )
 
-    if st.button("🔑 RSA uchun p va q tub sonlarini yaratish", type="primary", use_container_width=True):
+    if st.button("▶ RSA uchun p va q ni yaratish", type="primary", use_container_width=True):
         with st.spinner(f"Kriptografik xavfsiz {rsa_bit_choice}-bit tub sonlar generatsiya qilinmoqda..."):
             try:
                 # key_bits — N modulining maqsadli bit uzunligi.
-                rsa_res = generate_rsa_pair(rsa_bit_choice * 2, rsa_security_k)
+                rsa_res = generate_rsa_pair(rsa_bit_choice, rsa_security_k)
             except Exception as exc:
                 st.error(f"RSA parametrlarini yaratishda xatolik: {exc}")
                 st.stop()
@@ -864,7 +860,7 @@ with tab4:
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #10B981; margin: 0.3rem 0;">
                     ≤ 4⁻{rsa_security_k}
                 </div>
-                <div style="font-size: 0.75rem; color: #10B981;">Kriptografik xavfsiz</div>
+                <div style="font-size: 0.75rem; color: #10B981;">Nazariy xatolik chegarasi</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -916,11 +912,11 @@ with tab4:
         # JSON Eksport
         export_payload = {
             "metadata": {
-                "system": "PrimeGuard Suite v1.0",
+                "system": "PrimeGuard v1.0",
                 "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "algorithm": "Miller-Rabin Strong Pseudoprime",
                 "rounds_k": rsa_security_k,
-                "bit_length_each": rsa_bit_choice,
+                "bit_length_each": p.bit_length(),
                 "rsa_modulus_bits": n_mod.bit_length()
             },
             "performance": {
@@ -955,7 +951,7 @@ with tab4:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #64748B; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; padding: 1rem 0;">
-    PrimeGuard Suite v1.0 • Kriptografiya Matematik Usullari • Agent B (Cyber-Security Frontend Architect & Technical Writer)<br>
+    PrimeGuard v1.1 • Kriptografiya matematik usullari • Akademik laboratoriya<br>
     Akademik prototip • Algoritmlar va testlar bo'yicha mustaqil validatsiya talab etiladi
 </div>
 """, unsafe_allow_html=True)
