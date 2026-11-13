@@ -1,5 +1,5 @@
-# 🛡️ PrimeGuard — Akademik dasturiy loyiha
-### Kriptografik Tublik Auditi, Karmaykl Tuzog‘i Tahlili va RSA Kalitlar Laboratoriyasi
+# 🛡️ PrimeGuard — Ehtimollik asosida tublikni tekshirish tizimi
+### Fermat, Solovay–Strassen va Miller–Rabin algoritmlari laboratoriyasi
 
 ---
 
@@ -11,8 +11,10 @@
 * **Standartlar:** FIPS 186-5, RFC 8017 va ISO/IEC 18031 hujjatlari nazariy taqqoslash manbalari sifatida ko'rib chiqiladi; ushbu loyiha hozircha ularga muvofiqlik sertifikatiga ega emas.
 * **Ishlash Rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
 * **Mas'uliyat Zonasi:** 
-  * **Agent A:** Matematik Algoritmlar Yadrosi (`core/`), Analitika va Benchmark Generatorlari (`analytics/`), Sinov Testlari (`tests/`), Qaramliklar (`requirements.txt`).
-  * **Agent B:** Kiberxavfsizlik Frontend Arxitekturasi (`assets/style.css`), Interaktiv Dashboard (`app.py`), Akademik Loyiha Pasporti va Nazariy Hujjatlashtirish (`README.md`).
+  * **Matematik yadro:** uchta ehtimoliy tublik algoritmi va yordamchi sonlar nazariyasi funksiyalari (`core/`).
+  * **Analitika:** Karmaykl sonlari, benchmark va tub son generatori (`analytics/`).
+  * **Interfeys:** Streamlit dashboard (`app.py`) va CSS dizayni (`assets/style.css`).
+  * **Tekshiruv:** avtomatik testlar (`tests/`) va GitHub Actions.
 
 ---
 
