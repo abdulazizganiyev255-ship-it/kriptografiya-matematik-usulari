@@ -343,6 +343,15 @@ with tab1:
                     </div>
                     """, unsafe_allow_html=True)
 
+            # Qisqa va tushunarli yakuniy xulosa
+            audit_results = [res_f, res_ss, res_mr]
+            if any(not result["is_prime"] for result in audit_results):
+                st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
+            elif all(result["verdict"] == "Prime" for result in audit_results):
+                st.success("Yakuniy xulosa: SON ANIQ TUB. Natija kichik tub sonlar tekshiruvi bilan tasdiqlandi.")
+            else:
+                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham murakkablik guvohini topmadi, ammo bu matematik isbot emas.")
+
             # Raundma-raund audit jurnali
             st.markdown("### 📋 Tekshiruv bosqichlari")
 
@@ -410,6 +419,51 @@ with tab1:
                     mime="text/csv",
                     use_container_width=True
                 )
+
+            # To'liq natijani JSON ko'rinishida saqlash
+            json_results = {}
+            for algo_label, algo_result in [
+                ("Fermat", res_f),
+                ("Solovay-Strassen", res_ss),
+                ("Miller-Rabin", res_mr),
+            ]:
+                json_results[algo_label] = {
+                    "verdict": algo_result["verdict"],
+                    "is_probable_prime": algo_result["is_prime"],
+                    "execution_time_ms": algo_result["execution_time_ms"],
+                    "rounds_requested": global_k,
+                    "rounds_completed": algo_result["rounds"],
+                    "error_bound": algo_result.get("error_bound"),
+                    "witness": algo_result["witness"],
+                    "steps": [
+                        {
+                            "round": getattr(item, "round_idx", None),
+                            "base": getattr(item, "witness_a", None),
+                            "expression": getattr(item, "expression", ""),
+                            "computed_value": getattr(item, "computed_value", ""),
+                            "passed": getattr(item, "passed", None),
+                            "note": getattr(item, "note", ""),
+                        }
+                        for item in algo_result["logs"]
+                    ],
+                }
+
+            audit_json = {
+                "project": "PrimeGuard",
+                "report_type": "probabilistic_primality_audit",
+                "number_decimal": str(val),
+                "bit_length": bit_len,
+                "decimal_digits": digit_len,
+                "rounds": global_k,
+                "results": json_results,
+            }
+            st.download_button(
+                label="⬇ To'liq hisobotni JSON formatida yuklab olish",
+                data=json.dumps(audit_json, ensure_ascii=False, indent=2).encode("utf-8"),
+                file_name=f"primeguard_report_{bit_len}bit.json",
+                mime="application/json",
+                use_container_width=True,
+            )
 
 
 # ==============================================================================
