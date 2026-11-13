@@ -49,3 +49,8 @@ Ushbu loyiha o'quv va ilmiy tajriba prototipidir. U ishlab chiqarish kriptografi
 3. M. O. Rabin, "Probabilistic Algorithm for Testing Primality", *Journal of Number Theory*, 12, 1980, pp. 128–138.
 4. A. Korselt, "Sur le théorème de Fermat", *Comptes rendus de l'Académie des Sciences de Paris*, 129, 1899, pp. 438–440.
 5. A. J. Menezes, P. C. van Oorschot, and S. A. Vanstone, *Handbook of Applied Cryptography*, CRC Press, 1996.
+
+
+## Ilovadagi deterministik yakuniy tekshiruv
+
+Asosiy son tekshirish oynasi `n < 2^64` bo'lganda `is_prime_deterministic_64` etalonini yakuniy xulosaga qo'shadi. `n >= 2^64` bo'lganda etalon ishlatilmaydi va natija ehtimoliy tub sifatida ehtiyotkor ko'rsatiladi. Benchmarkda esa bir xil bit uzunligidagi tub nomzod va semiprime uch algoritmda alohida tekshiriladi; warm-up hamda nomzod yaratish vaqti o'lchovga kiritilmaydi.
