@@ -477,6 +477,7 @@ with tab2:
                 card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
                 badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
                 title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
+                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda testdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style}">
@@ -490,7 +491,7 @@ with tab2:
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
                         <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
-                            {'Karmaykl sonida Fermat aldandi' if is_fermat_fooled else ('Bu raundlarda testdan o'tdi; isbot emas' if fermat_passed else 'Fermat guvohi topildi')}
+                            {fermat_summary}
                         </span>
                     </div>
                     <div class="kpi-metric-row">
