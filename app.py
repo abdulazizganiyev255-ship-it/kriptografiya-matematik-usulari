@@ -127,7 +127,7 @@ with st.sidebar:
         help="Probabilistik testlarda tanlanadigan mustaqil tasodifiy asoslar soni."
     )
 
-    # Jonli Xatolik Ehtimoli Hisob-kitobi
+    # Jonli Nazariy xatolik chegarasi Hisob-kitobi
     err_ss = 2 ** (-global_k)
     err_mr = 4 ** (-global_k)
 
@@ -648,23 +648,33 @@ with tab3:
     </div>
     """, unsafe_allow_html=True)
 
-    col_b1, col_b2 = st.columns([2, 1])
+    col_b1, col_b2, col_b3 = st.columns([2, 1, 1])
 
     with col_b1:
         chosen_bits = st.multiselect(
             "Son uzunliklarini tanlang (bit):",
             options=[64, 128, 256, 512, 1024, 2048],
             default=[64, 128, 256, 512],
-            help="Katta bitlar (1024, 2048) ko'proq hisoblash vaqtini talab qilishi mumkin."
+            help="Katta sonlar ko'proq vaqt oladi. Dastlab 64–512 bit bilan sinab ko'ring."
         )
 
     with col_b2:
         bench_rounds = st.number_input(
-            "Har bir algoritm uchun raundlar (k):",
+            "Tekshiruv raundlari (k):",
             min_value=5,
             max_value=64,
             value=global_k,
             step=1
+        )
+
+    with col_b3:
+        bench_trials = st.number_input(
+            "Takrorlash soni:",
+            min_value=1,
+            max_value=5,
+            value=2,
+            step=1,
+            help="Har bir algoritmning o'lchovi necha marta takrorlanishini belgilaydi."
         )
 
     if st.button("▶ Tezlik sinovini boshlash", type="primary", use_container_width=True):
@@ -673,7 +683,7 @@ with tab3:
         else:
             with st.spinner("Benchmark o'lchovlari bajarilmoqda..."):
                 sorted_bits = sorted(chosen_bits)
-                raw_bench = run_benchmark(sorted_bits, int(bench_rounds))
+                raw_bench = run_benchmark(sorted_bits, int(bench_rounds), trials=int(bench_trials))
 
                 if isinstance(raw_bench, pd.DataFrame):
                     df_bench = raw_bench
@@ -799,7 +809,7 @@ with tab4:
         )
 
     if st.button("▶ RSA uchun p va q ni yaratish", type="primary", use_container_width=True):
-        with st.spinner(f"Kriptografik xavfsiz {rsa_bit_choice}-bit tub sonlar generatsiya qilinmoqda..."):
+        with st.spinner(f"{rsa_bit_choice}-bit RSA moduli uchun tub sonlar yaratilmoqda..."):
             try:
                 # key_bits — N modulining maqsadli bit uzunligi.
                 rsa_res = generate_rsa_pair(rsa_bit_choice, rsa_security_k)
@@ -813,9 +823,9 @@ with tab4:
         phi_n = rsa_res.get("phi", (p - 1) * (q - 1))
         t_ms = rsa_res.get("elapsed_ms", rsa_res.get("execution_time_ms", 0.0))
         c_tested = rsa_res.get("total_candidates_tested", 0)
-        c_expected = rsa_res.get("theoretical_expected_tests", int(rsa_bit_choice * 0.693))
+        c_expected = rsa_res.get("theoretical_expected_tests", int(rsa_bit_choice * 0.693 / 2))
 
-        st.markdown("### 🏆 Generatsiya Natijalari va Xavfsizlik Metrikalari")
+        st.markdown("### 🏆 Yaratilgan parametrlar va natijalar")
 
         # 4 ta Kichik KPI Metrika
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
@@ -867,7 +877,9 @@ with tab4:
         # Fermat faktorizatsiyasi xavfsizligi
         p_q_diff = abs(p - q)
         diff_bits = p_q_diff.bit_length()
-        is_fermat_safe = diff_bits >= (rsa_bit_choice - 100)
+        min_prime_bits = min(p.bit_length(), q.bit_length())
+        fermat_distance_threshold = max(1, min_prime_bits - 100)
+        is_fermat_safe = diff_bits >= fermat_distance_threshold
 
         st.markdown(f"""
         <div class="cyber-alert {'cyber-alert-success' if is_fermat_safe else 'cyber-alert-warning'}">
@@ -876,7 +888,7 @@ with tab4:
                 <div class="cyber-alert-title">Tub sonlar orasidagi masofa (o'quv ko'rsatkichi)</div>
                 <div class="cyber-alert-msg">
                     |p - q| masofasi: <b>{diff_bits} bit</b>. 
-                    {f"Tub sonlar bir-biridan yetarlicha uzoq joylashgan (|p - q| > 2^{rsa_bit_choice - 100}), Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: Tub sonlar bir-biriga juda yaqin!"}
+                    {f"Masofa o'quv mezonidan yuqori (|p - q| ≥ 2^{fermat_distance_threshold}). Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: p va q juda yaqin bo'lishi mumkin; bu o'quv tekshiruvini qayta ko'rib chiqing."}
                 </div>
             </div>
         </div>
