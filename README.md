@@ -1,40 +1,71 @@
-# 🛡️ PrimeGuard Suite v1.0
-### Kriptografik Tublik Auditi, Karmaykl Tuzog‘i Tahlili va RSA Kalitlar Laboratoriyasi
+# 🛡️ PrimeGuard — Tub sonlar laboratoriyasi
+### Fermat, Solovay–Strassen va Miller–Rabin algoritmlari laboratoriyasi
+
+**Foydalanuvchi qo'llanmasi:** [Dasturni ishlatish bo'yicha yo'riqnoma](docs/USER_GUIDE.md) · [Kod tuzilmasi](docs/CODE_GUIDE.md) · [Akademik tekshiruv](docs/ACADEMIC_VALIDATION.md)
 
 ---
 
 ## 📌 Loyiha Pasporti
 
-* **Loyiha nomi:** `PrimeGuard Suite`
-* **Versiya:** `1.0.0 (Production Release)`
+* **Loyiha nomi:** `PrimeGuard`
+* **Versiya:** `1.1.0 (Academic Prototype)`
 * **Yo'nalish:** Kriptografiyaning Matematik Usullari / Kiberxavfsizlik
-* **Standartlar Muvofiqligi:** FIPS 186-5 (Digital Signature Standard), RFC 3447 (Public-Key Cryptography Standards #1: RSA Cryptography Specifications Version 2.2), ISO/IEC 18031 (Random bit generation).
-* **Ishlash Rejimi:** Air-Gapped (Internetdan to'liq uzilgan maxfiy muhitlar uchun 100% oflayn barqaror, tashqi CDN bog'liqliklaridan xoli).
+* **Standartlar:** FIPS 186-5, RFC 8017 va ISO/IEC 18031 hujjatlari nazariy taqqoslash manbalari sifatida ko'rib chiqiladi; ushbu loyiha hozircha ularga muvofiqlik sertifikatiga ega emas.
+* **Ishlash Rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
 * **Mas'uliyat Zonasi:** 
-  * **Agent A:** Matematik Algoritmlar Yadrosi (`core/`), Analitika va Benchmark Generatorlari (`analytics/`), Sinov Testlari (`tests/`), Qaramliklar (`requirements.txt`).
-  * **Agent B:** Kiberxavfsizlik Frontend Arxitekturasi (`assets/style.css`), Interaktiv Dashboard (`app.py`), Akademik Loyiha Pasporti va Nazariy Hujjatlashtirish (`README.md`).
+  * **Matematik yadro:** uchta ehtimoliy tublik algoritmi va yordamchi sonlar nazariyasi funksiyalari (`core/`).
+  * **Analitika:** Karmaykl sonlari, benchmark va tub son generatori (`analytics/`).
+  * **Interfeys:** Streamlit dashboard (`app.py`) va CSS dizayni (`assets/style.css` (Midnight Lab interfeysi)).
+  * **Tekshiruv:** avtomatik testlar (`tests/`) va GitHub Actions.
 
 ---
 
+## Loyiha maqsadi va vazifalari
+
+**Maqsad:** sonlarning tubligini ehtimollikka asoslangan algoritmlar yordamida tekshiruvchi, hisoblash jarayonini ko'rsatuvchi va algoritmlar natijalarini taqqoslovchi kompleks dasturiy ta'minot ishlab chiqish.
+
+**Asosiy vazifalar:**
+1. Fermat, Solovay–Strassen va Miller–Rabin algoritmlarining matematik asoslarini o'rganish.
+2. Uch algoritmni Python tilida alohida modullarda amalga oshirish.
+3. Foydalanuvchiga son va test raundlari sonini tanlash imkonini beruvchi interfeys yaratish.
+4. Har bir raundning tasodifiy asosi, hisoblangan qiymati va natijasini ko'rsatish.
+5. Karmaykl sonlari orqali Fermat testining cheklovini namoyish etish.
+6. Algoritmlarning bajarilish vaqtini bir xil sharoitda o'lchash va taqqoslash.
+7. Natijalarni avtomatik testlar va deterministik etalon bilan tekshirish.
+
+**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval, CSV va JSON ko'rinishida saqlaydi. 64-bit diapazonida deterministik Miller–Rabin etaloni ham umumiy xulosani mustaqil tekshiradi.
+
+**Ilmiy cheklov:** probabilistik test barcha raundlardan o'tgan sonni avtomatik ravishda isbotlangan tub son deb hisoblamaydi. Natija "ehtimoliy tub" deb ko'rsatiladi. Ushbu loyihada alohida deterministik etalon faqat n < 2^64 diapazoni uchun mavjud.
+
+---
+
+## Natija atamalari
+
+| Dasturdagi xulosa | Ma'nosi |
+|---|---|
+| **Composite** / Murakkab | Murakkablik guvohi topildi; son aniq murakkab |
+| **Probably Prime** / Ehtimoliy tub | Tanlangan raundlardan o'tdi; bu isbot emas |
+| **Prime** / Aniq tub | Kichik tub sonlar jadvali yoki deterministik etalon bilan tekshirildi |
+
 ## 🏛️ Tizim Arxitekturasi
 
-Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu esa tizimning kengaytiriluvchanligi, testlanuvchanligi va mustaqilligini kafolatlaydi:
+Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu yondashuv kodni kengaytirish, testlash va tushuntirishni osonlashtiradi:
 
 ```mermaid
 flowchart TD
-    subgraph UI ["🖥️ Taqdimot Qatlami (Presentation Layer - Agent B)"]
+    subgraph UI ["🖥️ Taqdimot Qatlami (Presentation Layer)"]
         APP["app.py (Streamlit Dashboard)"]
-        CSS["assets/style.css (Dark Cyber Glassmorphism)"]
+        CSS["assets/style.css (Midnight Lab UI)"]
         APP --- CSS
     end
 
-    subgraph Analytics ["📊 Analitika Qatlami (Analytics Layer - Agent A)"]
+    subgraph Analytics ["📊 Analitika Qatlami (Analytics Layer)"]
         CARM["analytics/carmichael.py"]
         BENCH["analytics/benchmark.py"]
         PRIMEGEN["analytics/prime_generator.py"]
     end
 
-    subgraph Core ["⚙️ Matematik Yadro (Core Layer - Agent A)"]
+    subgraph Core ["⚙️ Matematik Yadro (Core Layer)"]
         MODELS["core/models.py (PrimalityResult, RoundLog)"]
         FERMAT["core/fermat.py (Fermat Test)"]
         SS["core/solovay_strassen.py (Solovay-Strassen Test)"]
@@ -78,7 +109,7 @@ $$a^{p-1} \equiv 1 \pmod p$$
 3. Agar $a^{n-1} \not\equiv 1 \pmod n$ bo'lsa, $a$ soni $n$ ning **Fermat guvohi (Fermat witness)** hisoblanadi va $n$ ning murakkabligi qat'iy isbotlanadi.
 4. Agar $a^{n-1} \equiv 1 \pmod n$ bo'lsa, son ehtimoliy tub deb hisoblanadi.
 
-Oddiy murakkab sonlar uchun $k$ ta mustaqil raunddan keyin xatolik ehtimoli:
+Karmaykl sonlari bundan mustasno bo'lgan murakkab sonlar uchun, mustaqil va bir tekis tasodifiy asoslar tanlanganda, $k$ raund uchun klassik yuqori chegara:
 
 $$P(\text{Xatolik}) \le \left(\frac{1}{2}\right)^k = 2^{-k}$$
 
@@ -178,6 +209,12 @@ $n$ nomzod sonining bit uzunligi $b = \lfloor \log_2 n \rfloor + 1$, $k$ — aud
 
 ---
 
+## Kodni o'rganish
+
+Papka va fayllarning sodda izohi uchun [CODE_GUIDE.md](docs/CODE_GUIDE.md) faylini o'qing. Matematik validatsiya va test metodikasi [ACADEMIC_VALIDATION.md](docs/ACADEMIC_VALIDATION.md) faylida berilgan.
+
+---
+
 ## 🚀 O'rnatish va Ishga Tushirish
 
 ### 1. Tizim Talablari
@@ -234,3 +271,34 @@ pytest tests/ -v
 * **Agent B:** Cyber-Security Frontend Architect & Technical Documentation Writer
 * **Kafedra:** Axborot Xavfsizligi va Kriptografiya Kafedrasi
 * **Litsenziya:** MIT Academic License 2026
+
+
+## Windows 10/11 — tez ishga tushirish
+
+**Muhim:** PowerShell ochilganda `C:\Windows\System32` ichida turmang. Avval loyihani foydalanuvchi papkasiga klonlang:
+
+```powershell
+New-Item -ItemType Directory -Force "$HOME\Projects" | Out-Null
+Set-Location "$HOME\Projects"
+git clone -b academic/math-core-corrections https://github.com/abdulazizganiyev255-ship-it/kriptografiya-matematik-usulari.git PrimeGuard
+Set-Location .\PrimeGuard
+```
+
+Keyin bitta buyruq bilan muhitni tayyorlang, kutubxonalarni o'rnating, testlarni bajaring va dasturni ishga tushiring:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start_primeguard.ps1
+```
+
+Skript virtual muhitni loyiha ichidagi `.venv` papkasida yaratadi. Global Python paketlarini o'zgartirmaydi. Testlardan biri yiqilsa, Streamlit ishga tushirilmaydi va xato terminalda ko'rsatiladi.
+
+Brauzer manzili: http://localhost:8501
+
+**Qo'lda ishga tushirish (ixtiyoriy):**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m streamlit run app.py
+```

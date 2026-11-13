@@ -1,8 +1,4 @@
-"""
-PrimeGuard Suite v1.0 - Cyber-Security Primality Audit & Cryptographic Laboratory
-Author: Agent B (Cyber-Security Frontend Architect & Technical Writer)
-Strict single import contract with Agent A (core & analytics modules)
-"""
+"""PrimeGuard: ehtimollik asosidagi tublik algoritmlari laboratoriyasi."""
 
 import os
 import json
@@ -10,303 +6,34 @@ import time
 import math
 import secrets
 from typing import Any, Tuple, Optional, List, Dict
+
 import pandas as pd
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
 
-# ==============================================================================
-# YAGONA IMPORT KONTRAKTI (Agent A modullari bilan integratsiya)
-# ==============================================================================
-try:
-    from core.models import PrimalityResult, RoundLog
-    from core.fermat import fermat_test
-    from core.solovay_strassen import solovay_strassen_test
-    from core.miller_rabin import miller_rabin_test
-    from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
-    from analytics.benchmark import run_benchmark
-    from analytics.prime_generator import generate_prime, generate_rsa_pair
-except ImportError:
-    # --------------------------------------------------------------------------
-    # Parallel ishlayotgan Agent A modullari ulanmagan vaqtda
-    # UI mustaqil va xatosiz ishlashi uchun to'liq mos fallback implementatsiya
-    # --------------------------------------------------------------------------
-    from dataclasses import dataclass, field
-
-    @dataclass
-    class RoundLog:
-        round: int
-        base: int
-        result: bool
-        witness: Optional[int] = None
-        details: str = ""
-
-    @dataclass
-    class PrimalityResult:
-        is_prime: bool
-        execution_time_ms: float
-        confidence: float
-        rounds_performed: int
-        rounds_log: List[RoundLog] = field(default_factory=list)
-        witness: Optional[int] = None
-        algorithm: str = ""
-        error_probability: float = 0.0
-
-    CARMICHAEL_NUMBERS = [
-        561, 1105, 1729, 2465, 2821, 6601, 8911, 10585,
-        15841, 29341, 41041, 46657, 52633, 62745, 63973, 75361
-    ]
-
-    def _pow_mod(base: int, exp: int, mod: int) -> int:
-        return pow(base, exp, mod)
-
-    def _jacobi(a: int, n: int) -> int:
-        if n <= 0 or n % 2 == 0:
-            return 0
-        a = a % n
-        t = 1
-        while a != 0:
-            while a % 2 == 0:
-                a //= 2
-                r = n % 8
-                if r == 3 or r == 5:
-                    t = -t
-            a, n = n, a
-            if a % 4 == 3 and n % 4 == 3:
-                t = -t
-            a = a % n
-        return t if n == 1 else 0
-
-    def fermat_test(n: int, k: int = 20) -> PrimalityResult:
-        start_time = time.perf_counter()
-        if n < 2:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], None, "Fermat", 1.0)
-        if n in (2, 3):
-            return PrimalityResult(True, 0.0, 1.0, 0, [], None, "Fermat", 0.0)
-        if n % 2 == 0:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], 2, "Fermat", 1.0)
-
-        logs: List[RoundLog] = []
-        is_p = True
-        wit = None
-        for r in range(1, k + 1):
-            a = secrets.randbelow(n - 3) + 2
-            g = math.gcd(a, n)
-            if g > 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"gcd({a}, {n}) = {g} > 1 (Bo'luvchi topildi)"))
-                break
-            val = _pow_mod(a, n - 1, n)
-            if val != 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"{a}^(n-1) mod n = {val} != 1 (Fermat guvohi)"))
-                break
-            else:
-                logs.append(RoundLog(r, a, True, None, f"{a}^(n-1) ≡ 1 (mod n) [Muvaffaqiyatli]"))
-
-        elapsed = (time.perf_counter() - start_time) * 1000.0
-        err_prob = (0.5 ** k) if is_p else 0.0
-        return PrimalityResult(is_p, elapsed, 1.0 - err_prob, len(logs), logs, wit, "Fermat", err_prob)
-
-    def solovay_strassen_test(n: int, k: int = 20) -> PrimalityResult:
-        start_time = time.perf_counter()
-        if n < 2:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], None, "Solovay-Strassen", 1.0)
-        if n in (2, 3):
-            return PrimalityResult(True, 0.0, 1.0, 0, [], None, "Solovay-Strassen", 0.0)
-        if n % 2 == 0:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], 2, "Solovay-Strassen", 1.0)
-
-        logs: List[RoundLog] = []
-        is_p = True
-        wit = None
-        for r in range(1, k + 1):
-            a = secrets.randbelow(n - 3) + 2
-            g = math.gcd(a, n)
-            if g > 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"gcd({a}, {n}) = {g} > 1"))
-                break
-            j = _jacobi(a, n)
-            j_mod = j % n
-            val = _pow_mod(a, (n - 1) // 2, n)
-            if j == 0 or val != j_mod:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"Euler mezoniga zid: a^((n-1)/2)={val}, Jacobi={j}"))
-                break
-            else:
-                logs.append(RoundLog(r, a, True, None, f"{a}^((n-1)/2) ≡ Jacobi({a}/{n}) ≡ {j} (mod n)"))
-
-        elapsed = (time.perf_counter() - start_time) * 1000.0
-        err_prob = (0.5 ** k) if is_p else 0.0
-        return PrimalityResult(is_p, elapsed, 1.0 - err_prob, len(logs), logs, wit, "Solovay-Strassen", err_prob)
-
-    def miller_rabin_test(n: int, k: int = 20) -> PrimalityResult:
-        start_time = time.perf_counter()
-        if n < 2:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], None, "Miller-Rabin", 1.0)
-        if n in (2, 3):
-            return PrimalityResult(True, 0.0, 1.0, 0, [], None, "Miller-Rabin", 0.0)
-        if n % 2 == 0:
-            return PrimalityResult(False, 0.0, 1.0, 0, [], 2, "Miller-Rabin", 1.0)
-
-        # n - 1 = 2^s * d
-        s = 0
-        d = n - 1
-        while d % 2 == 0:
-            s += 1
-            d //= 2
-
-        logs: List[RoundLog] = []
-        is_p = True
-        wit = None
-
-        for r in range(1, k + 1):
-            a = secrets.randbelow(n - 3) + 2
-            g = math.gcd(a, n)
-            if g > 1:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"gcd({a}, {n}) = {g} > 1"))
-                break
-
-            x = _pow_mod(a, d, n)
-            if x == 1 or x == n - 1:
-                logs.append(RoundLog(r, a, True, None, f"a^d mod n = {x} (Tublik sharti bajarildi)"))
-                continue
-
-            composite_found = True
-            for _ in range(s - 1):
-                x = _pow_mod(x, 2, n)
-                if x == n - 1:
-                    composite_found = False
-                    logs.append(RoundLog(r, a, True, None, f"Ketma-ket kvadratlashda -1 ga erishildi"))
-                    break
-
-            if composite_found:
-                is_p = False
-                wit = a
-                logs.append(RoundLog(r, a, False, a, f"{a} kuchli murakkablik guvohi (trivial bo'lmagan kvadrat ildiz)"))
-                break
-
-        elapsed = (time.perf_counter() - start_time) * 1000.0
-        err_prob = (0.25 ** k) if is_p else 0.0
-        return PrimalityResult(is_p, elapsed, 1.0 - err_prob, len(logs), logs, wit, "Miller-Rabin", err_prob)
-
-    def analyze_carmichael(n: int, k: int = 20) -> Dict[str, Any]:
-        temp = n
-        factors = []
-        d = 2
-        while d * d <= temp and len(factors) < 10:
-            if temp % d == 0:
-                factors.append(d)
-                while temp % d == 0:
-                    temp //= d
-            d += 1
-        if temp > 1:
-            factors.append(temp)
-
-        korselt_satisfied = True
-        korselt_details = []
-        for p in factors:
-            divides = ((n - 1) % (p - 1) == 0)
-            if not divides:
-                korselt_satisfied = False
-            korselt_details.append(f"({p}-1)={p-1} | (n-1)={n-1} -> {'Bajarildi' if divides else 'Bajarilmadi'}")
-
-        return {
-            "n": n,
-            "is_carmichael": korselt_satisfied and len(factors) >= 3,
-            "factors": factors,
-            "korselt_satisfied": korselt_satisfied,
-            "korselt_details": korselt_details,
-            "explanation": (
-                f"Karmaykl soni n={n} barcha o'zaro tub asoslar uchun a^(n-1) ≡ 1 mod n "
-                f"shartini qanoatlantiradi, biroq u murakkab son ({' × '.join(map(str, factors))})."
-            )
-        }
-
-    def run_benchmark(bit_lengths: List[int], k: int = 20) -> pd.DataFrame:
-        records = []
-        for bits in bit_lengths:
-            test_num = (1 << bits) - 1
-            if test_num % 2 == 0:
-                test_num += 1
-
-            for name, func in [("Fermat", fermat_test), ("Solovay-Strassen", solovay_strassen_test), ("Miller-Rabin", miller_rabin_test)]:
-                times = []
-                for _ in range(3):
-                    t0 = time.perf_counter()
-                    func(test_num, k)
-                    times.append((time.perf_counter() - t0) * 1000.0)
-                avg_time = sum(times) / len(times)
-                records.append({
-                    "bit_length": bits,
-                    "algorithm": name,
-                    "execution_time_ms": round(avg_time, 4),
-                    "rounds": k
-                })
-        return pd.DataFrame(records)
-
-    def generate_prime(bits: int, k: int = 20) -> int:
-        while True:
-            candidate = secrets.randbits(bits) | (1 << (bits - 1)) | 1
-            res = miller_rabin_test(candidate, k)
-            if res.is_prime:
-                return candidate
-
-    def generate_rsa_pair(bits: int, k: int = 20) -> Dict[str, Any]:
-        t0 = time.perf_counter()
-        candidates_tested = 0
-
-        def get_prime():
-            nonlocal candidates_tested
-            while True:
-                candidates_tested += 1
-                cand = secrets.randbits(bits) | (1 << (bits - 1)) | 1
-                if cand % 3 == 0 or cand % 5 == 0 or cand % 7 == 0:
-                    continue
-                if miller_rabin_test(cand, k).is_prime:
-                    return cand
-
-        p = get_prime()
-        while True:
-            q = get_prime()
-            if p != q and abs(p - q) > (1 << (bits - 100)):
-                break
-
-        n = p * q
-        phi = (p - 1) * (q - 1)
-        elapsed = (time.perf_counter() - t0) * 1000.0
-        expected_tests = int(bits * 0.693147)
-
-        return {
-            "p": p,
-            "q": q,
-            "n": n,
-            "phi": phi,
-            "bit_length": bits,
-            "execution_time_ms": round(elapsed, 2),
-            "total_candidates_tested": candidates_tested,
-            "theoretical_expected_tests": expected_tests
-        }
+# Asosiy matematik algoritmlar va tahlil modullari.
+from core.models import PrimalityResult, RoundLog
+from core.fermat import fermat_test
+from core.solovay_strassen import solovay_strassen_test
+from core.miller_rabin import miller_rabin_test
+from core.number_theory import is_prime_deterministic_64
+from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
+from analytics.benchmark import run_benchmark
+from analytics.prime_generator import generate_prime, generate_rsa_pair
 
 # ==============================================================================
 # STREAMLIT CONFIG & OFFLINE STYLING
 # ==============================================================================
 st.set_page_config(
-    page_title="PrimeGuard Suite v1.0 | Kriptografik Tublik Auditi",
+    page_title="PrimeGuard | Tub sonlar laboratoriyasi",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 def inject_custom_css():
-    """Load local CSS file for air-gapped security room compliance."""
+    """Load the local PrimeGuard theme stylesheet."""
     css_path = os.path.join(os.path.dirname(__file__), "assets", "style.css")
     if os.path.exists(css_path):
         with open(css_path, "r", encoding="utf-8") as f:
@@ -338,7 +65,10 @@ def validate_number_input(raw_str: str) -> Tuple[Optional[int], Optional[str], s
     if not clean_str:
         return None, "Kiritish maydoni bo'sh. Iltimos, tekshiruv uchun natural son kiriting.", "error"
 
-    if not clean_str.isdigit():
+    if len(clean_str.lstrip("-")) > 2048:
+        return None, "Kiritilgan son juda uzun (maksimal 2048 ta raqam). Hisoblash resurslarini himoya qilish uchun qisqaroq son kiriting.", "error"
+
+    if not clean_str.isascii() or not clean_str.isdigit():
         if clean_str.startswith("-"):
             return None, "Manfiy sonlar kiritilishi mumkin emas. Kriptografik tublik faqat natural sonlar (n ≥ 2) uchun aniqlanadi.", "error"
         return None, "Kiritilgan satrda begona belgilar yoki harflar mavjud. Faqat natural son (raqamlar) kiriting.", "error"
@@ -356,42 +86,19 @@ def validate_number_input(raw_str: str) -> Tuple[Optional[int], Optional[str], s
     return val, None, "valid"
 
 
-def safe_extract_result(res: Any) -> Dict[str, Any]:
-    """Agent A qaytargan PrimalityResult obyektidan ma'lumotlarni xavfsiz ajratib oladi."""
-    is_prime = getattr(res, "is_prime", getattr(res, "is_probable_prime", False))
-    exec_time = getattr(
-        res, "elapsed_ms",
-        getattr(res, "execution_time_ms",
-        getattr(res, "elapsed_time_ms",
-        getattr(res, "time_ms", 0.0)))
-    )
-    conf = getattr(res, "confidence", 1.0)
-    err_prob = getattr(res, "error_bound", getattr(res, "error_probability", 0.0))
-    rounds = getattr(res, "rounds_run", getattr(res, "rounds_performed", getattr(res, "rounds", 0)))
-    wit = getattr(res, "witness", getattr(res, "composite_witness", getattr(res, "witness_a", None)))
-    logs = getattr(res, "logs", getattr(res, "rounds_log", getattr(res, "round_logs", [])))
-    algo = getattr(res, "algorithm", "Algoritm")
-    pre_filtered = getattr(res, "pre_filtered", False)
-    verdict = getattr(res, "verdict", "Prime" if is_prime else "Composite")
-
-    # Agar murakkab bo'lib, guvoh asosiy obyektda ko'rsatilmagan bo'lsa, loglardan qidirish
-    if not is_prime and wit is None and logs:
-        for item in logs:
-            if not getattr(item, "passed", getattr(item, "result", True)):
-                wit = getattr(item, "witness_a", getattr(item, "base", getattr(item, "witness", None)))
-                break
-
+def safe_extract_result(res: PrimalityResult) -> Dict[str, Any]:
+    """Algoritm natijasini interfeys ko'rsatadigan oddiy lug'atga o'tkazadi."""
+    witness = next((log.witness_a for log in res.logs if not log.passed), None)
     return {
-        "is_prime": bool(is_prime),
-        "execution_time_ms": float(exec_time),
-        "confidence": float(conf),
-        "error_probability": err_prob,
-        "rounds": int(rounds),
-        "witness": wit,
-        "logs": logs,
-        "algorithm": str(algo),
-        "pre_filtered": bool(pre_filtered),
-        "verdict": str(verdict)
+        "is_prime": res.is_prime,
+        "execution_time_ms": res.elapsed_ms,
+        "rounds": res.rounds_run,
+        "witness": witness,
+        "logs": res.logs,
+        "algorithm": res.algorithm,
+        "pre_filtered": res.pre_filtered,
+        "verdict": res.verdict,
+        "error_bound": res.error_bound,
     }
 
 # ==============================================================================
@@ -403,10 +110,10 @@ with st.sidebar:
         <span style="font-size: 1.8rem;">🛡️</span>
         <div>
             <div style="font-weight: 800; font-size: 1.25rem; color: #00F5D4; letter-spacing: -0.01em;">
-                PrimeGuard Suite
+                PrimeGuard
             </div>
             <div style="font-size: 0.75rem; color: #94A3B8; font-family: 'JetBrains Mono', monospace;">
-                v1.0 • Cyber-Security Lab
+                v1.1 • Number Theory Lab
             </div>
         </div>
     </div>
@@ -415,9 +122,9 @@ with st.sidebar:
     st.markdown("---")
 
     # Global Rounds Slider
-    st.markdown("### ⚙️ Global Audit Parametrlari")
+    st.markdown("### ⚙️ Tekshiruv sozlamalari")
     global_k = st.slider(
-        "Audit raundlari soni (k):",
+        "Raundlar soni (k):",
         min_value=1,
         max_value=64,
         value=20,
@@ -425,19 +132,20 @@ with st.sidebar:
         help="Probabilistik testlarda tanlanadigan mustaqil tasodifiy asoslar soni."
     )
 
-    # Jonli Xatolik Ehtimoli Hisob-kitobi
-    err_fermat_ss = 2 ** (-global_k)
+    # Jonli Nazariy xatolik chegarasi Hisob-kitobi
+    err_ss = 2 ** (-global_k)
     err_mr = 4 ** (-global_k)
 
     st.markdown(f"""
     <div class="cyber-card" style="padding: 1rem; margin: 1rem 0; border-color: rgba(0, 245, 212, 0.3);">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #00F5D4; font-weight: 700; margin-bottom: 0.5rem;">
-            📊 JONLI XATOLIK CHEGARASI
+            📊 NAZARIY XATOLIK CHEGARASI
         </div>
         <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD5E1;">
-            <b>Fermat & Solovay-Strassen:</b><br>
+            <b>Fermat:</b> universal xatolik chegarasi yo'q (Karmaykl sonlari sababli).<br>
+            <b>Solovay–Strassen:</b><br>
             <span style="font-family: 'JetBrains Mono', monospace; color: #F59E0B;">
-                2<sup>-{global_k}</sup> ≈ {err_fermat_ss:.2e}
+                2<sup>-{global_k}</sup> ≈ {err_ss:.2e}
             </span>
         </div>
         <div style="font-size: 0.82rem; color: #CBD5E1;">
@@ -452,7 +160,7 @@ with st.sidebar:
     st.markdown("---")
 
     # Tezkor Namuna Tugmalari
-    st.markdown("### ⚡ Tezkor Namunalar")
+    st.markdown("### ⚡ Tayyor misollar")
     st.caption("Bir marta bosish orqali sinov sonini yuklang:")
 
     SAMPLE_MERSENNE = "170141183460469231731687303715884105727"  # 2^127 - 1
@@ -464,33 +172,33 @@ with st.sidebar:
     )
     SAMPLE_COMPOSITE = "340282366920938463463374607431768211455"  # 2^128 - 1
 
-    if st.button("🔢 Mersenne 2^127 - 1", use_container_width=True):
+    if st.button("127-bit tub son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_MERSENNE
-        st.session_state["active_tab_intent"] = 0
+        st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
         st.rerun()
 
-    if st.button("⚠️ Karmaykl 8911", use_container_width=True):
+    if st.button("Karmaykl soni: 8911", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
+        st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["carmichael_select"] = 8911
-        st.session_state["active_tab_intent"] = 1
         st.rerun()
 
-    if st.button("🔐 512-bit Tub Son", use_container_width=True):
+    if st.button("512-bit tub son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_512_PRIME
-        st.session_state["active_tab_intent"] = 0
+        st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
         st.rerun()
 
-    if st.button("🧱 Yirik Murakkab Son", use_container_width=True):
+    if st.button("128-bit murakkab son", use_container_width=True):
         st.session_state["input_candidate"] = SAMPLE_COMPOSITE
-        st.session_state["active_tab_intent"] = 0
+        st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
         st.rerun()
 
     st.markdown("---")
     st.markdown("""
     <div style="font-size: 0.75rem; color: #64748B; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
-        Offline Air-Gapped Certified<br>
-        FIPS 186-5 & RFC 3447 Standard<br>
-        TDI TUUIT Kriptografiya Kafedrasi
+        Akademik dasturiy prototip<br>
+        Tub sonlarni tekshirish va algoritmlarni taqqoslash laboratoriyasi<br>
+        Natijalar mustaqil testlar bilan tekshiriladi
     </div>
     """, unsafe_allow_html=True)
 
@@ -501,19 +209,19 @@ with st.sidebar:
 st.markdown("""
 <div style="margin-bottom: 1.2rem;">
     <div class="cyber-header">
-        <span class="cyber-header-accent">PrimeGuard</span> Suite v1.0
+        <span class="cyber-header-accent">PrimeGuard</span> v1.1
     </div>
     <div class="cyber-subtitle">
-        Kriptografik Tublik Auditi, Karmaykl Tuzog'i Tahlili va RSA Kalitlar Laboratoriyasi
+        Ehtimoliy tublik algoritmlari, Karmaykl sonlari va benchmark laboratoriyasi
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs([
-    "🔍 Tublik Auditi",
-    "⚠️ Karmaykl Tuzog‘i",
-    "📊 Kompleks Benchmark",
-    "🔐 RSA Tub Son Generator"
+    "🔍 Sonni tekshirish",
+    "🧩 Karmaykl tahlili",
+    "📈 Tezlik taqqoslash",
+    "🔐 RSA parametrlari"
 ])
 
 # ==============================================================================
@@ -523,12 +231,12 @@ with tab1:
     st.markdown("""
     <div class="cyber-card">
         <div style="font-weight: 700; font-size: 1.1rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            Matematik Tublik Audit Laboratoriyasi
+            Sonni tekshirish laboratoriyasi
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
             Istalgan o'lchamdagi katta natural sonni kiriting. Tizim bir vaqtning o'zida uchta mustaqil
             probabilistik algoritm (<b>Kichik Fermat</b>, <b>Solovay-Strassen</b> va <b>Miller-Rabin Strong</b>)
-            yordamida raundma-raund xavfsizlik auditini o'tkazadi.
+            yordamida har bir algoritm bo'yicha tekshiruv o'tkazadi.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -536,16 +244,16 @@ with tab1:
     default_input = st.session_state.get("input_candidate", SAMPLE_MERSENNE)
 
     raw_candidate = st.text_area(
-        "Tekshiriluvchi nomzod son (n):",
+        "Tekshiriladigan son (n)",
         value=default_input,
         height=110,
-        help="O'nlik (decimal) formatdagi ixtiyoriy katta butun sonni kiriting.",
+        help="Faqat natural son kiriting. O'qish qulayligi uchun raqamlarni bo'sh joy bilan guruhlash mumkin.",
         key="tab1_text_area"
     )
 
     col_btn, col_info = st.columns([1, 3])
     with col_btn:
-        start_audit = st.button("🛡️ Tublik Auditini Boshlash", use_container_width=True, type="primary")
+        start_audit = st.button("▶ Sonni tekshirish", use_container_width=True, type="primary")
 
     if start_audit:
         val, msg, alert_type = validate_number_input(raw_candidate)
@@ -584,9 +292,9 @@ with tab1:
 
             st.markdown(f"""
             <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
-                <span class="cyber-badge cyber-badge-cyan">Bit Uzunligi: {bit_len} bit</span>
-                <span class="cyber-badge cyber-badge-cyan">O'nlik Raqamlar Soni: {digit_len} ta</span>
-                <span class="cyber-badge cyber-badge-cyan">Audit Raundlari: {global_k}</span>
+                <span class="cyber-badge cyber-badge-cyan">Uzunligi: {bit_len} bit</span>
+                <span class="cyber-badge cyber-badge-cyan">Raqamlar: {digit_len} ta</span>
+                <span class="cyber-badge cyber-badge-cyan">Raundlar: {global_k}</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -594,16 +302,17 @@ with tab1:
             col1, col2, col3 = st.columns(3)
 
             cards_data = [
-                ("Fermat Testi", res_f, f"≤ 2⁻{global_k}", "O(k · log² n)"),
-                ("Solovay-Strassen", res_ss, f"≤ 2⁻{global_k}", "O(k · log³ n)"),
-                ("Miller-Rabin Strong", res_mr, f"≤ 4⁻{global_k}", "O(k · log³ n)")
+                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k modul darajaga oshirish"),
+                ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "k raund + Yakobi belgisi"),
+                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "k kuchli tublik raundi")
             ]
 
             for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
                 is_p = r_data["is_prime"]
                 card_class = "kpi-card-prime" if is_p else "kpi-card-composite"
                 badge_class = "kpi-status-prime" if is_p else "kpi-status-composite"
-                status_text = "EHTIMOLIY TUB" if is_p else "ANIQ MURAKKAB"
+                status_text = ("ANIQ TUB" if r_data["verdict"] == "Prime" else "EHTIMOLIY TUB") if is_p else "ANIQ MURAKKAB"
+                shown_error = "0 (elak bilan aniq)" if r_data["pre_filtered"] else err_bound
 
                 with col:
                     st.markdown(f"""
@@ -620,8 +329,8 @@ with tab1:
                             <span class="kpi-metric-val">{r_data['execution_time_ms']:.4f} ms</span>
                         </div>
                         <div class="kpi-metric-row">
-                            <span class="kpi-metric-label">Xatolik chegarasi:</span>
-                            <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{err_bound if is_p else '0 (Aniq)'}</span>
+                            <span class="kpi-metric-label">Nazariy xatolik chegarasi:</span>
+                            <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{shown_error if is_p else '0 (Aniq)'}</span>
                         </div>
                         <div class="kpi-metric-row">
                             <span class="kpi-metric-label">O'tkazilgan raundlar:</span>
@@ -636,11 +345,25 @@ with tab1:
                     </div>
                     """, unsafe_allow_html=True)
 
+            # Mustaqil deterministik etalon faqat 64-bit diapazonida kafolatlangan.
+            audit_results = [res_f, res_ss, res_mr]
+            deterministic_reference = (
+                is_prime_deterministic_64(val) if val < (1 << 64) else None
+            )
+            if any(not result["is_prime"] for result in audit_results):
+                st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
+            elif deterministic_reference is True:
+                st.success("Yakuniy xulosa: SON ANIQ TUB. n < 2⁶⁴ uchun deterministik Miller–Rabin etaloni bilan tasdiqlandi.")
+            elif deterministic_reference is False:
+                st.error("Yakuniy xulosa: SON MURAKKAB. 64-bit deterministik etalon murakkablikni tasdiqladi.")
+            else:
+                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
+
             # Raundma-raund audit jurnali
-            st.markdown("### 📋 Raundma-raund Audit Jurnali")
+            st.markdown("### 📋 Tekshiruv bosqichlari")
 
             tab_log_f, tab_log_ss, tab_log_mr = st.tabs([
-                "Fermat Raundlari", "Solovay-Strassen Raundlari", "Miller-Rabin Raundlari"
+                "Fermat bosqichlari", "Solovay–Strassen bosqichlari", "Miller–Rabin bosqichlari"
             ])
 
             all_csv_rows = []
@@ -673,16 +396,16 @@ with tab1:
                             status_str = "O'tdi (Tublikka mos)" if res_bool else "Yiqildi (Murakkablik guvohi)"
 
                             table_rows.append({
-                                "Raund": r_num,
-                                "Tasodifiy Asos (a)": str(base_a),
+                                "Bosqich": r_num,
+                                "Tanlangan asos (a)": str(base_a),
                                 "Holat": status_str,
-                                "Tafsilot / Matematik Izoh": str(details)
+                                "Hisoblash tafsiloti": str(details)
                             })
 
                             all_csv_rows.append({
                                 "Nomzod_Son": str(val)[:50] + ("..." if len(str(val)) > 50 else ""),
                                 "Algoritm": algo_name,
-                                "Raund": r_num,
+                                "Bosqich": r_num,
                                 "Asos_a": str(base_a),
                                 "Holat": status_str,
                                 "Bajarilish_ms": r_data['execution_time_ms'],
@@ -697,16 +420,63 @@ with tab1:
                 df_export = pd.DataFrame(all_csv_rows)
                 csv_data = df_export.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label="📥 Audit Jurnalini CSV Formatida Yuklab Olish",
+                    label="⬇ Tekshiruv jurnalini CSV formatida yuklab olish",
                     data=csv_data,
                     file_name=f"primeguard_audit_log_{val.bit_length()}bit.csv",
                     mime="text/csv",
                     use_container_width=True
                 )
 
+            # To'liq natijani JSON ko'rinishida saqlash
+            json_results = {}
+            for algo_label, algo_result in [
+                ("Fermat", res_f),
+                ("Solovay-Strassen", res_ss),
+                ("Miller-Rabin", res_mr),
+            ]:
+                json_results[algo_label] = {
+                    "verdict": algo_result["verdict"],
+                    "is_probable_prime": algo_result["is_prime"],
+                    "execution_time_ms": algo_result["execution_time_ms"],
+                    "rounds_requested": global_k,
+                    "rounds_completed": algo_result["rounds"],
+                    "error_bound": algo_result.get("error_bound"),
+                    "witness": algo_result["witness"],
+                    "steps": [
+                        {
+                            "round": getattr(item, "round_idx", None),
+                            "base": getattr(item, "witness_a", None),
+                            "expression": getattr(item, "expression", ""),
+                            "computed_value": getattr(item, "computed_value", ""),
+                            "passed": getattr(item, "passed", None),
+                            "note": getattr(item, "note", ""),
+                        }
+                        for item in algo_result["logs"]
+                    ],
+                }
+
+            audit_json = {
+                "project": "PrimeGuard",
+                "report_type": "probabilistic_primality_audit",
+                "number_decimal": str(val),
+                "bit_length": bit_len,
+                "decimal_digits": digit_len,
+                "rounds": global_k,
+                "deterministic_64_reference": deterministic_reference,
+                "deterministic_reference_scope": "n < 2**64",
+                "results": json_results,
+            }
+            st.download_button(
+                label="⬇ To'liq hisobotni JSON formatida yuklab olish",
+                data=json.dumps(audit_json, ensure_ascii=False, indent=2).encode("utf-8"),
+                file_name=f"primeguard_report_{bit_len}bit.json",
+                mime="application/json",
+                use_container_width=True,
+            )
+
 
 # ==============================================================================
-# TAB 2: ⚠️ KARMAYKL TUZOG‘I (CARMICHAEL PARADOX)
+# TAB 2: KARMAYKL SONLARI VA KORSELT MEZONI
 # ==============================================================================
 with tab2:
     st.markdown(r"""
@@ -727,21 +497,22 @@ with tab2:
 
     with col_select:
         carm_selected = st.selectbox(
-            "Mashhur Karmaykl sonini tanlang:",
+            "Tayyor Karmaykl sonini tanlang:",
             options=CARMICHAEL_NUMBERS,
             index=CARMICHAEL_NUMBERS.index(8911) if 8911 in CARMICHAEL_NUMBERS else 0,
-            help="Tarixiy va kriptografik tahlillarda keng qo'llaniladigan universal psevdotub sonlar."
+            key="carmichael_select",
+            help="Fermat testining cheklovini ko'rsatadigan mashhur murakkab sonlar."
         )
 
     with col_custom:
         custom_carm = st.text_input(
-            "Yoki maxsus son kiriting (ixtiyoriy):",
+            "Boshqa son kiritish (ixtiyoriy):",
             value="",
             placeholder="Masalan: 561, 8911, 1105...",
             help="Bo'sh qoldirsangiz, chapdagi tanlangan son tahlil qilinadi."
         )
 
-    if st.button("⚠️ Karmaykl Tuzog'ini Tahlil Qilish", type="primary", use_container_width=True):
+    if st.button("▶ Karmaykl sonini tahlil qilish", type="primary", use_container_width=True):
         target_str = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
         n_carm, err_m, a_type = validate_number_input(target_str)
 
@@ -757,19 +528,10 @@ with tab2:
             """, unsafe_allow_html=True)
         else:
             with st.spinner("Karmaykl va Korselt tahlili o'tkazilmoqda..."):
-                try:
-                    carm_report = analyze_carmichael(n_carm, global_k)
-                except TypeError:
-                    carm_report = analyze_carmichael(n_carm)
-
-                if isinstance(carm_report, dict) and "fermat" in carm_report:
-                    c_f = safe_extract_result(carm_report["fermat"])
-                    c_ss = safe_extract_result(carm_report["solovay_strassen"])
-                    c_mr = safe_extract_result(carm_report["miller_rabin"])
-                else:
-                    c_f = safe_extract_result(fermat_test(n_carm, global_k))
-                    c_ss = safe_extract_result(solovay_strassen_test(n_carm, global_k))
-                    c_mr = safe_extract_result(miller_rabin_test(n_carm, global_k))
+                carm_report = analyze_carmichael(n_carm, global_k)
+                c_f = safe_extract_result(carm_report["fermat"])
+                c_ss = safe_extract_result(carm_report["solovay_strassen"])
+                c_mr = safe_extract_result(carm_report["miller_rabin"])
 
             st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
 
@@ -777,10 +539,12 @@ with tab2:
 
             # Fermat Card (Carmichael Trap)
             with col_c1:
-                is_fermat_fooled = c_f["is_prime"]
-                card_style = "kpi-card-warning" if is_fermat_fooled else "kpi-card-composite"
-                badge_style = "kpi-status-warning" if is_fermat_fooled else "kpi-status-composite"
-                title_status = "🚨 YOLG'ON TUB (ALDOV)" if is_fermat_fooled else "MURAKKAB"
+                fermat_passed = c_f["is_prime"]
+                is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
+                card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
+                badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
+                title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
+                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda testdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style}">
@@ -794,7 +558,7 @@ with tab2:
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
                         <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
-                            {'Tuzoqqa tushdi!' if is_fermat_fooled else 'Guvoh topildi'}
+                            {fermat_summary}
                         </span>
                     </div>
                     <div class="kpi-metric-row">
@@ -814,6 +578,7 @@ with tab2:
                 card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
                 badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
                 title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
+                ss_summary = "Karmayklni fosh qildi" if not ss_passed else "Euler yolg'onchisi"
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style_ss}">
@@ -827,7 +592,7 @@ with tab2:
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
                         <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
-                            {'Karmayklni fosh qildi' if not ss_passed else 'Euler yolg\'onchisi'}
+                            {ss_summary}
                         </span>
                     </div>
                     <div class="kpi-metric-row">
@@ -878,20 +643,16 @@ with tab2:
             st.markdown("### 📐 Korselt Mezoni va Matematik Fosh Qilish")
 
             factors_list = carm_report.get("factors", [])
-            if not factors_list:
-                temp_val = n_carm
-                d_val = 2
-                while d_val * d_val <= temp_val and len(factors_list) < 15:
-                    if temp_val % d_val == 0:
-                        factors_list.append(d_val)
-                        while temp_val % d_val == 0:
-                            temp_val //= d_val
-                    d_val += 1
-                if temp_val > 1:
-                    factors_list.append(temp_val)
+            factorization_complete = carm_report.get("factorization_complete", False)
+            factors_str = " × ".join(map(str, factors_list)) if factors_list else "To'liq ajratilmadi"
+            korselt_sat = carm_report.get("korselt_satisfied")
 
-            factors_str = " × ".join(map(str, factors_list)) if factors_list else "Aniqlanmoqda..."
-            korselt_sat = carm_report.get("korselt_satisfied", True)
+            if not factorization_complete:
+                st.warning("Sonning tub ko'paytuvchilarga ajratilishi hisoblash limiti ichida tugamadi. Korselt mezoni bo'yicha yakuniy xulosa berilmaydi.")
+            elif korselt_sat is True:
+                st.success("Korselt mezoni bajarildi: bu son Karmaykl soni.")
+            else:
+                st.info("Korselt mezoni bajarilmadi: bu son Karmaykl soni emas.")
 
             st.markdown(rf"""
             <div class="cyber-card">
@@ -934,7 +695,7 @@ with tab2:
 
 
 # ==============================================================================
-# TAB 3: 📊 KOMPLEKS BENCHMARK
+# TAB 3: ALGORITMLAR TEZLIGINI TAQQOSLASH
 # ==============================================================================
 with tab3:
     st.markdown("""
@@ -943,39 +704,49 @@ with tab3:
             Algoritmlar Samaradorligi va Tezlik Benchmarki
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            Kriptografik kalitlar (64 bitdan 2048 bitgacha) miqyosida tublik testlarining hisoblash
-            murakkabligini empirik o'lchash. Plotly orqali asimptotik o'sish dinamikasi va guruhlangan
-            taqqoslama grafiklar hosil qilinadi.
+            Bir xil bit uzunligidagi tub va murakkab semiprime nomzodlarda uch algoritmning
+            bajarilish vaqtini empirik taqqoslash. Warm-up va nomzod yaratish vaqti o'lchovdan
+            chiqariladi; median, o'rtacha va tarqalish ko'rsatkichlari alohida beriladi.
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    col_b1, col_b2 = st.columns([2, 1])
+    col_b1, col_b2, col_b3 = st.columns([2, 1, 1])
 
     with col_b1:
         chosen_bits = st.multiselect(
-            "Sinov bit uzunliklarini tanlang:",
+            "Son uzunliklarini tanlang (bit):",
             options=[64, 128, 256, 512, 1024, 2048],
             default=[64, 128, 256, 512],
-            help="Katta bitlar (1024, 2048) ko'proq hisoblash vaqtini talab qilishi mumkin."
+            help="Katta sonlar ko'proq vaqt oladi. Dastlab 64–512 bit bilan sinab ko'ring."
         )
 
     with col_b2:
         bench_rounds = st.number_input(
-            "Benchmark raundlar soni (k):",
+            "Tekshiruv raundlari (k):",
             min_value=5,
             max_value=64,
             value=global_k,
             step=1
         )
 
-    if st.button("🚀 Benchmarkni Ishga Tushirish", type="primary", use_container_width=True):
+    with col_b3:
+        bench_trials = st.number_input(
+            "Takrorlash soni:",
+            min_value=1,
+            max_value=5,
+            value=2,
+            step=1,
+            help="Har bir algoritmning o'lchovi necha marta takrorlanishini belgilaydi."
+        )
+
+    if st.button("▶ Tezlik sinovini boshlash", type="primary", use_container_width=True):
         if not chosen_bits:
             st.warning("Iltimos, kamida bitta bit uzunligini tanlang.")
         else:
             with st.spinner("Benchmark o'lchovlari bajarilmoqda..."):
                 sorted_bits = sorted(chosen_bits)
-                raw_bench = run_benchmark(sorted_bits, int(bench_rounds))
+                raw_bench = run_benchmark(sorted_bits, int(bench_rounds), trials=int(bench_trials))
 
                 if isinstance(raw_bench, pd.DataFrame):
                     df_bench = raw_bench
@@ -989,9 +760,10 @@ with tab3:
                 # Normalize column names if needed
                 col_map = {
                     "Bit_Length": "bit_length", "bits": "bit_length", "Bit Length": "bit_length",
-                    "Algorithm": "algorithm", "algo": "algorithm", "Algoritm": "algorithm",
-                    "Avg_Time_ms": "execution_time_ms", "time": "execution_time_ms",
-                    "time_ms": "execution_time_ms", "Vaqt (ms)": "execution_time_ms"
+                    "Candidate_Type": "candidate_type", "Algorithm": "algorithm", "algo": "algorithm", "Algoritm": "algorithm",
+                    "Median_Time_ms": "execution_time_ms", "Avg_Time_ms": "average_time_ms",
+                    "Std_Dev_ms": "std_dev_ms", "Min_Time_ms": "min_time_ms", "Max_Time_ms": "max_time_ms",
+                    "time": "execution_time_ms", "time_ms": "execution_time_ms", "Vaqt (ms)": "execution_time_ms"
                 }
                 df_bench.rename(columns=col_map, inplace=True)
 
@@ -1013,8 +785,9 @@ with tab3:
                     y="execution_time_ms",
                     color="algorithm",
                     markers=True,
-                    title="Bit Uzunligi bo'yicha Vaqt (O(k·log³ n) Trendi)",
-                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Vaqt (ms)", "algorithm": "Algoritm"},
+                    line_dash="candidate_type",
+                    title="Tub va murakkab nomzodlarda median vaqt",
+                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Median vaqt (ms)", "algorithm": "Algoritm", "candidate_type": "Nomzod turi"},
                     template="plotly_dark",
                     color_discrete_map=color_map
                 )
@@ -1035,8 +808,9 @@ with tab3:
                     y="execution_time_ms",
                     color="algorithm",
                     barmode="group",
-                    title="Algoritmlararo Samaradorlik Taqqoslashi",
-                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Vaqt (ms)", "algorithm": "Algoritm"},
+                    facet_col="candidate_type",
+                    title="Algoritmlararo median vaqt taqqoslashi",
+                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Median vaqt (ms)", "algorithm": "Algoritm", "candidate_type": "Nomzod turi"},
                     template="plotly_dark",
                     color_discrete_map=color_map
                 )
@@ -1054,7 +828,7 @@ with tab3:
 
             csv_bench_data = df_bench.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Benchmark Natijalarini CSV Formatida Yuklab Olish",
+                label="⬇ Tezlik natijalarini CSV formatida yuklab olish",
                 data=csv_bench_data,
                 file_name="primeguard_benchmark_results.csv",
                 mime="text/csv",
@@ -1063,17 +837,17 @@ with tab3:
 
 
 # ==============================================================================
-# TAB 4: 🔐 RSA TUB SON GENERATOR
+# TAB 4: RSA UCHUN O'QUV PARAMETRLARI
 # ==============================================================================
 with tab4:
     st.markdown(r"""
     <div class="cyber-card">
         <div style="font-weight: 700; font-size: 1.15rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            Sanoat Darajasidagi RSA Tub Sonlar va Kalitlar Generatori
+            RSA uchun tub parametrlar generatori (qo'shimcha modul)
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            Kriptografik xavfsiz tasodifiy sonlar generatori (CSPRNG) va <b>Miller-Rabin Strong</b> testi asosida
-            haqiqiy RSA kalit juftligining negizlari (\( p, q, N, \phi(N) \)) hisoblanadi. Bosh sonlar teoremasi
+            O'quv tajribasi uchun <b>Miller–Rabin</b> yordamida ikkita ehtimoliy tub son \(p, q\),
+            modul \(N\) va Eyler funksiyasi \(\phi(N)\) hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Bosh sonlar teoremasi
             (PNT) bo'yicha nazariy kutilgan sinovlar soni bilan amaliy nomzodlar statistikasi taqqoslanadi.
         </div>
     </div>
@@ -1083,33 +857,31 @@ with tab4:
 
     with col_r1:
         rsa_bit_choice = st.radio(
-            "Har bir tub son (p va q) uchun bit o'lchami:",
-            options=[512, 1024, 2048],
-            index=0,
+            "RSA moduli N ning bit uzunligi:",
+            options=[1024, 2048, 4096],
+            index=1,
             horizontal=True,
-            help="512 bit -> RSA-1024 moduli; 1024 bit -> RSA-2048 moduli (Standart); 2048 bit -> RSA-4096 moduli."
+            help="1024, 2048 yoki 4096 bitli N modulini yaratadi. p va q taxminan modul uzunligining yarmiga teng bo‘ladi."
         )
 
     with col_r2:
         rsa_security_k = st.slider(
-            "Miller-Rabin xavfsizlik raundi (k):",
+            "Miller–Rabin raundlari (k):",
             min_value=10,
             max_value=64,
             value=global_k,
             step=1,
-            help="FIPS 186-5 standarti bo'yicha kamida k=20 tavsiya etiladi."
+            help="Raundlar soni oshgani sari Miller–Rabin testining nazariy xatolik chegarasi kamayadi."
         )
 
-    if st.button("🔑 RSA Kalit Juftligi va Tub Sonlarni Generatsiya Qilish", type="primary", use_container_width=True):
-        with st.spinner(f"Kriptografik xavfsiz {rsa_bit_choice}-bit tub sonlar generatsiya qilinmoqda..."):
+    if st.button("▶ RSA uchun p va q ni yaratish", type="primary", use_container_width=True):
+        with st.spinner(f"{rsa_bit_choice}-bit RSA moduli uchun tub sonlar yaratilmoqda..."):
             try:
-                # key_bits moduli o'lchami: p va q ning har biri rsa_bit_choice bit bo'lishi uchun key_bits = rsa_bit_choice * 2
-                rsa_res = generate_rsa_pair(rsa_bit_choice * 2, rsa_security_k)
-            except Exception:
-                try:
-                    rsa_res = generate_rsa_pair(rsa_bit_choice, rsa_security_k)
-                except Exception:
-                    rsa_res = generate_rsa_pair(rsa_bit_choice)
+                # key_bits — N modulining maqsadli bit uzunligi.
+                rsa_res = generate_rsa_pair(rsa_bit_choice, rsa_security_k)
+            except Exception as exc:
+                st.error(f"RSA parametrlarini yaratishda xatolik: {exc}")
+                st.stop()
 
         p = rsa_res["p"]
         q = rsa_res["q"]
@@ -1117,9 +889,9 @@ with tab4:
         phi_n = rsa_res.get("phi", (p - 1) * (q - 1))
         t_ms = rsa_res.get("elapsed_ms", rsa_res.get("execution_time_ms", 0.0))
         c_tested = rsa_res.get("total_candidates_tested", 0)
-        c_expected = rsa_res.get("theoretical_expected_tests", int(rsa_bit_choice * 0.693))
+        c_expected = rsa_res.get("theoretical_expected_tests", int(rsa_bit_choice * 0.693 / 2))
 
-        st.markdown("### 🏆 Generatsiya Natijalari va Xavfsizlik Metrikalari")
+        st.markdown("### 🏆 Yaratilgan parametrlar va natijalar")
 
         # 4 ta Kichik KPI Metrika
         col_m1, col_m2, col_m3, col_m4 = st.columns(4)
@@ -1160,27 +932,29 @@ with tab4:
         with col_m4:
             st.markdown(f"""
             <div class="kpi-card kpi-card-prime">
-                <div class="kpi-metric-label">Xatolik Ehtimoli</div>
+                <div class="kpi-metric-label">Nazariy xatolik chegarasi</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #10B981; margin: 0.3rem 0;">
                     ≤ 4⁻{rsa_security_k}
                 </div>
-                <div style="font-size: 0.75rem; color: #10B981;">Kriptografik xavfsiz</div>
+                <div style="font-size: 0.75rem; color: #10B981;">Nazariy xatolik chegarasi</div>
             </div>
             """, unsafe_allow_html=True)
 
         # Fermat faktorizatsiyasi xavfsizligi
         p_q_diff = abs(p - q)
         diff_bits = p_q_diff.bit_length()
-        is_fermat_safe = diff_bits >= (rsa_bit_choice - 100)
+        min_prime_bits = min(p.bit_length(), q.bit_length())
+        fermat_distance_threshold = max(1, min_prime_bits // 2)
+        is_fermat_safe = p_q_diff > (1 << fermat_distance_threshold)
 
         st.markdown(f"""
         <div class="cyber-alert {'cyber-alert-success' if is_fermat_safe else 'cyber-alert-warning'}">
             <span class="cyber-alert-icon">{"🔒" if is_fermat_safe else "⚠️"}</span>
             <div class="cyber-alert-content">
-                <div class="cyber-alert-title">Fermat Faktorizatsiya Hujumidan Himoya (|p - q| Tahlili)</div>
+                <div class="cyber-alert-title">Tub sonlar orasidagi masofa (o'quv ko'rsatkichi)</div>
                 <div class="cyber-alert-msg">
                     |p - q| masofasi: <b>{diff_bits} bit</b>. 
-                    {f"Tub sonlar bir-biridan yetarlicha uzoq joylashgan (|p - q| > 2^{rsa_bit_choice - 100}), Fermat faktorizatsiyasi xavfi bartaraf etilgan." if is_fermat_safe else "Diqqat: Tub sonlar bir-biriga juda yaqin!"}
+                    {f"Masofa oddiy Fermat faktorizatsiyasi uchun yaqinlik chegarasidan yuqori (|p - q| > 2^{fermat_distance_threshold}). Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: p va q juda yaqin bo'lishi mumkin; bu o'quv tekshiruvini qayta ko'rib chiqing."}
                 </div>
             </div>
         </div>
@@ -1216,12 +990,15 @@ with tab4:
         # JSON Eksport
         export_payload = {
             "metadata": {
-                "system": "PrimeGuard Suite v1.0",
+                "system": "PrimeGuard v1.1",
                 "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "algorithm": "Miller-Rabin Strong Pseudoprime",
                 "rounds_k": rsa_security_k,
-                "bit_length_each": rsa_bit_choice,
-                "rsa_modulus_bits": n_mod.bit_length()
+                "p_bit_length": p.bit_length(),
+                "q_bit_length": q.bit_length(),
+                "rsa_modulus_bits": n_mod.bit_length(),
+                "target_modulus_bits": rsa_bit_choice,
+                "modulus_length_exact": n_mod.bit_length() == rsa_bit_choice
             },
             "performance": {
                 "execution_time_ms": t_ms,
@@ -1242,7 +1019,7 @@ with tab4:
 
         json_bytes = json.dumps(export_payload, indent=2).encode('utf-8')
         st.download_button(
-            label="📥 RSA Kalit Ma'lumotlarini JSON Formatida Yuklab Olish",
+            label="⬇ RSA parametrlarini JSON formatida yuklab olish",
             data=json_bytes,
             file_name=f"primeguard_rsa_{n_mod.bit_length()}bit_keys.json",
             mime="application/json",
@@ -1255,7 +1032,7 @@ with tab4:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #64748B; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; padding: 1rem 0;">
-    PrimeGuard Suite v1.0 • Kriptografiya Matematik Usullari • Agent B (Cyber-Security Frontend Architect & Technical Writer)<br>
-    FIPS 186-5 & RFC 3447 Talablariga Muofiq Ishlab Chiqilgan
+    PrimeGuard v1.1 • Kriptografiya matematik usullari • Akademik laboratoriya<br>
+    Akademik prototip • Algoritmlar va testlar bo'yicha mustaqil validatsiya talab etiladi
 </div>
 """, unsafe_allow_html=True)

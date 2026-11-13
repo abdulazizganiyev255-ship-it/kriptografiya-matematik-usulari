@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from analytics.benchmark import run_benchmark
-from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
+from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael, check_korselt_criterion
 from analytics.prime_generator import generate_prime, generate_rsa_pair
 from core.fermat import fermat_test
 from core.miller_rabin import miller_rabin_test
@@ -12,6 +12,7 @@ from core.number_theory import (
     check_small_primes,
     gcd,
     jacobi_symbol,
+    is_prime_deterministic_64,
 )
 from core.solovay_strassen import solovay_strassen_test
 
@@ -65,6 +66,33 @@ def test_small_primes():
     for p in SMALL_PRIMES[:50]:
         for d in range(2, int(p**0.5) + 1):
             assert p % d != 0
+
+
+def test_deterministic_miller_rabin_64():
+    def trial_division_is_prime(n):
+        if n < 2:
+            return False
+        divisor = 2
+        while divisor * divisor <= n:
+            if n % divisor == 0:
+                return False
+            divisor += 1
+        return True
+
+    for value in range(10_000):
+        assert is_prime_deterministic_64(value) is trial_division_is_prime(value)
+
+    assert is_prime_deterministic_64(2**61 - 1) is True
+    assert is_prime_deterministic_64(341550071728321) is False
+    assert is_prime_deterministic_64(561) is False
+    assert is_prime_deterministic_64(0) is False
+    assert is_prime_deterministic_64(1) is False
+    assert is_prime_deterministic_64(-7) is False
+
+
+def test_deterministic_miller_rabin_64_rejects_out_of_range():
+    with pytest.raises(ValueError):
+        is_prime_deterministic_64(2**64)
 
 
 def test_gcd():
@@ -156,6 +184,10 @@ def test_fermat_primes():
         assert res.verdict in ("Prime", "Probably Prime")
 
 
+    probable = fermat_test(1009, k=10, skip_prefilter=True)
+    assert "No universal bound" in probable.error_bound
+
+
 def test_fermat_composites_without_prefilter():
     # Test composite numbers with skip_prefilter to verify witness detection
     composites = [91, 119, 121, 209, 341]
@@ -238,6 +270,18 @@ def test_carmichael_constants():
     assert CARMICHAEL_NUMBERS == expected
 
 
+def test_korselt_criterion():
+    assert check_korselt_criterion(561)["is_carmichael"] is True
+    assert check_korselt_criterion(1105)["is_carmichael"] is True
+    assert check_korselt_criterion(1729)["is_carmichael"] is True
+    assert check_korselt_criterion(15)["is_carmichael"] is False
+    assert check_korselt_criterion(9)["is_carmichael"] is False
+    assert check_korselt_criterion(2)["is_carmichael"] is False
+    assert check_korselt_criterion(561, max_steps=1)["complete"] is False
+    with pytest.raises(ValueError):
+        check_korselt_criterion(561, max_steps=0)
+
+
 def test_analyze_carmichael():
     analysis = analyze_carmichael(561, k=20)
     assert analysis["n"] == 561
@@ -252,6 +296,9 @@ def test_analyze_carmichael():
     assert analysis["solovay_strassen"].is_prime is False
     assert analysis["miller_rabin"].is_prime is False
     assert analysis["fermat_fooled"] is True
+    assert analysis["is_carmichael"] is True
+    assert analysis["factors"] == [3, 11, 17]
+    assert analysis["factorization_complete"] is True
 
 
 # ==========================================
@@ -260,6 +307,12 @@ def test_analyze_carmichael():
 def test_generate_prime_invalid():
     with pytest.raises(ValueError):
         generate_prime(1)
+    with pytest.raises(ValueError):
+        generate_prime(True)
+    with pytest.raises(ValueError):
+        generate_prime(16, k=0)
+    with pytest.raises(ValueError):
+        generate_prime(16, max_attempts=0)
 
 
 def test_generate_prime():
@@ -275,51 +328,66 @@ def test_generate_prime():
 def test_generate_rsa_pair_invalid():
     with pytest.raises(ValueError):
         generate_rsa_pair(key_bits=4)
+    with pytest.raises(ValueError):
+        generate_rsa_pair(key_bits=8)
+    with pytest.raises(ValueError):
+        generate_rsa_pair(key_bits=True)
 
 
 def test_generate_rsa_pair():
-    rsa = generate_rsa_pair(key_bits=128, k=20)
-    required_keys = [
-        "p",
-        "q",
-        "N",
-        "phi",
-        "total_candidates_tested",
-        "theoretical_expected_tests",
-        "elapsed_ms",
-    ]
-    for key in required_keys:
-        assert key in rsa
+    for requested_bits in (64, 65, 128):
+        rsa = generate_rsa_pair(key_bits=requested_bits, k=12)
+        required_keys = [
+            "p", "q", "N", "phi", "target_modulus_bits", "modulus_bits",
+            "p_bits", "q_bits", "attempts_p", "attempts_q",
+            "total_candidates_tested", "theoretical_expected_tests", "elapsed_ms",
+        ]
+        for key in required_keys:
+            assert key in rsa
 
-    p = rsa["p"]
-    q = rsa["q"]
-    N = rsa["N"]
-    phi = rsa["phi"]
-
-    assert p != q
-    assert N == p * q
-    assert phi == (p - 1) * (q - 1)
-    assert abs(N.bit_length() - 128) <= 1
-    assert rsa["total_candidates_tested"] >= 2
-    assert rsa["theoretical_expected_tests"] > 0
-    assert rsa["elapsed_ms"] >= 0
+        p, q, N, phi = rsa["p"], rsa["q"], rsa["N"], rsa["phi"]
+        assert p != q
+        assert N == p * q
+        assert phi == (p - 1) * (q - 1)
+        assert N.bit_length() == requested_bits
+        assert rsa["target_modulus_bits"] == requested_bits
+        assert rsa["modulus_bits"] == requested_bits
+        assert rsa["p_bits"] == p.bit_length()
+        assert rsa["q_bits"] == q.bit_length()
+        assert rsa["attempts_q"] >= 1
+        assert rsa["total_candidates_tested"] >= 2
+        assert rsa["theoretical_expected_tests"] > 0
+        assert rsa["elapsed_ms"] >= 0
 
 
 # ==========================================
 # 8. Benchmark Tests
 # ==========================================
+def test_run_benchmark_rejects_invalid_settings():
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[], k=5, trials=1)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[64], k=0, trials=1)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[64], k=5, trials=0)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[64, 64], k=5, trials=1)
+    with pytest.raises(ValueError):
+        run_benchmark(bit_sizes=[True], k=5, trials=1)
+
+
 def test_run_benchmark():
-    df = run_benchmark(bit_sizes=[64, 128], k=5, trials=1)
+    df = run_benchmark(bit_sizes=[64], k=5, trials=2)
     assert isinstance(df, pd.DataFrame)
     expected_cols = [
-        "Bit_Length",
-        "Algorithm",
-        "Avg_Time_ms",
-        "Min_Time_ms",
-        "Max_Time_ms",
-        "Error_Bound",
+        "Bit_Length", "Candidate_Type", "Algorithm", "Trials", "Rounds",
+        "Avg_Time_ms", "Median_Time_ms", "Std_Dev_ms", "Min_Time_ms",
+        "Max_Time_ms", "Verdict", "Error_Bound",
     ]
     assert list(df.columns) == expected_cols
-    assert len(df) == 6  # 2 bit sizes * 3 algorithms
-    algorithms = set(df["Algorithm"])
-    assert algorithms == {"Fermat", "Solovay-Strassen", "Miller-Rabin"}
+    assert len(df) == 6  # 1 bit size * 2 candidate types * 3 algorithms
+    assert set(df["Candidate_Type"]) == {"Tub nomzod", "Murakkab (semiprime)"}
+    assert set(df["Algorithm"]) == {"Fermat", "Solovay-Strassen", "Miller-Rabin"}
+    assert (df["Median_Time_ms"] >= 0).all()
+    assert (df["Std_Dev_ms"] >= 0).all()
+    assert (df["Trials"] == 2).all()
