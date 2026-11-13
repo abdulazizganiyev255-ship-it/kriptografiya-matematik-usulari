@@ -297,7 +297,7 @@ with tab1:
             col1, col2, col3 = st.columns(3)
 
             cards_data = [
-                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "O(k · log² n)"),
+                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "O(k · log³ n)"),
                 ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "O(k · log³ n)"),
                 ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "O(k · log³ n)")
             ]
@@ -877,10 +877,10 @@ with tab4:
         <div class="cyber-alert {'cyber-alert-success' if is_fermat_safe else 'cyber-alert-warning'}">
             <span class="cyber-alert-icon">{"🔒" if is_fermat_safe else "⚠️"}</span>
             <div class="cyber-alert-content">
-                <div class="cyber-alert-title">Fermat Faktorizatsiya Hujumidan Himoya (|p - q| Tahlili)</div>
+                <div class="cyber-alert-title">Tub sonlar orasidagi masofa (o'quv ko'rsatkichi)</div>
                 <div class="cyber-alert-msg">
                     |p - q| masofasi: <b>{diff_bits} bit</b>. 
-                    {f"Tub sonlar bir-biridan yetarlicha uzoq joylashgan (|p - q| > 2^{rsa_bit_choice - 100}), Fermat faktorizatsiyasi xavfi bartaraf etilgan." if is_fermat_safe else "Diqqat: Tub sonlar bir-biriga juda yaqin!"}
+                    {f"Tub sonlar bir-biridan yetarlicha uzoq joylashgan (|p - q| > 2^{rsa_bit_choice - 100}), Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: Tub sonlar bir-biriga juda yaqin!"}
                 </div>
             </div>
         </div>
