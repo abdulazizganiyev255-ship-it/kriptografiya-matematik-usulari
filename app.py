@@ -481,10 +481,11 @@ with tab2:
 
             # Fermat Card (Carmichael Trap)
             with col_c1:
-                is_fermat_fooled = c_f["is_prime"]
-                card_style = "kpi-card-warning" if is_fermat_fooled else "kpi-card-composite"
-                badge_style = "kpi-status-warning" if is_fermat_fooled else "kpi-status-composite"
-                title_status = "🚨 YOLG'ON TUB (ALDOV)" if is_fermat_fooled else "MURAKKAB"
+                fermat_passed = c_f["is_prime"]
+                is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
+                card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
+                badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
+                title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style}">
@@ -498,7 +499,7 @@ with tab2:
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
                         <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
-                            {'Tuzoqqa tushdi!' if is_fermat_fooled else 'Guvoh topildi'}
+                            {'Karmaykl sonida Fermat aldandi' if is_fermat_fooled else ('Bu raundlarda testdan o'tdi; isbot emas' if fermat_passed else 'Fermat guvohi topildi')}
                         </span>
                     </div>
                     <div class="kpi-metric-row">
