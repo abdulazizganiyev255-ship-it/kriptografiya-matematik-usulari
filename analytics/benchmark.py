@@ -26,6 +26,12 @@ def run_benchmark(
     """
     if bit_sizes is None:
         bit_sizes = [64, 128, 256, 512, 1024, 2048]
+    if not bit_sizes or any(not isinstance(bits, int) or bits < 2 for bits in bit_sizes):
+        raise ValueError("bit_sizes kamida bitta 2 yoki undan katta butun qiymatdan iborat bo'lishi kerak")
+    if not isinstance(k, int) or k < 1:
+        raise ValueError("k kamida 1 bo'lishi kerak")
+    if not isinstance(trials, int) or trials < 1:
+        raise ValueError("trials kamida 1 bo'lishi kerak")
 
     algorithms = [
         ("Fermat", fermat_test),
