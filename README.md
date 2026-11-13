@@ -1,19 +1,19 @@
-# 🛡️ PrimeGuard — Ehtimollik asosida tublikni tekshirish tizimi
+# 🛡️ PrimeGuard — Tub sonlar laboratoriyasi
 ### Fermat, Solovay–Strassen va Miller–Rabin algoritmlari laboratoriyasi
 
 ---
 
 ## 📌 Loyiha Pasporti
 
-* **Loyiha nomi:** `PrimeGuard Suite`
-* **Versiya:** `1.0.0 (Academic Prototype)`
+* **Loyiha nomi:** `PrimeGuard`
+* **Versiya:** `1.1.0 (Academic Prototype)`
 * **Yo'nalish:** Kriptografiyaning Matematik Usullari / Kiberxavfsizlik
 * **Standartlar:** FIPS 186-5, RFC 8017 va ISO/IEC 18031 hujjatlari nazariy taqqoslash manbalari sifatida ko'rib chiqiladi; ushbu loyiha hozircha ularga muvofiqlik sertifikatiga ega emas.
 * **Ishlash Rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
 * **Mas'uliyat Zonasi:** 
   * **Matematik yadro:** uchta ehtimoliy tublik algoritmi va yordamchi sonlar nazariyasi funksiyalari (`core/`).
   * **Analitika:** Karmaykl sonlari, benchmark va tub son generatori (`analytics/`).
-  * **Interfeys:** Streamlit dashboard (`app.py`) va CSS dizayni (`assets/style.css`).
+  * **Interfeys:** Streamlit dashboard (`app.py`) va CSS dizayni (`assets/style.css` (Midnight Lab interfeysi)).
   * **Tekshiruv:** avtomatik testlar (`tests/`) va GitHub Actions.
 
 ---
@@ -31,7 +31,7 @@
 6. Algoritmlarning bajarilish vaqtini bir xil sharoitda o'lchash va taqqoslash.
 7. Natijalarni avtomatik testlar va deterministik etalon bilan tekshirish.
 
-**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval va CSV ko'rinishida oladi.
+**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval, CSV va JSON ko'rinishida saqlaydi.
 
 **Ilmiy cheklov:** probabilistik test barcha raundlardan o'tgan sonni avtomatik ravishda isbotlangan tub son deb hisoblamaydi. Natija "ehtimoliy tub" deb ko'rsatiladi. Ushbu loyihada alohida deterministik etalon faqat n < 2^64 diapazoni uchun mavjud.
 
@@ -51,19 +51,19 @@ Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslang
 
 ```mermaid
 flowchart TD
-    subgraph UI ["🖥️ Taqdimot Qatlami (Presentation Layer - Agent B)"]
+    subgraph UI ["🖥️ Taqdimot Qatlami (Presentation Layer)"]
         APP["app.py (Streamlit Dashboard)"]
-        CSS["assets/style.css (Dark Cyber Glassmorphism)"]
+        CSS["assets/style.css (Midnight Lab UI)"]
         APP --- CSS
     end
 
-    subgraph Analytics ["📊 Analitika Qatlami (Analytics Layer - Agent A)"]
+    subgraph Analytics ["📊 Analitika Qatlami (Analytics Layer)"]
         CARM["analytics/carmichael.py"]
         BENCH["analytics/benchmark.py"]
         PRIMEGEN["analytics/prime_generator.py"]
     end
 
-    subgraph Core ["⚙️ Matematik Yadro (Core Layer - Agent A)"]
+    subgraph Core ["⚙️ Matematik Yadro (Core Layer)"]
         MODELS["core/models.py (PrimalityResult, RoundLog)"]
         FERMAT["core/fermat.py (Fermat Test)"]
         SS["core/solovay_strassen.py (Solovay-Strassen Test)"]
