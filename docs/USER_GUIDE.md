@@ -46,7 +46,7 @@ Faktorizatsiya hisoblash limiti bilan cheklangan. Limit tugasa, dastur noto'g'ri
 4. Sinovni boshlang.
 5. Grafiklar, jadval va CSV natijalarini ko'ring.
 
-Katta bit uzunliklari va ko'p takrorlashlar ko'proq vaqt talab qiladi. Benchmark natijalari kompyuter, Python versiyasi va tizim yuklamasiga bog'liq.
+Benchmark har bir tanlangan bit uzunligida tub nomzod va murakkab semiprime nomzodini alohida tekshiradi. Nomzod yaratish va warm-up o'lchovga kiritilmaydi. Jadvalda o'rtacha, median, standart og'ish, minimum va maksimum vaqtlar beriladi. Katta bit uzunliklari va ko'p takrorlashlar ko'proq vaqt talab qiladi. Natijalar kompyuter, Python versiyasi va tizim yuklamasiga bog'liq; ular matematik murakkablik isboti emas.
 
 ## 5. RSA uchun o'quv parametrlari
 
