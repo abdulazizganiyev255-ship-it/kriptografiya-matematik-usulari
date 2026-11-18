@@ -19,7 +19,8 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
     $created = $false
     foreach ($candidate in $candidates) {
         if (-not (Get-Command $candidate.File -ErrorAction SilentlyContinue)) { continue }
-        & $candidate.File @($candidate.Args)
+        $launchArgs = [string[]]$candidate.Args
+        & $candidate.File @launchArgs
         if ($LASTEXITCODE -eq 0 -and (Test-Path -LiteralPath $venvPython)) {
             $created = $true
             break
@@ -32,12 +33,12 @@ if (-not (Test-Path -LiteralPath $venvPython)) {
 if (-not (Test-Path -LiteralPath $venvPython)) { throw "Virtual environment Python was not found: $venvPython" }
 
 Write-Host "[2/4] Installing dependencies..." -ForegroundColor Cyan
-Invoke-CheckedPython @("-m", "pip", "install", "-r", "requirements.txt")
+Invoke-CheckedPython -Arguments @("-m", "pip", "install", "-r", "requirements.txt")
 
 Write-Host "[3/4] Running automated tests..." -ForegroundColor Cyan
-Invoke-CheckedPython @("-m", "compileall", "-q", "app.py", "core", "analytics")
-Invoke-CheckedPython @("-m", "pytest", "-q")
+Invoke-CheckedPython -Arguments @("-m", "compileall", "-q", "app.py", "core", "analytics")
+Invoke-CheckedPython -Arguments @("-m", "pytest", "-q")
 
 Write-Host "[4/4] Starting PrimeGuard..." -ForegroundColor Green
 Write-Host "Open http://localhost:8501 if your browser does not open automatically." -ForegroundColor Green
-Invoke-CheckedPython @("-m", "streamlit", "run", "app.py", "--server.address", "127.0.0.1", "--server.port", "8501")
+Invoke-CheckedPython -Arguments @("-m", "streamlit", "run", "app.py", "--server.address", "127.0.0.1", "--server.port", "8501")
