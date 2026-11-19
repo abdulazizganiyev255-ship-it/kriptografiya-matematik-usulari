@@ -34,4 +34,7 @@ def test_benchmark_is_persistent_and_filters_are_present():
 def test_app_initial_streamlit_render_has_no_exception():
     app = AppTest.from_file(str(APP_FILE), default_timeout=20).run()
     assert not app.exception
-    assert len(app.tabs) >= 4
+    assert len(app.tabs) == 2
+    assert [tab.label for tab in app.tabs] == [
+        "🔍 Sonni tekshirish", "📊 Algoritmlarni taqqoslash"
+    ]
