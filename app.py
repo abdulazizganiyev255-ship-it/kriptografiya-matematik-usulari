@@ -26,7 +26,7 @@ from ui.round_explorer import render_round_explorer
 # STREAMLIT CONFIG & OFFLINE STYLING
 # ==============================================================================
 st.set_page_config(
-    page_title="PrimeGuard | Tub sonlar laboratoriyasi",
+    page_title="PrimeGuard | Ehtimoliy tublik laboratoriyasi",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -44,7 +44,7 @@ def inject_custom_css():
         <style>
         body, [data-testid="stAppViewContainer"] {
             background-color: #0B0F19 !important;
-            color: #F1F5F9 !important;
+            color: #F2F6FA !important;
             font-family: 'Segoe UI', system-ui, sans-serif !important;
         }
         </style>
@@ -109,11 +109,11 @@ with st.sidebar:
     <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem;">
         <span style="font-size: 1.8rem;">🛡️</span>
         <div>
-            <div style="font-weight: 800; font-size: 1.25rem; color: #00F5D4; letter-spacing: -0.01em;">
+            <div style="font-weight: 800; font-size: 1.25rem; color: #69D6C5; letter-spacing: -0.01em;">
                 PrimeGuard
             </div>
-            <div style="font-size: 0.75rem; color: #94A3B8; font-family: 'JetBrains Mono', monospace;">
-                v1.1 • Number Theory Lab
+            <div style="font-size: 0.75rem; color: #ACBCCD; font-family: 'JetBrains Mono', monospace;">
+                Ehtimoliy tublik laboratoriyasi
             </div>
         </div>
     </div>
@@ -122,7 +122,7 @@ with st.sidebar:
     st.markdown("---")
 
     # Global Rounds Slider
-    st.markdown("### ⚙️ Tekshiruv sozlamalari")
+    st.markdown("### Tekshiruv sozlamalari")
     global_k = st.slider(
         "Raundlar soni (k):",
         min_value=1,
@@ -133,8 +133,8 @@ with st.sidebar:
     )
 
     # Tezkor Namuna Tugmalari
-    st.markdown("### ⚡ Tayyor misollar")
-    st.caption("Bir marta bosish orqali sinov sonini yuklang:")
+    st.markdown("### Tayyor sonlar")
+    st.caption("Sonni yuklang, so‘ng tekshirishni boshlang.")
 
     SAMPLE_MERSENNE = "170141183460469231731687303715884105727"  # 2^127 - 1
     SAMPLE_CARMICHAEL = "8911"  # 7 * 19 * 67
@@ -154,6 +154,7 @@ with st.sidebar:
         st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
         st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["carmichael_select"] = 8911
+        st.session_state["primeguard_show_carmichael"] = True
         st.rerun()
 
     if st.button("512-bit tub son", width="stretch"):
@@ -173,19 +174,19 @@ with st.sidebar:
 
     st.markdown(f"""
     <div class="cyber-card" style="padding: 1rem; margin: 1rem 0; border-color: rgba(0, 245, 212, 0.3);">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #00F5D4; font-weight: 700; margin-bottom: 0.5rem;">
-            📊 NAZARIY XATOLIK CHEGARASI
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #69D6C5; font-weight: 700; margin-bottom: 0.5rem;">
+            NAZARIY XATOLIK CHEGARALARI
         </div>
-        <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD5E1;">
+        <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD8E4;">
             <b>Fermat:</b> universal xatolik chegarasi yo'q (Karmaykl sonlari sababli).<br>
             <b>Solovay–Strassen:</b><br>
-            <span style="font-family: 'JetBrains Mono', monospace; color: #F59E0B;">
+            <span style="font-family: 'JetBrains Mono', monospace; color: #F3C77B;">
                 2<sup>-{global_k}</sup> ≈ {err_ss:.2e}
             </span>
         </div>
-        <div style="font-size: 0.82rem; color: #CBD5E1;">
-            <b>Miller-Rabin Strong:</b><br>
-            <span style="font-family: 'JetBrains Mono', monospace; color: #10B981;">
+        <div style="font-size: 0.82rem; color: #CBD8E4;">
+            <b>Miller–Rabin:</b><br>
+            <span style="font-family: 'JetBrains Mono', monospace; color: #75D9AF;">
                 4<sup>-{global_k}</sup> ≈ {err_mr:.2e}
             </span>
         </div>
@@ -195,7 +196,7 @@ with st.sidebar:
     st.markdown("---")
 
     st.markdown("""
-    <div style="font-size: 0.75rem; color: #64748B; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
+    <div style="font-size: 0.75rem; color: #8C9FB3; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
         Akademik dasturiy prototip<br>
         Tub sonlarni tekshirish va algoritmlarni taqqoslash laboratoriyasi<br>
         Natijalar mustaqil testlar bilan tekshiriladi
@@ -209,10 +210,10 @@ with st.sidebar:
 st.markdown("""
 <div style="margin-bottom: 1.2rem;">
     <div class="cyber-header">
-        <span class="cyber-header-accent">PrimeGuard</span> v1.1
+        <span class="cyber-header-accent">PrimeGuard</span>
     </div>
     <div class="cyber-subtitle">
-        Ehtimoliy tublik algoritmlari, Karmaykl sonlari va benchmark laboratoriyasi
+        Sonni tekshirish · Matematik izoh · Algoritmlarni taqqoslash
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -228,10 +229,10 @@ tab1, tab3 = st.tabs([
 with tab1:
     st.markdown("""
     <div class="cyber-card">
-        <div style="font-weight: 700; font-size: 1.1rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            Sonni tekshirish laboratoriyasi
+        <div style="font-weight: 700; font-size: 1.1rem; color: #69D6C5; margin-bottom: 0.4rem;">
+            Sonning tubligini tekshirish
         </div>
-        <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
+        <div style="font-size: 0.92rem; color: #ACBCCD; line-height: 1.5;">
             2 dan boshlab, ko'pi bilan 2048 ta raqamli natural son kiriting. Tizim uchta
             ehtimoliy tublik algoritmi (<b>Kichik Fermat</b>, <b>Solovay-Strassen</b> va <b>Miller-Rabin Strong</b>)
             yordamida har bir algoritm bo'yicha tekshiruv o'tkazadi.
@@ -244,7 +245,7 @@ with tab1:
     raw_candidate = st.text_area(
         "Tekshiriladigan son (n)",
         value=default_input,
-        height=110,
+        height=95,
         help="Faqat natural son kiriting. O'qish qulayligi uchun raqamlarni bo'sh joy bilan guruhlash mumkin.",
         key="tab1_text_area"
     )
@@ -334,14 +335,19 @@ with tab1:
             card_class = "kpi-card-prime" if is_p else "kpi-card-composite"
             badge_class = "kpi-status-prime" if is_p else "kpi-status-composite"
             status_text = ("ANIQ TUB" if r_data["verdict"] == "Prime" else "EHTIMOLIY TUB") if is_p else "ANIQ MURAKKAB"
-            shown_error = "0 (elak bilan aniq)" if r_data["pre_filtered"] else err_bound
+            shown_error = "0 (aniq)" if r_data["pre_filtered"] else err_bound
+            witness_display = (
+                f"a = {r_data['witness']}" if r_data["witness"] is not None
+                else ("Oldindan tekshirildi" if r_data["pre_filtered"]
+                      else "Topilmadi")
+            )
 
             with col:
                 st.markdown(f"""
                 <div class="kpi-card {card_class}">
                     <div class="kpi-algo-name">
                         <span>{algo_title}</span>
-                        <span style="font-size: 0.72rem; color: #64748B;">{complexity}</span>
+                        <span style="font-size: 0.72rem; color: #8C9FB3;">{complexity}</span>
                     </div>
                     <div class="kpi-status-badge {badge_class}">
                         {status_text}
@@ -352,16 +358,16 @@ with tab1:
                     </div>
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Nazariy xatolik chegarasi:</span>
-                        <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{shown_error if is_p else '0 (Aniq)'}</span>
+                        <span class="kpi-metric-val" style="color: {'#75D9AF' if is_p else '#ACBCCD'};">{shown_error if is_p else '0 (Aniq)'}</span>
                     </div>
                     <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">O'tkazilgan raundlar:</span>
+                        <span class="kpi-metric-label">Bajarilgan raundlar:</span>
                         <span class="kpi-metric-val">{r_data['rounds']} ta</span>
                     </div>
                     <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Guvoh (Witness):</span>
-                        <span class="kpi-metric-val" style="font-size: 0.8rem; color: {'#F43F5E' if r_data['witness'] else '#10B981'};">
-                            {f"a = {r_data['witness']}" if r_data['witness'] else "Topilmadi"}
+                        <span class="kpi-metric-label">Murakkablik guvohi:</span>
+                        <span class="kpi-metric-val" style="font-size: 0.8rem; color: {'#FF8898' if r_data['witness'] else '#75D9AF'};">
+                            {witness_display}
                         </span>
                     </div>
                 </div>
@@ -511,10 +517,10 @@ with tab1:
     ):
         st.markdown(r"""
         <div class="cyber-card" style="border-color: rgba(245, 158, 11, 0.4);">
-            <div style="font-weight: 700; font-size: 1.15rem; color: #F59E0B; margin-bottom: 0.4rem;">
+            <div style="font-weight: 700; font-size: 1.15rem; color: #F3C77B; margin-bottom: 0.4rem;">
                 ⚠️ Karmaykl sonlari va Korselt mezoni
             </div>
-            <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
+            <div style="font-size: 0.92rem; color: #ACBCCD; line-height: 1.5;">
                 <b>Karmaykl sonlari</b> — Fermat testining cheklovini ko'rsatuvchi o'ziga xos murakkab sonlardir.
                 Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan <i>barcha</i> <em>a</em> asoslar uchun
                 <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> tenglikni bajaradi. Quyidagi laboratoriyada Fermat testining aldanishini
@@ -610,7 +616,7 @@ with tab1:
                     </div>
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
-                        <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
+                        <span class="kpi-metric-val" style="color: {'#F3C77B' if is_fermat_fooled else '#FF8898'};">
                             {fermat_summary}
                         </span>
                     </div>
@@ -644,7 +650,7 @@ with tab1:
                     </div>
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
-                        <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
+                        <span class="kpi-metric-val" style="color: {'#75D9AF' if not ss_passed else '#F3C77B'};">
                             {ss_summary}
                         </span>
                     </div>
@@ -654,7 +660,7 @@ with tab1:
                     </div>
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Eyler–Yakobi guvohi:</span>
-                        <span class="kpi-metric-val" style="color: #F43F5E;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
+                        <span class="kpi-metric-val" style="color: #FF8898;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -677,7 +683,7 @@ with tab1:
                     </div>
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
-                        <span class="kpi-metric-val" style="color: #10B981;">
+                        <span class="kpi-metric-val" style="color: #75D9AF;">
                             {'Murakkablik aniqlandi' if not mr_passed else 'Ehtimoliy tub'}
                         </span>
                     </div>
@@ -687,7 +693,7 @@ with tab1:
                     </div>
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Kuchli Guvoh:</span>
-                        <span class="kpi-metric-val" style="color: #F43F5E;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
+                        <span class="kpi-metric-val" style="color: #FF8898;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
@@ -719,13 +725,13 @@ with tab1:
 
             st.markdown(rf"""
             <div class="cyber-card">
-                <div style="font-weight: 700; color: #00F5D4; font-size: 1rem; margin-bottom: 0.6rem;">
+                <div style="font-weight: 700; color: #69D6C5; font-size: 1rem; margin-bottom: 0.6rem;">
                     Tub ko'paytuvchilarga ajratish:
                 </div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F1F5F9; margin-bottom: 1rem;">
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F2F6FA; margin-bottom: 1rem;">
                     {n_carm} = {factors_str}
                 </div>
-                <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
+                <div style="font-size: 0.92rem; color: #CBD8E4; line-height: 1.6;">
                     <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son <em>n</em> faqat va faqat quyidagi shartlar
                     bajarilgandagina Karmaykl soni bo'ladi:
                     <ol style="margin-top: 0.4rem;">
@@ -743,10 +749,10 @@ with tab1:
 
             st.markdown(r"""
             <div class="cyber-card" style="border-color: rgba(16, 185, 129, 0.3);">
-                <div style="font-weight: 700; color: #10B981; font-size: 0.98rem; margin-bottom: 0.4rem;">
+                <div style="font-weight: 700; color: #75D9AF; font-size: 0.98rem; margin-bottom: 0.4rem;">
                     Miller–Rabin murakkablikni qanday aniqlaydi?
                 </div>
-                <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
+                <div style="font-size: 0.9rem; color: #ACBCCD; line-height: 1.6;">
                     Karmaykl sonlari Fermat testidagi <code>a<sup>n−1</sup> ≡ 1 (mod n)</code>
                     tenglikning o'zi tublikni isbotlamasligini ko'rsatadi.
                     Miller–Rabin testi <code>n − 1 = 2<sup>s</sup> · d</code> orqali
@@ -766,10 +772,10 @@ with tab1:
 with tab3:
     st.markdown("""
     <div class="cyber-card">
-        <div style="font-weight: 700; font-size: 1.15rem; color: #00F5D4; margin-bottom: 0.4rem;">
+        <div style="font-weight: 700; font-size: 1.15rem; color: #69D6C5; margin-bottom: 0.4rem;">
             Algoritmlar samaradorligi va bajarilish vaqti
         </div>
-        <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
+        <div style="font-size: 0.92rem; color: #ACBCCD; line-height: 1.5;">
             Bir xil bit uzunligidagi tub va murakkab semiprime nomzodlarda uch algoritmning
             bajarilish vaqtini amaliy tajribada taqqoslash. Nomzod yaratish va dastlabki sinov
             vaqtga kiritilmaydi; median va boshqa statistik ko'rsatkichlar alohida beriladi.
