@@ -20,7 +20,6 @@ from core.miller_rabin import miller_rabin_test
 from core.number_theory import is_prime_deterministic_64
 from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
 from analytics.benchmark import run_benchmark
-from analytics.prime_generator import generate_prime, generate_rsa_pair
 from ui.round_explorer import render_round_explorer
 
 # ==============================================================================
@@ -218,11 +217,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab3 = st.tabs([
     "🔍 Sonni tekshirish",
-    "🧩 Karmaykl tahlili",
-    "📈 Tezlik taqqoslash",
-    "🔐 RSA parametrlari"
+    "📊 Algoritmlarni taqqoslash",
 ])
 
 # ==============================================================================
@@ -498,249 +495,269 @@ with tab1:
 
 
 # ==============================================================================
-# TAB 2: KARMAYKL SONLARI VA KORSELT MEZONI
+# KARMAYKL — SONNI TEKSHIRISH BO'LIMIDAGI O'QUV TAJRIBASI
 # ==============================================================================
-with tab2:
-    st.markdown(r"""
-    <div class="cyber-card" style="border-color: rgba(245, 158, 11, 0.4);">
-        <div style="font-weight: 700; font-size: 1.15rem; color: #F59E0B; margin-bottom: 0.4rem;">
-            ⚠️ Karmaykl sonlari va Korselt mezoni
-        </div>
-        <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            <b>Karmaykl sonlari</b> — Fermat testining cheklovini ko'rsatuvchi o'ziga xos murakkab sonlardir.
-            Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan <i>barcha</i> <em>a</em> asoslar uchun
-            <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> tenglikni bajaradi. Quyidagi laboratoriyada Fermat testining aldanishini
-            va boshqa algoritmlar murakkablikni qanday aniqlashini tekshiring.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_select, col_custom = st.columns([1, 1])
-
-    with col_select:
-        carm_selected = st.selectbox(
-            "Tayyor Karmaykl sonini tanlang:",
-            options=CARMICHAEL_NUMBERS,
-            index=CARMICHAEL_NUMBERS.index(8911) if 8911 in CARMICHAEL_NUMBERS else 0,
-            key="carmichael_select",
-            help="Fermat testining cheklovini ko'rsatadigan mashhur murakkab sonlar."
-        )
-
-    with col_custom:
-        custom_carm = st.text_input(
-            "Boshqa son kiritish (ixtiyoriy):",
-            value="",
-            placeholder="Masalan: 561, 8911, 1105...",
-            help="Bo'sh qoldirsangiz, chapdagi tanlangan son tahlil qilinadi."
-        )
-
-    if st.button(
-        "▶ Karmaykl sonini tahlil qilish",
-        type="primary",
-        width="stretch",
-        key="primeguard_start_carmichael",
+with tab1:
+    st.divider()
+    st.markdown("#### 🧪 Karmaykl sonlari: Fermat testining cheklovi")
+    st.caption(
+        "Ixtiyoriy matematik tajriba: 561, 8911 va boshqa kichik sonlarda "
+        "Fermat, Solovay–Strassen va Miller–Rabin natijalarini solishtiring."
+    )
+    if st.toggle(
+        "Karmaykl tajribasini ochish",
+        key="primeguard_show_carmichael",
+        value=False,
     ):
-        target_str = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
-        candidate, feedback, feedback_type = validate_number_input(target_str)
-        if feedback_type == "error":
-            st.session_state.pop("primeguard_last_carmichael", None)
-            st.error(feedback)
-        else:
-            with st.spinner("Karmaykl soni Korselt mezoni bo'yicha tekshirilmoqda..."):
-                report = analyze_carmichael(candidate, global_k)
-            st.session_state["primeguard_last_carmichael"] = {
-                "n": candidate,
-                "k": global_k,
-                "report": report,
-                "fermat": safe_extract_result(report["fermat"]),
-                "solovay_strassen": safe_extract_result(report["solovay_strassen"]),
-                "miller_rabin": safe_extract_result(report["miller_rabin"]),
-            }
+        st.markdown(r"""
+        <div class="cyber-card" style="border-color: rgba(245, 158, 11, 0.4);">
+            <div style="font-weight: 700; font-size: 1.15rem; color: #F59E0B; margin-bottom: 0.4rem;">
+                ⚠️ Karmaykl sonlari va Korselt mezoni
+            </div>
+            <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
+                <b>Karmaykl sonlari</b> — Fermat testining cheklovini ko'rsatuvchi o'ziga xos murakkab sonlardir.
+                Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan <i>barcha</i> <em>a</em> asoslar uchun
+                <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> tenglikni bajaradi. Quyidagi laboratoriyada Fermat testining aldanishini
+                va boshqa algoritmlar murakkablikni qanday aniqlashini tekshiring.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    last_carmichael = st.session_state.get("primeguard_last_carmichael")
-    if last_carmichael is not None:
-        n_carm = last_carmichael["n"]
-        carm_report = last_carmichael["report"]
-        c_f = last_carmichael["fermat"]
-        c_ss = last_carmichael["solovay_strassen"]
-        c_mr = last_carmichael["miller_rabin"]
+        col_select, col_custom = st.columns([1, 1])
 
-        current_carm = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
-        if current_carm != str(n_carm) or global_k != last_carmichael["k"]:
-            st.info(
-                "Quyidagi natija avvalgi Karmaykl tahliliga tegishli. "
-                "Yangi parametrlarni qo'llash uchun tahlil tugmasini qayta bosing."
+        with col_select:
+            carm_selected = st.selectbox(
+                "Tayyor Karmaykl sonini tanlang:",
+                options=CARMICHAEL_NUMBERS,
+                index=CARMICHAEL_NUMBERS.index(8911) if 8911 in CARMICHAEL_NUMBERS else 0,
+                key="carmichael_select",
+                help="Fermat testining cheklovini ko'rsatadigan mashhur murakkab sonlar."
             )
 
-        st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
+        with col_custom:
+            custom_carm = st.text_input(
+                "Boshqa son kiritish (ixtiyoriy):",
+                value="",
+                placeholder="Masalan: 561, 8911, 1105...",
+                help="Bo'sh qoldirsangiz, chapdagi tanlangan son tahlil qilinadi."
+            )
 
-        col_c1, col_c2, col_c3 = st.columns(3)
+        if st.button(
+            "▶ Karmaykl sonini tahlil qilish",
+            type="primary",
+            width="stretch",
+            key="primeguard_start_carmichael",
+        ):
+            target_str = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
+            candidate, feedback, feedback_type = validate_number_input(target_str)
+            if feedback_type == "error":
+                st.session_state.pop("primeguard_last_carmichael", None)
+                st.error(feedback)
+            elif candidate > 1_000_000:
+                st.session_state.pop("primeguard_last_carmichael", None)
+                st.warning(
+                    "Karmaykl tajribasi 1 000 000 gacha bo'lgan sonlar bilan cheklangan. "
+                    "Katta sonlarni yuqoridagi asosiy tublik tekshiruvida sinang."
+                )
+            else:
+                with st.spinner("Karmaykl soni Korselt mezoni bo'yicha tekshirilmoqda..."):
+                    report = analyze_carmichael(candidate, global_k)
+                st.session_state["primeguard_last_carmichael"] = {
+                    "n": candidate,
+                    "k": global_k,
+                    "report": report,
+                    "fermat": safe_extract_result(report["fermat"]),
+                    "solovay_strassen": safe_extract_result(report["solovay_strassen"]),
+                    "miller_rabin": safe_extract_result(report["miller_rabin"]),
+                }
 
-        # Fermat Card (Carmichael Trap)
-        with col_c1:
-            fermat_passed = c_f["is_prime"]
-            is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
-            card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
-            badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
-            title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
-            fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
+        last_carmichael = st.session_state.get("primeguard_last_carmichael")
+        if last_carmichael is not None:
+            n_carm = last_carmichael["n"]
+            carm_report = last_carmichael["report"]
+            c_f = last_carmichael["fermat"]
+            c_ss = last_carmichael["solovay_strassen"]
+            c_mr = last_carmichael["miller_rabin"]
 
-            st.markdown(f"""
-            <div class="kpi-card {card_style}">
-                <div class="kpi-algo-name">
-                    <span>Fermat testi</span>
-                    <span class="cyber-badge cyber-badge-amber">Zaif</span>
+            current_carm = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
+            if current_carm != str(n_carm) or global_k != last_carmichael["k"]:
+                st.info(
+                    "Quyidagi natija avvalgi Karmaykl tahliliga tegishli. "
+                    "Yangi parametrlarni qo'llash uchun tahlil tugmasini qayta bosing."
+                )
+
+            st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
+
+            col_c1, col_c2, col_c3 = st.columns(3)
+
+            # Fermat Card (Carmichael Trap)
+            with col_c1:
+                fermat_passed = c_f["is_prime"]
+                is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
+                card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
+                badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
+                title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
+                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
+
+                st.markdown(f"""
+                <div class="kpi-card {card_style}">
+                    <div class="kpi-algo-name">
+                        <span>Fermat testi</span>
+                        <span class="cyber-badge cyber-badge-amber">Zaif</span>
+                    </div>
+                    <div class="kpi-status-badge {badge_style}">
+                        {title_status}
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Xulosa:</span>
+                        <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
+                            {fermat_summary}
+                        </span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                        <span class="kpi-metric-val">{c_f['execution_time_ms']:.4f} ms</span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Murakkablik guvohi (a):</span>
+                        <span class="kpi-metric-val">{c_f['witness'] if c_f['witness'] else 'Mavjud emas'}</span>
+                    </div>
                 </div>
-                <div class="kpi-status-badge {badge_style}">
-                    {title_status}
+                """, unsafe_allow_html=True)
+
+            # Solovay-Strassen Card
+            with col_c2:
+                ss_passed = c_ss["is_prime"]
+                card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
+                badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
+                title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
+                ss_summary = "Murakkablikni aniqladi" if not ss_passed else "Eyler–Yakobi sinovidan o'tdi"
+
+                st.markdown(f"""
+                <div class="kpi-card {card_style_ss}">
+                    <div class="kpi-algo-name">
+                        <span>Solovay-Strassen</span>
+                        <span class="cyber-badge cyber-badge-green">Euler Mezoni</span>
+                    </div>
+                    <div class="kpi-status-badge {badge_style_ss}">
+                        {title_ss}
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Xulosa:</span>
+                        <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
+                            {ss_summary}
+                        </span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                        <span class="kpi-metric-val">{c_ss['execution_time_ms']:.4f} ms</span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Eyler–Yakobi guvohi:</span>
+                        <span class="kpi-metric-val" style="color: #F43F5E;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
+                    </div>
                 </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Xulosa:</span>
-                    <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
-                        {fermat_summary}
-                    </span>
+                """, unsafe_allow_html=True)
+
+            # Miller-Rabin Card
+            with col_c3:
+                mr_passed = c_mr["is_prime"]
+                card_style_mr = "kpi-card-prime" if mr_passed else "kpi-card-composite"
+                badge_style_mr = "kpi-status-prime" if mr_passed else "kpi-status-composite"
+                title_mr = "EHTIMOLIY TUB" if mr_passed else "✅ ANIQ MURAKKAB"
+
+                st.markdown(f"""
+                <div class="kpi-card {card_style_mr}">
+                    <div class="kpi-algo-name">
+                        <span>Miller-Rabin Strong</span>
+                        <span class="cyber-badge cyber-badge-green">Kuchli tublik testi</span>
+                    </div>
+                    <div class="kpi-status-badge {badge_style_mr}">
+                        {title_mr}
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Xulosa:</span>
+                        <span class="kpi-metric-val" style="color: #10B981;">
+                            {'Murakkablik aniqlandi' if not mr_passed else 'Ehtimoliy tub'}
+                        </span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                        <span class="kpi-metric-val">{c_mr['execution_time_ms']:.4f} ms</span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Kuchli Guvoh:</span>
+                        <span class="kpi-metric-val" style="color: #F43F5E;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
+                    </div>
                 </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                    <span class="kpi-metric-val">{c_f['execution_time_ms']:.4f} ms</span>
+                """, unsafe_allow_html=True)
+
+            render_round_explorer(
+                n_carm,
+                {
+                    "Fermat": c_f,
+                    "Solovay-Strassen": c_ss,
+                    "Miller-Rabin": c_mr,
+                },
+                namespace="primeguard_carmichael",
+            )
+
+            # Chuqur Matematik Tahlil (Korselt Mezoni)
+            st.markdown("### 📐 Korselt mezoni bo'yicha matematik tekshiruv")
+
+            factors_list = carm_report.get("factors", [])
+            factorization_complete = carm_report.get("factorization_complete", False)
+            factors_str = " × ".join(map(str, factors_list)) if factors_list else "To'liq ajratilmadi"
+            korselt_sat = carm_report.get("korselt_satisfied")
+
+            if not factorization_complete:
+                st.warning("Sonning tub ko'paytuvchilarga ajratilishi hisoblash limiti ichida tugamadi. Korselt mezoni bo'yicha yakuniy xulosa berilmaydi.")
+            elif korselt_sat is True:
+                st.success("Korselt mezoni bajarildi: bu son Karmaykl soni.")
+            else:
+                st.info("Korselt mezoni bajarilmadi: bu son Karmaykl soni emas.")
+
+            st.markdown(rf"""
+            <div class="cyber-card">
+                <div style="font-weight: 700; color: #00F5D4; font-size: 1rem; margin-bottom: 0.6rem;">
+                    Tub ko'paytuvchilarga ajratish:
                 </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Murakkablik guvohi (a):</span>
-                    <span class="kpi-metric-val">{c_f['witness'] if c_f['witness'] else 'Mavjud emas'}</span>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F1F5F9; margin-bottom: 1rem;">
+                    {n_carm} = {factors_str}
+                </div>
+                <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
+                    <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son <em>n</em> faqat va faqat quyidagi shartlar
+                    bajarilgandagina Karmaykl soni bo'ladi:
+                    <ol style="margin-top: 0.4rem;">
+                        <li><em>n</em> kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
+                        <li><em>n</em> ning har bir <em>p</em> tub bo'luvchisi uchun <code>(p − 1) | (n − 1)</code> bo'linish sharti qanoatlantiriladi.</li>
+                    </ol>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-        # Solovay-Strassen Card
-        with col_c2:
-            ss_passed = c_ss["is_prime"]
-            card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
-            badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
-            title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
-            ss_summary = "Murakkablikni aniqladi" if not ss_passed else "Eyler–Yakobi sinovidan o'tdi"
+            if "korselt_details" in carm_report:
+                with st.expander("🔍 Bo'linish shartlarini tekshirish:"):
+                    for detail_line in carm_report["korselt_details"]:
+                        st.markdown(f"- `{detail_line}`")
 
-            st.markdown(f"""
-            <div class="kpi-card {card_style_ss}">
-                <div class="kpi-algo-name">
-                    <span>Solovay-Strassen</span>
-                    <span class="cyber-badge cyber-badge-green">Euler Mezoni</span>
+            st.markdown(r"""
+            <div class="cyber-card" style="border-color: rgba(16, 185, 129, 0.3);">
+                <div style="font-weight: 700; color: #10B981; font-size: 0.98rem; margin-bottom: 0.4rem;">
+                    Miller–Rabin murakkablikni qanday aniqlaydi?
                 </div>
-                <div class="kpi-status-badge {badge_style_ss}">
-                    {title_ss}
-                </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Xulosa:</span>
-                    <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
-                        {ss_summary}
-                    </span>
-                </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                    <span class="kpi-metric-val">{c_ss['execution_time_ms']:.4f} ms</span>
-                </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Eyler–Yakobi guvohi:</span>
-                    <span class="kpi-metric-val" style="color: #F43F5E;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
+                <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
+                    Karmaykl sonlari Fermat testidagi <code>a<sup>n−1</sup> ≡ 1 (mod n)</code>
+                    tenglikning o'zi tublikni isbotlamasligini ko'rsatadi.
+                    Miller–Rabin testi <code>n − 1 = 2<sup>s</sup> · d</code> orqali
+                    <b>ketma-ket kvadratlash qoldiqlarini</b> tekshiradi. Agar guvoh topilsa,
+                    son aniq murakkab. Biroq bitta tasodifiy raund hamma murakkab sonlarni
+                    albatta aniqlaydi degan kafolat yo'q.
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-        # Miller-Rabin Card
-        with col_c3:
-            mr_passed = c_mr["is_prime"]
-            card_style_mr = "kpi-card-prime" if mr_passed else "kpi-card-composite"
-            badge_style_mr = "kpi-status-prime" if mr_passed else "kpi-status-composite"
-            title_mr = "EHTIMOLIY TUB" if mr_passed else "✅ ANIQ MURAKKAB"
 
-            st.markdown(f"""
-            <div class="kpi-card {card_style_mr}">
-                <div class="kpi-algo-name">
-                    <span>Miller-Rabin Strong</span>
-                    <span class="cyber-badge cyber-badge-green">Kuchli tublik testi</span>
-                </div>
-                <div class="kpi-status-badge {badge_style_mr}">
-                    {title_mr}
-                </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Xulosa:</span>
-                    <span class="kpi-metric-val" style="color: #10B981;">
-                        {'Murakkablik aniqlandi' if not mr_passed else 'Ehtimoliy tub'}
-                    </span>
-                </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                    <span class="kpi-metric-val">{c_mr['execution_time_ms']:.4f} ms</span>
-                </div>
-                <div class="kpi-metric-row">
-                    <span class="kpi-metric-label">Kuchli Guvoh:</span>
-                    <span class="kpi-metric-val" style="color: #F43F5E;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        render_round_explorer(
-            n_carm,
-            {
-                "Fermat": c_f,
-                "Solovay-Strassen": c_ss,
-                "Miller-Rabin": c_mr,
-            },
-            namespace="primeguard_carmichael",
-        )
-
-        # Chuqur Matematik Tahlil (Korselt Mezoni)
-        st.markdown("### 📐 Korselt mezoni bo'yicha matematik tekshiruv")
-
-        factors_list = carm_report.get("factors", [])
-        factorization_complete = carm_report.get("factorization_complete", False)
-        factors_str = " × ".join(map(str, factors_list)) if factors_list else "To'liq ajratilmadi"
-        korselt_sat = carm_report.get("korselt_satisfied")
-
-        if not factorization_complete:
-            st.warning("Sonning tub ko'paytuvchilarga ajratilishi hisoblash limiti ichida tugamadi. Korselt mezoni bo'yicha yakuniy xulosa berilmaydi.")
-        elif korselt_sat is True:
-            st.success("Korselt mezoni bajarildi: bu son Karmaykl soni.")
-        else:
-            st.info("Korselt mezoni bajarilmadi: bu son Karmaykl soni emas.")
-
-        st.markdown(rf"""
-        <div class="cyber-card">
-            <div style="font-weight: 700; color: #00F5D4; font-size: 1rem; margin-bottom: 0.6rem;">
-                Tub ko'paytuvchilarga ajratish:
-            </div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F1F5F9; margin-bottom: 1rem;">
-                {n_carm} = {factors_str}
-            </div>
-            <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
-                <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son <em>n</em> faqat va faqat quyidagi shartlar
-                bajarilgandagina Karmaykl soni bo'ladi:
-                <ol style="margin-top: 0.4rem;">
-                    <li><em>n</em> kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
-                    <li><em>n</em> ning har bir <em>p</em> tub bo'luvchisi uchun <code>(p − 1) | (n − 1)</code> bo'linish sharti qanoatlantiriladi.</li>
-                </ol>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        if "korselt_details" in carm_report:
-            with st.expander("🔍 Bo'linish shartlarini tekshirish:"):
-                for detail_line in carm_report["korselt_details"]:
-                    st.markdown(f"- `{detail_line}`")
-
-        st.markdown(r"""
-        <div class="cyber-card" style="border-color: rgba(16, 185, 129, 0.3);">
-            <div style="font-weight: 700; color: #10B981; font-size: 0.98rem; margin-bottom: 0.4rem;">
-                Miller–Rabin murakkablikni qanday aniqlaydi?
-            </div>
-            <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
-                Karmaykl sonlarida <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> bo'lsa-da, Miller-Rabin testi <code>n − 1 = 2<sup>s</sup> · d</code>
-                dekompozitsiyasini amalga oshirib, ketma-ket kvadratlash jarayonida <b>1 ning trivial bo'lmagan kvadrat ildizlarini</b>
-                tekshiradi. Modul murakkab son bo'lganligi sababli, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha
-                <code>x<sup>2</sup> ≡ 1 (mod n)</code> tenglama kamida <code>2<sup>r</sup> ≥ 8</code> ta yechimga ega bo'ladi (<code>±1</code> dan tashqari yechimlar).
-                Miller-Rabin bunday yechimni uchratgan zahoti sonning murakkabligini 100% aniqlik bilan isbotlaydi.
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
 
 
 # ==============================================================================
@@ -766,7 +783,7 @@ with tab3:
         chosen_bits = st.multiselect(
             "Son uzunliklarini tanlang (bit):",
             options=[64, 128, 256, 512, 1024, 2048],
-            default=[64, 128, 256, 512],
+            default=[64, 128, 256],
             help="Katta sonlar ko'proq vaqt oladi. Dastlab 64–512 bit bilan sinab ko'ring."
         )
 
@@ -782,11 +799,11 @@ with tab3:
     with col_b3:
         bench_trials = st.number_input(
             "Takrorlash soni:",
-            min_value=1,
-            max_value=5,
-            value=2,
+            min_value=3,
+            max_value=30,
+            value=10,
             step=1,
-            help="Har bir algoritmning o'lchovi necha marta takrorlanishini belgilaydi."
+            help="Kamida 10 ta takrorlash tavsiya etiladi. Median natijaga asoslaning."
         )
 
     if st.button("▶ Tezlik sinovini boshlash", type="primary", width="stretch"):
@@ -912,203 +929,3 @@ with tab3:
         )
 
 
-# ==============================================================================
-# TAB 4: RSA UCHUN O'QUV PARAMETRLARI
-# ==============================================================================
-with tab4:
-    st.markdown(r"""
-    <div class="cyber-card">
-        <div style="font-weight: 700; font-size: 1.15rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            RSA uchun o'quv parametrlarini yaratish
-        </div>
-        <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            O'quv tajribasi uchun <b>Miller–Rabin</b> yordamida ikkita ehtimoliy tub son <em>p, q</em>,
-            modul <em>N</em> va Eyler funksiyasi <em>φ(N)</em> hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Tub sonlar teoremasi
-            (PNT) bo'yicha nazariy kutilgan sinovlar soni bilan amaliy nomzodlar statistikasi taqqoslanadi.
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_r1, col_r2 = st.columns([1, 1])
-
-    with col_r1:
-        rsa_bit_choice = st.radio(
-            "RSA moduli N ning bit uzunligi:",
-            options=[1024, 2048, 4096],
-            index=1,
-            horizontal=True,
-            help="1024, 2048 yoki 4096 bitli N modulini yaratadi. p va q taxminan modul uzunligining yarmiga teng bo‘ladi."
-        )
-
-    with col_r2:
-        rsa_security_k = st.slider(
-            "Miller–Rabin raundlari (k):",
-            min_value=10,
-            max_value=64,
-            value=global_k,
-            step=1,
-            help="Raundlar soni oshgani sari Miller–Rabin testining nazariy xatolik chegarasi kamayadi."
-        )
-
-    if st.button("▶ RSA uchun p va q ni yaratish", type="primary", width="stretch"):
-        with st.spinner(f"{rsa_bit_choice}-bit RSA moduli uchun tub sonlar yaratilmoqda..."):
-            try:
-                # key_bits — N modulining maqsadli bit uzunligi.
-                rsa_res = generate_rsa_pair(rsa_bit_choice, rsa_security_k)
-            except Exception as exc:
-                st.error(f"RSA parametrlarini yaratishda xatolik: {exc}")
-                st.stop()
-
-        p = rsa_res["p"]
-        q = rsa_res["q"]
-        n_mod = rsa_res.get("N", rsa_res.get("n", p * q))
-        phi_n = rsa_res.get("phi", (p - 1) * (q - 1))
-        t_ms = rsa_res.get("elapsed_ms", rsa_res.get("execution_time_ms", 0.0))
-        c_tested = rsa_res.get("total_candidates_tested", 0)
-        c_expected = rsa_res.get("theoretical_expected_tests", int(rsa_bit_choice * 0.693 / 2))
-
-        st.markdown("### 🏆 Yaratilgan parametrlar va natijalar")
-
-        # 4 ta Kichik KPI Metrika
-        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
-
-        with col_m1:
-            st.markdown(f"""
-            <div class="kpi-card kpi-card-neutral">
-                <div class="kpi-metric-label">Umumiy Vaqt</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #00F5D4; margin: 0.3rem 0;">
-                    {t_ms:.2f} ms
-                </div>
-                <div style="font-size: 0.75rem; color: #94A3B8;">CSPRNG + Testlar</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        with col_m2:
-            st.markdown(f"""
-            <div class="kpi-card kpi-card-neutral">
-                <div class="kpi-metric-label">Tekshirilgan Nomzodlar</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #F1F5F9; margin: 0.3rem 0;">
-                    {c_tested} ta
-                </div>
-                <div style="font-size: 0.75rem; color: #94A3B8;">Nomzod elakdan o'tkazildi</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        with col_m3:
-            st.markdown(f"""
-            <div class="kpi-card kpi-card-neutral">
-                <div class="kpi-metric-label">Nazariy Kutilgan (PNT)</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #F59E0B; margin: 0.3rem 0;">
-                    ≈ {c_expected} ta
-                </div>
-                <div style="font-size: 0.75rem; color: #94A3B8;">b · ln(2) / 2 me'yori</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        with col_m4:
-            st.markdown(f"""
-            <div class="kpi-card kpi-card-prime">
-                <div class="kpi-metric-label">Har bir tublik testi uchun chegara</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #10B981; margin: 0.3rem 0;">
-                    ≤ 4⁻{rsa_security_k}
-                </div>
-                <div style="font-size: 0.75rem; color: #94A3B8;">p va q alohida tekshiriladi; bu RSA xavfsizligi kafolati emas</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # Fermat faktorizatsiyasi xavfsizligi
-        p_q_diff = abs(p - q)
-        diff_bits = p_q_diff.bit_length()
-        min_prime_bits = min(p.bit_length(), q.bit_length())
-        fermat_distance_threshold = max(1, min_prime_bits // 2)
-        is_fermat_safe = p_q_diff > (1 << fermat_distance_threshold)
-
-        st.markdown(f"""
-        <div class="cyber-alert {'cyber-alert-success' if is_fermat_safe else 'cyber-alert-warning'}">
-            <span class="cyber-alert-icon">{"🔒" if is_fermat_safe else "⚠️"}</span>
-            <div class="cyber-alert-content">
-                <div class="cyber-alert-title">Tub sonlar orasidagi masofa (o'quv ko'rsatkichi)</div>
-                <div class="cyber-alert-msg">
-                    |p − q| ayirmasining bit uzunligi: <b>{diff_bits} bit</b>. 
-                    {f"Masofa oddiy Fermat faktorizatsiyasi uchun yaqinlik chegarasidan yuqori (|p - q| > 2^{fermat_distance_threshold}). Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: p va q juda yaqin bo'lishi mumkin; bu o'quv tekshiruvini qayta ko'rib chiqing."}
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Kalitlar ko'rinishi
-        st.markdown("#### 🔑 Yaratilgan kriptografik parametrlar:")
-
-        with st.expander(f"📌 Birinchi ehtimoliy tub son (p) — {p.bit_length()} bit", expanded=False):
-            st.markdown("**O'nlik sanoq tizimida:**")
-            st.code(str(p), language="text")
-            st.markdown("**O'n oltilik sanoq tizimida:**")
-            st.code(hex(p), language="text")
-
-        with st.expander(f"📌 Ikkinchi ehtimoliy tub son (q) — {q.bit_length()} bit", expanded=False):
-            st.markdown("**O'nlik sanoq tizimida:**")
-            st.code(str(q), language="text")
-            st.markdown("**O'n oltilik sanoq tizimida:**")
-            st.code(hex(q), language="text")
-
-        with st.expander(f"🛡️ RSA Moduli (N = p × q) — {n_mod.bit_length()} bit", expanded=True):
-            st.markdown("**O'nlik sanoq tizimida:**")
-            st.code(str(n_mod), language="text")
-            st.markdown("**O'n oltilik sanoq tizimida:**")
-            st.code(hex(n_mod), language="text")
-
-        with st.expander(f"📐 Eyler Funksiyasi φ(N) = (p-1)(q-1) — {phi_n.bit_length()} bit", expanded=False):
-            st.markdown("**O'nlik sanoq tizimida:**")
-            st.code(str(phi_n), language="text")
-            st.markdown("**O'n oltilik sanoq tizimida:**")
-            st.code(hex(phi_n), language="text")
-
-        # JSON Eksport
-        export_payload = {
-            "metadata": {
-                "system": "PrimeGuard v1.1",
-                "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "algorithm": "Miller-Rabin Strong Pseudoprime",
-                "rounds_k": rsa_security_k,
-                "p_bit_length": p.bit_length(),
-                "q_bit_length": q.bit_length(),
-                "rsa_modulus_bits": n_mod.bit_length(),
-                "target_modulus_bits": rsa_bit_choice,
-                "modulus_length_exact": n_mod.bit_length() == rsa_bit_choice
-            },
-            "performance": {
-                "execution_time_ms": t_ms,
-                "candidates_tested": c_tested,
-                "theoretical_expected": c_expected
-            },
-            "keys": {
-                "p_decimal": str(p),
-                "p_hex": hex(p),
-                "q_decimal": str(q),
-                "q_hex": hex(q),
-                "N_modulus_decimal": str(n_mod),
-                "N_modulus_hex": hex(n_mod),
-                "phi_N_decimal": str(phi_n),
-                "phi_N_hex": hex(phi_n)
-            }
-        }
-
-        json_bytes = json.dumps(export_payload, indent=2).encode('utf-8')
-        st.download_button(
-            label="⬇ RSA parametrlarini JSON formatida yuklab olish",
-            data=json_bytes,
-            file_name=f"primeguard_rsa_{n_mod.bit_length()}bit_keys.json",
-            mime="application/json",
-            width="stretch"
-        )
-
-# ==============================================================================
-# FOOTER
-# ==============================================================================
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #64748B; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; padding: 1rem 0;">
-    PrimeGuard v1.1 • Kriptografiyaning matematik usullari • Akademik laboratoriya<br>
-    Akademik prototip • Algoritmlar va testlar bo'yicha mustaqil validatsiya talab etiladi
-</div>
-""", unsafe_allow_html=True)
