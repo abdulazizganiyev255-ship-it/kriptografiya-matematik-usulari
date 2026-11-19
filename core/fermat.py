@@ -1,8 +1,8 @@
-import secrets
 import time
 
 from core.models import PrimalityResult, RoundLog
 from core.number_theory import check_small_primes, gcd
+from core.witness import draw_witness, validate_inputs
 
 
 def fermat_test(
@@ -15,8 +15,7 @@ def fermat_test(
     Fermat probabilistic primality test.
     Checks whether a^(n-1) == 1 (mod n) for k random bases a in [2, n-2].
     """
-    if k < 1:
-        raise ValueError("Raundlar soni k >= 1 bo'lishi kerak")
+    validate_inputs(n, k)
 
     t0 = time.perf_counter()
     bit_length = n.bit_length() if n > 0 else 0
@@ -101,29 +100,34 @@ def fermat_test(
             )
 
     logs: list[RoundLog] = []
-    seen_a: set[int] = set()
-    num_possible = n - 3
-
     for round_idx in range(1, k + 1):
-        # Pick random witness a in [2, n-2] using secrets
-        attempts = 0
-        while attempts < 100:
-            a = secrets.randbelow(num_possible) + 2
-            if coprime_only and gcd(a, n) != 1:
-                attempts += 1
-                continue
-            if len(seen_a) < num_possible and a in seen_a:
-                attempts += 1
-                continue
-            break
-        else:
-            # Fallback if range is small
-            a = secrets.randbelow(num_possible) + 2
-            if coprime_only:
-                while gcd(a, n) != 1:
-                    a = secrets.randbelow(num_possible) + 2
+        a = draw_witness(n, coprime_only=coprime_only)
 
-        seen_a.add(a)
+        factor = gcd(a, n)
+        if factor > 1:
+            logs.append(RoundLog(
+                round_idx=round_idx,
+                witness_a=a,
+                expression=f"gcd({a}, {n})",
+                computed_value=str(factor),
+                passed=False,
+                note=f"EKUB({a}, {n}) = {factor} > 1: murakkablik guvohi topildi",
+            ))
+            elapsed = (time.perf_counter() - t0) * 1000.0
+            return PrimalityResult(
+                algorithm="Fermat",
+                n=n,
+                bit_length=bit_length,
+                is_prime=False,
+                verdict="Composite",
+                rounds_requested=k,
+                rounds_run=round_idx,
+                error_bound="0",
+                elapsed_ms=round(elapsed, 4),
+                pre_filtered=False,
+                logs=logs,
+            )
+
         val = pow(a, n - 1, n)
         expr = f"{a}^({n}-1) mod {n}"
 
