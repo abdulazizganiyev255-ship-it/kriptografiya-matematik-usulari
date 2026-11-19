@@ -5,14 +5,14 @@
 
 ---
 
-## 📌 Loyiha Pasporti
+## 📌 Loyiha pasporti
 
 * **Loyiha nomi:** `PrimeGuard`
 * **Versiya:** `1.1.0 (Academic Prototype)`
-* **Yo'nalish:** Kriptografiyaning Matematik Usullari / Kiberxavfsizlik
+* **Yo'nalish:** Kriptografiyaning matematik usullari / Kiberxavfsizlik
 * **Standartlar:** FIPS 186-5, RFC 8017 va ISO/IEC 18031 hujjatlari nazariy taqqoslash manbalari sifatida ko'rib chiqiladi; ushbu loyiha hozircha ularga muvofiqlik sertifikatiga ega emas.
-* **Ishlash Rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
-* **Mas'uliyat Zonasi:** 
+* **Ishlash rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
+* **Mas'uliyat zonasi:** 
   * **Matematik yadro:** uchta ehtimoliy tublik algoritmi va yordamchi sonlar nazariyasi funksiyalari (`core/`).
   * **Analitika:** Karmaykl sonlari, benchmark va tub son generatori (`analytics/`).
   * **Interfeys:** Streamlit dashboard (`app.py`) va CSS dizayni (`assets/style.css` (Midnight Lab interfeysi)).
@@ -47,7 +47,7 @@
 | **Probably Prime** / Ehtimoliy tub | Tanlangan raundlardan o'tdi; bu isbot emas |
 | **Prime** / Aniq tub | Kichik tub sonlar jadvali yoki deterministik etalon bilan tekshirildi |
 
-## 🏛️ Tizim Arxitekturasi
+## 🏛️ Tizim arxitekturasi
 
 Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu yondashuv kodni kengaytirish, testlash va tushuntirishni osonlashtiradi:
 
@@ -90,20 +90,20 @@ flowchart TD
 
 ---
 
-## 📐 Matematik Nazariya va Algoritmlar
+## 📐 Matematik nazariya va algoritmlar
 
 Asimmetrik kriptografiyada (RSA, Diffie-Hellman, DSA, ElGamal) xavfsizlikning fundamental kafolati — yirik (512, 1024, 2048, 4096 bitli) tub sonlarni ishonchli va tezkor aniqlashga tayanadi. Deterministik usullar (masalan, AKS algoritmi) hisoblash nuqtai nazaridan sekin bo'lganligi bois, amaliyotda **probabilistik (Monte-Karlo tipidagi) tublik testlari** qo'llaniladi.
 
 ---
 
-### 1. Kichik Fermat Teoremasi va Fermat Testi
+### 1. Fermatning kichik teoremasi va Fermat testi
 
 Pyer de Fermat (1640) tomonidan shakllantirilgan teoremaga ko'ra:
 Agar $p$ tub son bo'lib, $\gcd(a, p) = 1$ bo'lsa:
 
 $$a^{p-1} \equiv 1 \pmod p$$
 
-#### Algoritm Mantig'i:
+#### Algoritm mantig'i:
 1. Tekshiriluvchi toq $n$ soni uchun tasodifiy $a \in [2, n - 2]$ asosi tanlanadi.
 2. Agar $\gcd(a, n) > 1$ bo'lsa, son aniq murakkab deb topiladi.
 3. Agar $a^{n-1} \not\equiv 1 \pmod n$ bo'lsa, $a$ soni $n$ ning **Fermat guvohi (Fermat witness)** hisoblanadi va $n$ ning murakkabligi qat'iy isbotlanadi.
@@ -113,10 +113,10 @@ Karmaykl sonlari bundan mustasno bo'lgan murakkab sonlar uchun, mustaqil va bir 
 
 $$P(\text{Xatolik}) \le \left(\frac{1}{2}\right)^k = 2^{-k}$$
 
-#### ⚠️ Karmaykl Sonlari (Universal Psevdotublar) va Korselt Mezoni
+#### ⚠️ Karmaykl sonlari va Korselt mezoni
 Fermat testining halokatli kamchiligi mavjud: **Karmaykl sonlari**. Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan *barcha* $a$ asoslar uchun Fermat tengligini soxta qanoatlantiradi.
 
-**Korselt Mezoni (1899):** Musbat toq murakkab son $n$ faqat va faqat quyidagi shartlar bajarilgandagina Karmaykl soni bo'ladi:
+**Korselt mezoni (1899):** Musbat toq murakkab son $n$ faqat va faqat quyidagi shartlar bajarilgandagina Karmaykl soni bo'ladi:
 1. $n$ kvadratlardan xoli (square-free), ya'ni uning kanonik yoyilmasida hech bir tub son darajasi 1 dan oshmaydi: 
    $$n = p_1 p_2 \dots p_r \quad (\forall i \ne j, \, p_i \ne p_j)$$
 2. Har bir $p_i$ tub bo'luvchisi uchun quyidagi bo'linish sharti bajariladi:
@@ -130,7 +130,7 @@ Fermat testi Karmaykl sonlariga qarshi ojiz bo'lib, $\gcd(a, n) = 1$ bo'lgan har
 
 ---
 
-### 2. Solovay-Strassen Testi va Eyler Kriteriyasi
+### 2. Solovay–Strassen testi va Eyler mezoni
 
 Robert Solovay va Volker Strassen (1977) Fermat testining cheklovlarini yengish uchun Eyler kriteriyasi va Yakobi belgisiga asoslangan testni taklif etishdi.
 
@@ -142,20 +142,20 @@ Bu yerda $\left(\frac{a}{p}\right)$ — Lejandr belgisi (umumiy holda toq $n$ uc
 
 $$\left(\frac{a}{n}\right) \in \{-1, 0, 1\}$$
 
-#### Algoritm Mantig'i:
+#### Algoritm mantig'i:
 1. Tasodifiy $a \in [2, n - 2]$ tanlanadi.
 2. Yakobi belgisi $J = \left(\frac{a}{n}\right)$ hisoblanadi ($O(\log^2 n)$).
 3. Modul bo'yicha daraja $V = a^{\frac{n-1}{2}} \pmod n$ hisoblanadi.
 4. Agar $J = 0$ yoki $V \not\equiv J \pmod n$ bo'lsa, $a$ soni **Eyler guvohi (Euler witness)** bo'lib, $n$ ning murakkabligi 100% isbotlanadi.
 
-#### Xatolik Ehtimoli:
+#### Xatolik ehtimoli:
 Solovay-Strassen testi Karmaykl sonlarida aldanmaydi. Har qanday toq murakkab son $n$ uchun Eyler yolg'onchilari guruhi $\mathbb{Z}_n^*$ ning qism guruhi bo'lib, uning tartibi ko'pi bilan $\frac{\varphi(n)}{2}$ ga teng:
 
 $$P(\text{Xatolik}) \le \left(\frac{1}{2}\right)^k = 2^{-k}$$
 
 ---
 
-### 3. Miller-Rabin Kuchli Psevdotublik Testi (Kriptografik Standart)
+### 3. Miller–Rabin kuchli ehtimoliy tublik testi
 
 Gari Miller (1976) va Maykl Rabin (1980) tomonidan ishlab chiqilgan ushbu algoritm zamonaviy kiberxavfsizlik va kriptotizimlarning (OpenSSL, GnuPG, TLS/SSL) sanoat standarti hisoblanadi.
 
@@ -165,7 +165,7 @@ $$x^2 \equiv 1 \pmod p \implies (x - 1)(x + 1) \equiv 0 \pmod p \implies x \equi
 
 Agar $n$ murakkab son bo'lsa, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha $x^2 \equiv 1 \pmod n$ kongruensiyasi $\pm 1$ dan tashqari trivial bo'lmagan kvadrat ildizlarga ega bo'ladi.
 
-#### Algoritm Mantig'i:
+#### Algoritm mantig'i:
 1. $n - 1$ soni 2 ning darajasi va toq songa dekompozitsiya qilinadi:
    $$n - 1 = 2^s \cdot d \quad (d \text{ toq}, \, s \ge 1)$$
 2. Tasodifiy $a \in [2, n - 2]$ tanlanadi.
@@ -177,7 +177,7 @@ Agar $n$ murakkab son bo'lsa, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha $x^2 \equ
    * Agar $x_r \equiv 1 \pmod n$ bo'lib, undan oldingi $x_{r-1} \not\equiv \pm 1 \pmod n$ bo'lsa, 1 ning trivial bo'lmagan kvadrat ildizi topiladi va $n$ **ANIQ MURAKKAB** deb topiladi.
 6. Agar $s-1$ ta qadamda ham $-1$ ga erishilmasa, $a$ — **Kuchli Murakkablik Guvohi (Strong Witness)** bo'ladi.
 
-#### Monier-Rabin Teoremasi va Xatolik Chegarasi:
+#### Monier–Rabin teoremasi va xatolik chegarasi:
 Har qanday toq murakkab $n$ soni uchun kuchli soxta guvohlar (strong liars) soni eng ko'pi bilan:
 
 $$|L_n| \le \frac{1}{4}\varphi(n) < \frac{n - 1}{4}$$
@@ -190,16 +190,16 @@ $$P(\text{Xatolik}) \le \left(\frac{1}{4}\right)^k = 4^{-k} = 2^{-2k}$$
 | :---: | :---: | :---: |
 | 10 | $\approx 9.53 \times 10^{-7}$ | $99.99990\%$ |
 | 20 | $\approx 9.09 \times 10^{-13}$ | $99.9999999999\%$ |
-| 40 | $\approx 8.27 \times 10^{-25}$ | $1 - 10^{-24}$ (Kriptografik kafolat) |
-| 64 | $\approx 2.93 \times 10^{-39}$ | Koinotdagi atomlar sonidan kam xato |
+| 40 | $\approx 8.27 \times 10^{-25}$ | $1 - 10^{-24}$ (nazariy yuqori chegara) |
+| 64 | $\approx 2.93 \times 10^{-39}$ | Juda kichik nazariy yuqori chegara |
 
 ---
 
-## 📊 Algoritmlarning Hisoblash Murakkabligi (Big-O Matrix)
+## 📊 Algoritmlarning hisoblash murakkabligi (Big-O)
 
 $n$ nomzod sonining bit uzunligi $b = \lfloor \log_2 n \rfloor + 1$, $k$ — audit raundlari soni bo'lsin:
 
-| Algoritm | Vaqt Murakkabligi (Klassik) | Vaqt Murakkabligi (FFT / Schönhage) | Xotira Sarfi | Xatolik Ehtimoli | Karmaykl Tuzog'iga Zaiflik |
+| Algoritm | Vaqt Murakkabligi (Klassik) | Vaqt Murakkabligi (FFT / Schönhage) | Xotira Sarfi | Xatolik ehtimoli | Karmaykl Tuzog'iga Zaiflik |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Kichik Fermat** | $O(k \cdot b^3)$ | $O(k \cdot b^2 \log b \log \log b)$ | $O(b)$ | $\le 2^{-k}$ *(Karmaykldan tashqari)* | 🚨 **O'ta Zaif** (Tuzoqqa tushadi) |
 | **Solovay-Strassen** | $O(k \cdot b^3)$ | $O(k \cdot b^2 \log b \log \log b)$ | $O(b)$ | $\le 2^{-k}$ | ✅ **Xavfsiz** (Karmayklni fosh qiladi) |
@@ -217,11 +217,11 @@ Papka va fayllarning sodda izohi uchun [CODE_GUIDE.md](docs/CODE_GUIDE.md) fayli
 
 ## 🚀 O'rnatish va Ishga Tushirish
 
-### 1. Tizim Talablari
+### 1. Tizim talablari
 * **Python:** `3.10` yoki undan yuqori (tavsiya etiladi: `3.11` / `3.12` / `3.13`).
 * **Operatsion Tizim:** Windows 10/11, Ubuntu 20.04+, macOS Sonoma+.
 
-### 2. Virtual Muhitni Yaratish va Faollashtirish
+### 2. Virtual muhitni yaratish va faollashtirish
 Loyiha papkasiga kiring va virtual muhitni ishga tushiring:
 
 ```bash
@@ -234,7 +234,7 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. Bog'liqliklarni O'rnatish
+### 3. Kutubxonalarni o'rnatish
 ```bash
 pip install --upgrade pip
 pip install -r requirements.txt
@@ -242,13 +242,13 @@ pip install -r requirements.txt
 
 *(Kutubxonalar tarkibi: `streamlit`, `plotly`, `pandas`, `pytest`)*
 
-### 4. Dashboard Interfeysini Ishga Tushirish
+### 4. Dastur interfeysini ishga tushirish
 ```bash
 streamlit run app.py
 ```
 Buyruq bajarilgach, standart brauzeringizda `http://localhost:8501` manzili avtomatik ravishda ochiladi.
 
-### 5. Yadroviy Sinov Testlarini O'tkazish
+### 5. Matematik yadro testlarini o'tkazish
 ```bash
 pytest tests/ -v
 ```
