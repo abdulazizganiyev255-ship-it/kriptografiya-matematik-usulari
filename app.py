@@ -21,6 +21,7 @@ from core.number_theory import is_prime_deterministic_64
 from analytics.carmichael import CARMICHAEL_NUMBERS, analyze_carmichael
 from analytics.benchmark import run_benchmark
 from analytics.prime_generator import generate_prime, generate_rsa_pair
+from ui.round_explorer import render_round_explorer
 
 # ==============================================================================
 # STREAMLIT CONFIG & OFFLINE STYLING
@@ -253,227 +254,247 @@ with tab1:
 
     col_btn, col_info = st.columns([1, 3])
     with col_btn:
-        start_audit = st.button("▶ Sonni tekshirish", width="stretch", type="primary")
+        start_audit = st.button("▶ Sonni tekshirish", width="stretch", type="primary", key="primeguard_start_audit")
 
     if start_audit:
-        val, msg, alert_type = validate_number_input(raw_candidate)
-
-        if alert_type == "error":
-            st.markdown(f"""
-            <div class="cyber-alert cyber-alert-error">
-                <span class="cyber-alert-icon">🚫</span>
-                <div class="cyber-alert-content">
-                    <div class="cyber-alert-title">Validatsiya Xatoligi (Input Error)</div>
-                    <div class="cyber-alert-msg">{msg}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        candidate, feedback, feedback_type = validate_number_input(raw_candidate)
+        if feedback_type == "error":
+            st.session_state.pop("primeguard_last_audit", None)
+            st.error(feedback)
         else:
-            if alert_type in ("warning", "success"):
+            with st.spinner(f"Son tahlil qilinmoqda ({global_k} raund)..."):
+                computed_fermat = safe_extract_result(fermat_test(candidate, global_k))
+                computed_ss = safe_extract_result(solovay_strassen_test(candidate, global_k))
+                computed_mr = safe_extract_result(miller_rabin_test(candidate, global_k))
+            st.session_state["primeguard_last_audit"] = {
+                "n": candidate,
+                "k": global_k,
+                "message": feedback,
+                "alert_type": feedback_type,
+                "fermat": computed_fermat,
+                "solovay_strassen": computed_ss,
+                "miller_rabin": computed_mr,
+            }
+
+    # Preserve the exact random witness logs across Streamlit widget reruns.
+    last_audit = st.session_state.get("primeguard_last_audit")
+    if last_audit is not None:
+        val = last_audit["n"]
+        audit_k = last_audit["k"]
+        res_f = last_audit["fermat"]
+        res_ss = last_audit["solovay_strassen"]
+        res_mr = last_audit["miller_rabin"]
+        if last_audit["alert_type"] == "warning":
+            st.warning(last_audit["message"])
+        elif last_audit["alert_type"] == "success":
+            st.success(last_audit["message"])
+
+        current_raw = raw_candidate.strip().replace(" ", "").replace("_", "")
+        if current_raw != str(val) or global_k != audit_k:
+            st.info(
+                "Quyidagi natija avvalgi tekshiruvga tegishli. Yangi son yoki "
+                "raund qiymatini qo'llash uchun «Sonni tekshirish» tugmasini bosing."
+            )
+
+        # Bit uzunligi va raqamlar soni
+        bit_len = val.bit_length()
+        digit_len = len(str(val))
+
+        st.markdown(f"""
+        <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
+            <span class="cyber-badge cyber-badge-cyan">Uzunligi: {bit_len} bit</span>
+            <span class="cyber-badge cyber-badge-cyan">Raqamlar: {digit_len} ta</span>
+            <span class="cyber-badge cyber-badge-cyan">Raundlar: {audit_k}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Mustaqil deterministik etalon faqat 64-bit diapazonida kafolatlangan.
+        audit_results = [res_f, res_ss, res_mr]
+        deterministic_reference = (
+            is_prime_deterministic_64(val) if val < (1 << 64) else None
+        )
+        if any(not result["is_prime"] for result in audit_results):
+            st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
+        elif deterministic_reference is True:
+            st.success("Yakuniy xulosa: SON ANIQ TUB. n < 2⁶⁴ uchun deterministik Miller–Rabin etaloni bilan tasdiqlandi.")
+        elif deterministic_reference is False:
+            st.error("Yakuniy xulosa: SON MURAKKAB. 64-bit deterministik etalon murakkablikni tasdiqladi.")
+        else:
+            st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
+
+
+        # 3 ta Neon KPI Kartochka
+        col1, col2, col3 = st.columns(3)
+
+        cards_data = [
+            ("Fermat testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k marta modul bo'yicha darajaga oshirish"),
+            ("Solovay–Strassen", res_ss, f"≤ 2⁻{audit_k}", "k raund + Yakobi belgisi"),
+            ("Miller–Rabin", res_mr, f"≤ 4⁻{audit_k}", "k ta kuchli tublik raundi")
+        ]
+
+        for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
+            is_p = r_data["is_prime"]
+            card_class = "kpi-card-prime" if is_p else "kpi-card-composite"
+            badge_class = "kpi-status-prime" if is_p else "kpi-status-composite"
+            status_text = ("ANIQ TUB" if r_data["verdict"] == "Prime" else "EHTIMOLIY TUB") if is_p else "ANIQ MURAKKAB"
+            shown_error = "0 (elak bilan aniq)" if r_data["pre_filtered"] else err_bound
+
+            with col:
                 st.markdown(f"""
-                <div class="cyber-alert cyber-alert-{alert_type}">
-                    <span class="cyber-alert-icon">{"⚠️" if alert_type == "warning" else "✅"}</span>
-                    <div class="cyber-alert-content">
-                        <div class="cyber-alert-title">Deterministik Xulosa</div>
-                        <div class="cyber-alert-msg">{msg}</div>
+                <div class="kpi-card {card_class}">
+                    <div class="kpi-algo-name">
+                        <span>{algo_title}</span>
+                        <span style="font-size: 0.72rem; color: #64748B;">{complexity}</span>
+                    </div>
+                    <div class="kpi-status-badge {badge_class}">
+                        {status_text}
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                        <span class="kpi-metric-val">{r_data['execution_time_ms']:.4f} ms</span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Nazariy xatolik chegarasi:</span>
+                        <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{shown_error if is_p else '0 (Aniq)'}</span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">O'tkazilgan raundlar:</span>
+                        <span class="kpi-metric-val">{r_data['rounds']} ta</span>
+                    </div>
+                    <div class="kpi-metric-row">
+                        <span class="kpi-metric-label">Guvoh (Witness):</span>
+                        <span class="kpi-metric-val" style="font-size: 0.8rem; color: {'#F43F5E' if r_data['witness'] else '#10B981'};">
+                            {f"a = {r_data['witness']}" if r_data['witness'] else "Topilmadi"}
+                        </span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
 
-            # Algoritmlarni ishga tushirish
-            with st.spinner(f"Son tahlil qilinmoqda ({global_k} raund)..."):
-                res_f = safe_extract_result(fermat_test(val, global_k))
-                res_ss = safe_extract_result(solovay_strassen_test(val, global_k))
-                res_mr = safe_extract_result(miller_rabin_test(val, global_k))
+        # The step explorer uses the exact RoundLog bases from this saved run.
+        render_round_explorer(
+            val,
+            {
+                "Fermat": res_f,
+                "Solovay-Strassen": res_ss,
+                "Miller-Rabin": res_mr,
+            },
+            namespace="primeguard_audit",
+        )
 
-            # Bit uzunligi va raqamlar soni
-            bit_len = val.bit_length()
-            digit_len = len(str(val))
+        # Raundlar bo'yicha tekshiruv jurnali
+        st.markdown("### 📋 Tekshiruv bosqichlari")
 
-            st.markdown(f"""
-            <div style="display: flex; gap: 1rem; margin: 1rem 0; flex-wrap: wrap;">
-                <span class="cyber-badge cyber-badge-cyan">Uzunligi: {bit_len} bit</span>
-                <span class="cyber-badge cyber-badge-cyan">Raqamlar: {digit_len} ta</span>
-                <span class="cyber-badge cyber-badge-cyan">Raundlar: {global_k}</span>
-            </div>
-            """, unsafe_allow_html=True)
+        tab_log_f, tab_log_ss, tab_log_mr = st.tabs([
+            "Fermat bosqichlari", "Solovay–Strassen bosqichlari", "Miller–Rabin bosqichlari"
+        ])
 
-            # Mustaqil deterministik etalon faqat 64-bit diapazonida kafolatlangan.
-            audit_results = [res_f, res_ss, res_mr]
-            deterministic_reference = (
-                is_prime_deterministic_64(val) if val < (1 << 64) else None
-            )
-            if any(not result["is_prime"] for result in audit_results):
-                st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
-            elif deterministic_reference is True:
-                st.success("Yakuniy xulosa: SON ANIQ TUB. n < 2⁶⁴ uchun deterministik Miller–Rabin etaloni bilan tasdiqlandi.")
-            elif deterministic_reference is False:
-                st.error("Yakuniy xulosa: SON MURAKKAB. 64-bit deterministik etalon murakkablikni tasdiqladi.")
-            else:
-                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
+        all_csv_rows = []
 
+        for tab_target, r_data, algo_name in [
+            (tab_log_f, res_f, "Fermat"),
+            (tab_log_ss, res_ss, "Solovay-Strassen"),
+            (tab_log_mr, res_mr, "Miller-Rabin")
+        ]:
+            with tab_target:
+                logs_list = r_data["logs"]
+                if not logs_list:
+                    st.info("Maxsus holat (n ≤ 3 yoki juft son) tufayli ehtimoliy test raundlari o'tkazilmadi.")
+                else:
+                    table_rows = []
+                    for idx, item in enumerate(logs_list, 1):
+                        r_num = getattr(item, "round_idx", getattr(item, "round", getattr(item, "round_number", idx)))
+                        base_a = getattr(item, "witness_a", getattr(item, "base", getattr(item, "a", "—")))
+                        res_bool = getattr(item, "passed", getattr(item, "result", True))
+                        expr = getattr(item, "expression", "")
+                        comp = getattr(item, "computed_value", "")
+                        note = getattr(item, "note", getattr(item, "details", getattr(item, "message", "")))
+                        if expr and comp:
+                            details = f"{expr} = {comp} | {note}"
+                        elif expr:
+                            details = f"{expr} | {note}"
+                        else:
+                            details = note or "Muvaffaqiyatli tekshirildi"
 
-            # 3 ta Neon KPI Kartochka
-            col1, col2, col3 = st.columns(3)
+                        status_str = "O'tdi (Tublikka mos)" if res_bool else "O'tmadi (murakkablik guvohi)"
 
-            cards_data = [
-                ("Fermat testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k marta modul bo'yicha darajaga oshirish"),
-                ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "k raund + Yakobi belgisi"),
-                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "k ta kuchli tublik raundi")
-            ]
+                        table_rows.append({
+                            "Bosqich": r_num,
+                            "Tanlangan asos (a)": str(base_a),
+                            "Holat": status_str,
+                            "Hisoblash tafsiloti": str(details)
+                        })
 
-            for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
-                is_p = r_data["is_prime"]
-                card_class = "kpi-card-prime" if is_p else "kpi-card-composite"
-                badge_class = "kpi-status-prime" if is_p else "kpi-status-composite"
-                status_text = ("ANIQ TUB" if r_data["verdict"] == "Prime" else "EHTIMOLIY TUB") if is_p else "ANIQ MURAKKAB"
-                shown_error = "0 (elak bilan aniq)" if r_data["pre_filtered"] else err_bound
+                        all_csv_rows.append({
+                            "Nomzod_Son": str(val)[:50] + ("..." if len(str(val)) > 50 else ""),
+                            "Algoritm": algo_name,
+                            "Bosqich": r_num,
+                            "Asos_a": str(base_a),
+                            "Holat": status_str,
+                            "Bajarilish_ms": r_data['execution_time_ms'],
+                            "Izoh": str(details)
+                        })
 
-                with col:
-                    st.markdown(f"""
-                    <div class="kpi-card {card_class}">
-                        <div class="kpi-algo-name">
-                            <span>{algo_title}</span>
-                            <span style="font-size: 0.72rem; color: #64748B;">{complexity}</span>
-                        </div>
-                        <div class="kpi-status-badge {badge_class}">
-                            {status_text}
-                        </div>
-                        <div class="kpi-metric-row">
-                            <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                            <span class="kpi-metric-val">{r_data['execution_time_ms']:.4f} ms</span>
-                        </div>
-                        <div class="kpi-metric-row">
-                            <span class="kpi-metric-label">Nazariy xatolik chegarasi:</span>
-                            <span class="kpi-metric-val" style="color: {'#10B981' if is_p else '#94A3B8'};">{shown_error if is_p else '0 (Aniq)'}</span>
-                        </div>
-                        <div class="kpi-metric-row">
-                            <span class="kpi-metric-label">O'tkazilgan raundlar:</span>
-                            <span class="kpi-metric-val">{r_data['rounds']} ta</span>
-                        </div>
-                        <div class="kpi-metric-row">
-                            <span class="kpi-metric-label">Guvoh (Witness):</span>
-                            <span class="kpi-metric-val" style="font-size: 0.8rem; color: {'#F43F5E' if r_data['witness'] else '#10B981'};">
-                                {f"a = {r_data['witness']}" if r_data['witness'] else "Topilmadi"}
-                            </span>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
+                    df_logs = pd.DataFrame(table_rows)
+                    st.dataframe(df_logs, width="stretch", height=220)
 
-            # Raundlar bo'yicha tekshiruv jurnali
-            st.markdown("### 📋 Tekshiruv bosqichlari")
-
-            tab_log_f, tab_log_ss, tab_log_mr = st.tabs([
-                "Fermat bosqichlari", "Solovay–Strassen bosqichlari", "Miller–Rabin bosqichlari"
-            ])
-
-            all_csv_rows = []
-
-            for tab_target, r_data, algo_name in [
-                (tab_log_f, res_f, "Fermat"),
-                (tab_log_ss, res_ss, "Solovay-Strassen"),
-                (tab_log_mr, res_mr, "Miller-Rabin")
-            ]:
-                with tab_target:
-                    logs_list = r_data["logs"]
-                    if not logs_list:
-                        st.info("Maxsus holat (n ≤ 3 yoki juft son) tufayli ehtimoliy test raundlari o'tkazilmadi.")
-                    else:
-                        table_rows = []
-                        for idx, item in enumerate(logs_list, 1):
-                            r_num = getattr(item, "round_idx", getattr(item, "round", getattr(item, "round_number", idx)))
-                            base_a = getattr(item, "witness_a", getattr(item, "base", getattr(item, "a", "—")))
-                            res_bool = getattr(item, "passed", getattr(item, "result", True))
-                            expr = getattr(item, "expression", "")
-                            comp = getattr(item, "computed_value", "")
-                            note = getattr(item, "note", getattr(item, "details", getattr(item, "message", "")))
-                            if expr and comp:
-                                details = f"{expr} = {comp} | {note}"
-                            elif expr:
-                                details = f"{expr} | {note}"
-                            else:
-                                details = note or "Muvaffaqiyatli tekshirildi"
-
-                            status_str = "O'tdi (Tublikka mos)" if res_bool else "O'tmadi (murakkablik guvohi)"
-
-                            table_rows.append({
-                                "Bosqich": r_num,
-                                "Tanlangan asos (a)": str(base_a),
-                                "Holat": status_str,
-                                "Hisoblash tafsiloti": str(details)
-                            })
-
-                            all_csv_rows.append({
-                                "Nomzod_Son": str(val)[:50] + ("..." if len(str(val)) > 50 else ""),
-                                "Algoritm": algo_name,
-                                "Bosqich": r_num,
-                                "Asos_a": str(base_a),
-                                "Holat": status_str,
-                                "Bajarilish_ms": r_data['execution_time_ms'],
-                                "Izoh": str(details)
-                            })
-
-                        df_logs = pd.DataFrame(table_rows)
-                        st.dataframe(df_logs, width="stretch", height=220)
-
-            # CSV Yuklab olish
-            if all_csv_rows:
-                df_export = pd.DataFrame(all_csv_rows)
-                csv_data = df_export.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="⬇ Tekshiruv jurnalini CSV formatida yuklab olish",
-                    data=csv_data,
-                    file_name=f"primeguard_audit_log_{val.bit_length()}bit.csv",
-                    mime="text/csv",
-                    width="stretch"
-                )
-
-            # To'liq natijani JSON ko'rinishida saqlash
-            json_results = {}
-            for algo_label, algo_result in [
-                ("Fermat", res_f),
-                ("Solovay-Strassen", res_ss),
-                ("Miller-Rabin", res_mr),
-            ]:
-                json_results[algo_label] = {
-                    "verdict": algo_result["verdict"],
-                    "is_probable_prime": algo_result["is_prime"],
-                    "execution_time_ms": algo_result["execution_time_ms"],
-                    "rounds_requested": global_k,
-                    "rounds_completed": algo_result["rounds"],
-                    "error_bound": algo_result.get("error_bound"),
-                    "witness": algo_result["witness"],
-                    "steps": [
-                        {
-                            "round": getattr(item, "round_idx", None),
-                            "base": getattr(item, "witness_a", None),
-                            "expression": getattr(item, "expression", ""),
-                            "computed_value": getattr(item, "computed_value", ""),
-                            "passed": getattr(item, "passed", None),
-                            "note": getattr(item, "note", ""),
-                        }
-                        for item in algo_result["logs"]
-                    ],
-                }
-
-            audit_json = {
-                "project": "PrimeGuard",
-                "report_type": "probabilistic_primality_audit",
-                "number_decimal": str(val),
-                "bit_length": bit_len,
-                "decimal_digits": digit_len,
-                "rounds": global_k,
-                "deterministic_64_reference": deterministic_reference,
-                "deterministic_reference_scope": "n < 2**64",
-                "results": json_results,
-            }
+        # CSV Yuklab olish
+        if all_csv_rows:
+            df_export = pd.DataFrame(all_csv_rows)
+            csv_data = df_export.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="⬇ To'liq hisobotni JSON formatida yuklab olish",
-                data=json.dumps(audit_json, ensure_ascii=False, indent=2).encode("utf-8"),
-                file_name=f"primeguard_report_{bit_len}bit.json",
-                mime="application/json",
-                width="stretch",
+                label="⬇ Tekshiruv jurnalini CSV formatida yuklab olish",
+                data=csv_data,
+                file_name=f"primeguard_audit_log_{val.bit_length()}bit.csv",
+                mime="text/csv",
+                width="stretch"
             )
+
+        # To'liq natijani JSON ko'rinishida saqlash
+        json_results = {}
+        for algo_label, algo_result in [
+            ("Fermat", res_f),
+            ("Solovay-Strassen", res_ss),
+            ("Miller-Rabin", res_mr),
+        ]:
+            json_results[algo_label] = {
+                "verdict": algo_result["verdict"],
+                "is_probable_prime": algo_result["is_prime"],
+                "execution_time_ms": algo_result["execution_time_ms"],
+                "rounds_requested": audit_k,
+                "rounds_completed": algo_result["rounds"],
+                "error_bound": algo_result.get("error_bound"),
+                "witness": algo_result["witness"],
+                "steps": [
+                    {
+                        "round": getattr(item, "round_idx", None),
+                        "base": getattr(item, "witness_a", None),
+                        "expression": getattr(item, "expression", ""),
+                        "computed_value": getattr(item, "computed_value", ""),
+                        "passed": getattr(item, "passed", None),
+                        "note": getattr(item, "note", ""),
+                    }
+                    for item in algo_result["logs"]
+                ],
+            }
+
+        audit_json = {
+            "project": "PrimeGuard",
+            "report_type": "probabilistic_primality_audit",
+            "number_decimal": str(val),
+            "bit_length": bit_len,
+            "decimal_digits": digit_len,
+            "rounds": audit_k,
+            "deterministic_64_reference": deterministic_reference,
+            "deterministic_reference_scope": "n < 2**64",
+            "results": json_results,
+        }
+        st.download_button(
+            label="⬇ To'liq hisobotni JSON formatida yuklab olish",
+            data=json.dumps(audit_json, ensure_ascii=False, indent=2).encode("utf-8"),
+            file_name=f"primeguard_report_{bit_len}bit.json",
+            mime="application/json",
+            width="stretch",
+        )
 
 
 # ==============================================================================
@@ -513,186 +534,213 @@ with tab2:
             help="Bo'sh qoldirsangiz, chapdagi tanlangan son tahlil qilinadi."
         )
 
-    if st.button("▶ Karmaykl sonini tahlil qilish", type="primary", width="stretch"):
+    if st.button(
+        "▶ Karmaykl sonini tahlil qilish",
+        type="primary",
+        width="stretch",
+        key="primeguard_start_carmichael",
+    ):
         target_str = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
-        n_carm, err_m, a_type = validate_number_input(target_str)
-
-        if a_type == "error":
-            st.markdown(f"""
-            <div class="cyber-alert cyber-alert-error">
-                <span class="cyber-alert-icon">🚫</span>
-                <div class="cyber-alert-content">
-                    <div class="cyber-alert-title">Xato Kiritish</div>
-                    <div class="cyber-alert-msg">{err_m}</div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        candidate, feedback, feedback_type = validate_number_input(target_str)
+        if feedback_type == "error":
+            st.session_state.pop("primeguard_last_carmichael", None)
+            st.error(feedback)
         else:
             with st.spinner("Karmaykl soni Korselt mezoni bo'yicha tekshirilmoqda..."):
-                carm_report = analyze_carmichael(n_carm, global_k)
-                c_f = safe_extract_result(carm_report["fermat"])
-                c_ss = safe_extract_result(carm_report["solovay_strassen"])
-                c_mr = safe_extract_result(carm_report["miller_rabin"])
+                report = analyze_carmichael(candidate, global_k)
+            st.session_state["primeguard_last_carmichael"] = {
+                "n": candidate,
+                "k": global_k,
+                "report": report,
+                "fermat": safe_extract_result(report["fermat"]),
+                "solovay_strassen": safe_extract_result(report["solovay_strassen"]),
+                "miller_rabin": safe_extract_result(report["miller_rabin"]),
+            }
 
-            st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
+    last_carmichael = st.session_state.get("primeguard_last_carmichael")
+    if last_carmichael is not None:
+        n_carm = last_carmichael["n"]
+        carm_report = last_carmichael["report"]
+        c_f = last_carmichael["fermat"]
+        c_ss = last_carmichael["solovay_strassen"]
+        c_mr = last_carmichael["miller_rabin"]
 
-            col_c1, col_c2, col_c3 = st.columns(3)
+        current_carm = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
+        if current_carm != str(n_carm) or global_k != last_carmichael["k"]:
+            st.info(
+                "Quyidagi natija avvalgi Karmaykl tahliliga tegishli. "
+                "Yangi parametrlarni qo'llash uchun tahlil tugmasini qayta bosing."
+            )
 
-            # Fermat Card (Carmichael Trap)
-            with col_c1:
-                fermat_passed = c_f["is_prime"]
-                is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
-                card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
-                badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
-                title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
-                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
+        st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
 
-                st.markdown(f"""
-                <div class="kpi-card {card_style}">
-                    <div class="kpi-algo-name">
-                        <span>Fermat testi</span>
-                        <span class="cyber-badge cyber-badge-amber">Zaif</span>
-                    </div>
-                    <div class="kpi-status-badge {badge_style}">
-                        {title_status}
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Xulosa:</span>
-                        <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
-                            {fermat_summary}
-                        </span>
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                        <span class="kpi-metric-val">{c_f['execution_time_ms']:.4f} ms</span>
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Murakkablik guvohi (a):</span>
-                        <span class="kpi-metric-val">{c_f['witness'] if c_f['witness'] else 'Mavjud emas'}</span>
-                    </div>
+        col_c1, col_c2, col_c3 = st.columns(3)
+
+        # Fermat Card (Carmichael Trap)
+        with col_c1:
+            fermat_passed = c_f["is_prime"]
+            is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
+            card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
+            badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
+            title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
+            fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
+
+            st.markdown(f"""
+            <div class="kpi-card {card_style}">
+                <div class="kpi-algo-name">
+                    <span>Fermat testi</span>
+                    <span class="cyber-badge cyber-badge-amber">Zaif</span>
                 </div>
-                """, unsafe_allow_html=True)
-
-            # Solovay-Strassen Card
-            with col_c2:
-                ss_passed = c_ss["is_prime"]
-                card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
-                badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
-                title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
-                ss_summary = "Murakkablikni aniqladi" if not ss_passed else "Eyler–Yakobi sinovidan o'tdi"
-
-                st.markdown(f"""
-                <div class="kpi-card {card_style_ss}">
-                    <div class="kpi-algo-name">
-                        <span>Solovay-Strassen</span>
-                        <span class="cyber-badge cyber-badge-green">Euler Mezoni</span>
-                    </div>
-                    <div class="kpi-status-badge {badge_style_ss}">
-                        {title_ss}
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Xulosa:</span>
-                        <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
-                            {ss_summary}
-                        </span>
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                        <span class="kpi-metric-val">{c_ss['execution_time_ms']:.4f} ms</span>
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Eyler–Yakobi guvohi:</span>
-                        <span class="kpi-metric-val" style="color: #F43F5E;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
-                    </div>
+                <div class="kpi-status-badge {badge_style}">
+                    {title_status}
                 </div>
-                """, unsafe_allow_html=True)
-
-            # Miller-Rabin Card
-            with col_c3:
-                mr_passed = c_mr["is_prime"]
-                card_style_mr = "kpi-card-prime" if mr_passed else "kpi-card-composite"
-                badge_style_mr = "kpi-status-prime" if mr_passed else "kpi-status-composite"
-                title_mr = "EHTIMOLIY TUB" if mr_passed else "✅ ANIQ MURAKKAB"
-
-                st.markdown(f"""
-                <div class="kpi-card {card_style_mr}">
-                    <div class="kpi-algo-name">
-                        <span>Miller-Rabin Strong</span>
-                        <span class="cyber-badge cyber-badge-green">Kuchli tublik testi</span>
-                    </div>
-                    <div class="kpi-status-badge {badge_style_mr}">
-                        {title_mr}
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Xulosa:</span>
-                        <span class="kpi-metric-val" style="color: #10B981;">
-                            {'Murakkablik aniqlandi' if not mr_passed else 'Ehtimoliy tub'}
-                        </span>
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Bajarilish vaqti:</span>
-                        <span class="kpi-metric-val">{c_mr['execution_time_ms']:.4f} ms</span>
-                    </div>
-                    <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Kuchli Guvoh:</span>
-                        <span class="kpi-metric-val" style="color: #F43F5E;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
-                    </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Xulosa:</span>
+                    <span class="kpi-metric-val" style="color: {'#F59E0B' if is_fermat_fooled else '#F43F5E'};">
+                        {fermat_summary}
+                    </span>
                 </div>
-                """, unsafe_allow_html=True)
-
-            # Chuqur Matematik Tahlil (Korselt Mezoni)
-            st.markdown("### 📐 Korselt mezoni bo'yicha matematik tekshiruv")
-
-            factors_list = carm_report.get("factors", [])
-            factorization_complete = carm_report.get("factorization_complete", False)
-            factors_str = " × ".join(map(str, factors_list)) if factors_list else "To'liq ajratilmadi"
-            korselt_sat = carm_report.get("korselt_satisfied")
-
-            if not factorization_complete:
-                st.warning("Sonning tub ko'paytuvchilarga ajratilishi hisoblash limiti ichida tugamadi. Korselt mezoni bo'yicha yakuniy xulosa berilmaydi.")
-            elif korselt_sat is True:
-                st.success("Korselt mezoni bajarildi: bu son Karmaykl soni.")
-            else:
-                st.info("Korselt mezoni bajarilmadi: bu son Karmaykl soni emas.")
-
-            st.markdown(rf"""
-            <div class="cyber-card">
-                <div style="font-weight: 700; color: #00F5D4; font-size: 1rem; margin-bottom: 0.6rem;">
-                    Tub ko'paytuvchilarga ajratish:
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                    <span class="kpi-metric-val">{c_f['execution_time_ms']:.4f} ms</span>
                 </div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F1F5F9; margin-bottom: 1rem;">
-                    {n_carm} = {factors_str}
-                </div>
-                <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
-                    <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son <em>n</em> faqat va faqat quyidagi shartlar
-                    bajarilgandagina Karmaykl soni bo'ladi:
-                    <ol style="margin-top: 0.4rem;">
-                        <li><em>n</em> kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
-                        <li><em>n</em> ning har bir <em>p</em> tub bo'luvchisi uchun <code>(p − 1) | (n − 1)</code> bo'linish sharti qanoatlantiriladi.</li>
-                    </ol>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Murakkablik guvohi (a):</span>
+                    <span class="kpi-metric-val">{c_f['witness'] if c_f['witness'] else 'Mavjud emas'}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
 
-            if "korselt_details" in carm_report:
-                with st.expander("🔍 Bo'linish shartlarini tekshirish:"):
-                    for detail_line in carm_report["korselt_details"]:
-                        st.markdown(f"- `{detail_line}`")
+        # Solovay-Strassen Card
+        with col_c2:
+            ss_passed = c_ss["is_prime"]
+            card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
+            badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
+            title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
+            ss_summary = "Murakkablikni aniqladi" if not ss_passed else "Eyler–Yakobi sinovidan o'tdi"
 
-            st.markdown(r"""
-            <div class="cyber-card" style="border-color: rgba(16, 185, 129, 0.3);">
-                <div style="font-weight: 700; color: #10B981; font-size: 0.98rem; margin-bottom: 0.4rem;">
-                    Miller–Rabin murakkablikni qanday aniqlaydi?
+            st.markdown(f"""
+            <div class="kpi-card {card_style_ss}">
+                <div class="kpi-algo-name">
+                    <span>Solovay-Strassen</span>
+                    <span class="cyber-badge cyber-badge-green">Euler Mezoni</span>
                 </div>
-                <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
-                    Karmaykl sonlarida <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> bo'lsa-da, Miller-Rabin testi <code>n − 1 = 2<sup>s</sup> · d</code>
-                    dekompozitsiyasini amalga oshirib, ketma-ket kvadratlash jarayonida <b>1 ning trivial bo'lmagan kvadrat ildizlarini</b>
-                    tekshiradi. Modul murakkab son bo'lganligi sababli, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha
-                    <code>x<sup>2</sup> ≡ 1 (mod n)</code> tenglama kamida <code>2<sup>r</sup> ≥ 8</code> ta yechimga ega bo'ladi (<code>±1</code> dan tashqari yechimlar).
-                    Miller-Rabin bunday yechimni uchratgan zahoti sonning murakkabligini 100% aniqlik bilan isbotlaydi.
+                <div class="kpi-status-badge {badge_style_ss}">
+                    {title_ss}
+                </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Xulosa:</span>
+                    <span class="kpi-metric-val" style="color: {'#10B981' if not ss_passed else '#F59E0B'};">
+                        {ss_summary}
+                    </span>
+                </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                    <span class="kpi-metric-val">{c_ss['execution_time_ms']:.4f} ms</span>
+                </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Eyler–Yakobi guvohi:</span>
+                    <span class="kpi-metric-val" style="color: #F43F5E;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+        # Miller-Rabin Card
+        with col_c3:
+            mr_passed = c_mr["is_prime"]
+            card_style_mr = "kpi-card-prime" if mr_passed else "kpi-card-composite"
+            badge_style_mr = "kpi-status-prime" if mr_passed else "kpi-status-composite"
+            title_mr = "EHTIMOLIY TUB" if mr_passed else "✅ ANIQ MURAKKAB"
+
+            st.markdown(f"""
+            <div class="kpi-card {card_style_mr}">
+                <div class="kpi-algo-name">
+                    <span>Miller-Rabin Strong</span>
+                    <span class="cyber-badge cyber-badge-green">Kuchli tublik testi</span>
+                </div>
+                <div class="kpi-status-badge {badge_style_mr}">
+                    {title_mr}
+                </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Xulosa:</span>
+                    <span class="kpi-metric-val" style="color: #10B981;">
+                        {'Murakkablik aniqlandi' if not mr_passed else 'Ehtimoliy tub'}
+                    </span>
+                </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Bajarilish vaqti:</span>
+                    <span class="kpi-metric-val">{c_mr['execution_time_ms']:.4f} ms</span>
+                </div>
+                <div class="kpi-metric-row">
+                    <span class="kpi-metric-label">Kuchli Guvoh:</span>
+                    <span class="kpi-metric-val" style="color: #F43F5E;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        render_round_explorer(
+            n_carm,
+            {
+                "Fermat": c_f,
+                "Solovay-Strassen": c_ss,
+                "Miller-Rabin": c_mr,
+            },
+            namespace="primeguard_carmichael",
+        )
+
+        # Chuqur Matematik Tahlil (Korselt Mezoni)
+        st.markdown("### 📐 Korselt mezoni bo'yicha matematik tekshiruv")
+
+        factors_list = carm_report.get("factors", [])
+        factorization_complete = carm_report.get("factorization_complete", False)
+        factors_str = " × ".join(map(str, factors_list)) if factors_list else "To'liq ajratilmadi"
+        korselt_sat = carm_report.get("korselt_satisfied")
+
+        if not factorization_complete:
+            st.warning("Sonning tub ko'paytuvchilarga ajratilishi hisoblash limiti ichida tugamadi. Korselt mezoni bo'yicha yakuniy xulosa berilmaydi.")
+        elif korselt_sat is True:
+            st.success("Korselt mezoni bajarildi: bu son Karmaykl soni.")
+        else:
+            st.info("Korselt mezoni bajarilmadi: bu son Karmaykl soni emas.")
+
+        st.markdown(rf"""
+        <div class="cyber-card">
+            <div style="font-weight: 700; color: #00F5D4; font-size: 1rem; margin-bottom: 0.6rem;">
+                Tub ko'paytuvchilarga ajratish:
+            </div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F1F5F9; margin-bottom: 1rem;">
+                {n_carm} = {factors_str}
+            </div>
+            <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
+                <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son <em>n</em> faqat va faqat quyidagi shartlar
+                bajarilgandagina Karmaykl soni bo'ladi:
+                <ol style="margin-top: 0.4rem;">
+                    <li><em>n</em> kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
+                    <li><em>n</em> ning har bir <em>p</em> tub bo'luvchisi uchun <code>(p − 1) | (n − 1)</code> bo'linish sharti qanoatlantiriladi.</li>
+                </ol>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if "korselt_details" in carm_report:
+            with st.expander("🔍 Bo'linish shartlarini tekshirish:"):
+                for detail_line in carm_report["korselt_details"]:
+                    st.markdown(f"- `{detail_line}`")
+
+        st.markdown(r"""
+        <div class="cyber-card" style="border-color: rgba(16, 185, 129, 0.3);">
+            <div style="font-weight: 700; color: #10B981; font-size: 0.98rem; margin-bottom: 0.4rem;">
+                Miller–Rabin murakkablikni qanday aniqlaydi?
+            </div>
+            <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
+                Karmaykl sonlarida <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> bo'lsa-da, Miller-Rabin testi <code>n − 1 = 2<sup>s</sup> · d</code>
+                dekompozitsiyasini amalga oshirib, ketma-ket kvadratlash jarayonida <b>1 ning trivial bo'lmagan kvadrat ildizlarini</b>
+                tekshiradi. Modul murakkab son bo'lganligi sababli, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha
+                <code>x<sup>2</sup> ≡ 1 (mod n)</code> tenglama kamida <code>2<sup>r</sup> ≥ 8</code> ta yechimga ega bo'ladi (<code>±1</code> dan tashqari yechimlar).
+                Miller-Rabin bunday yechimni uchratgan zahoti sonning murakkabligini 100% aniqlik bilan isbotlaydi.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
 
 
 # ==============================================================================

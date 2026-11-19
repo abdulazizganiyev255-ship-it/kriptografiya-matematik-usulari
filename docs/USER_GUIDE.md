@@ -85,3 +85,21 @@ Universitet himoyasida quyidagi tartibdan foydalanish mumkin:
 - **Raundlar soni:** chap panelda tanlanadi. Tayyor misollar darhol shu sozlamadan keyin joylashgan.
 
 **Texnik talab:** interfeys Streamlit 1.58 yoki yangiroq versiyadagi `width="stretch"` parametridan foydalanadi. Pandas `DataFrame.rename(..., inplace=True)` ogohlantirishi bo'lmasligi kerak.
+
+
+## Qadam-baqadam interaktiv matematik laboratoriya
+
+"Sonni tekshirish" yoki "Karmaykl tahlili" bo'limida tekshiruvni bajaring. Natijalar kartalari ostida **"Algoritm qanday ishlaydi?"** bo'limi paydo bo'ladi:
+
+1. Algoritmni tanlang: **Fermat**, **Solovay–Strassen** yoki **Miller–Rabin**.
+2. Haqiqatan bajarilgan raundlardan birini tanlang. Erta to'xtagan algoritmning bajarilmagan raundlari ko'rsatilmaydi.
+3. **Oldingi qadam** / **Keyingi qadam** tugmalari bilan formulani, hisoblangan qiymatni va izohni birma-bir ko'ring. Progress ko'rsatkichi qadamlar sonini bildiradi.
+4. **Barcha qadamlar jadvali**ni ochib, tanlangan raundni tez ko'zdan kechiring.
+
+**Matematik tekshiruv:** interfeys yangi tasodifiy asos yaratmaydi; avvalgi algoritmning `RoundLog` jurnalidagi aynan `a` asosidan foydalanadi. Oraliq hisoblashlar mustaqil qayta hisoblanib, yakuniy qiymat va raund holati asl jurnal bilan solishtiriladi. Mos kelmasa, ogohlantirish chiqadi.
+
+**Fermat:** EKUB, `a^(n-1) mod n` va `= 1` mezoni. **Solovay–Strassen:** EKUB, Yakobi belgisi, daraja qoldig'i, Eyler–Yakobi taqqoslashi. **Miller–Rabin:** `n-1=2^s*d`, boshlang'ich qoldiq va ketma-ket kvadratlashlar.
+
+Karmaykl misolida Fermatning sinovdan o'tishi son tub ekanini isbotlamaydi. Dastlabki elak tekshiruvni tugatsa, raund jurnali bo'lmasligi mumkin va navigator buni aniq tushuntiradi. Juda uzun Miller–Rabin kvadratlash zanjiri uchun birinchi 128 ta qadam ko'rsatiladi; to'liq hisoblash yakuniy holat uchun bajariladi.
+
+Navigatsiya vaqtida avvalgi test natijalari saqlanadi. Boshqa son yoki `k` qiymatini kiritganingizda yangi hisoblash uchun tegishli **tekshirish** yoki **tahlil** tugmasini qayta bosing.
