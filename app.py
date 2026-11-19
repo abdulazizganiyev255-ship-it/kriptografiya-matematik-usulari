@@ -254,7 +254,7 @@ with tab1:
 
     col_btn, col_info = st.columns([1, 3])
     with col_btn:
-        start_audit = st.button("▶ Sonni tekshirish", width="stretch", type="primary")
+        start_audit = st.button("▶ Sonni tekshirish", width="stretch", type="primary", key="primeguard_start_audit")
 
     if start_audit:
         candidate, feedback, feedback_type = validate_number_input(raw_candidate)
