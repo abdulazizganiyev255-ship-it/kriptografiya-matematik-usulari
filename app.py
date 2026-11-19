@@ -150,7 +150,7 @@ with st.sidebar:
         st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
         st.rerun()
 
-    if st.button("Karmaykl soni: 8911", width="stretch"):
+    if st.button("Karmaykl soni: 8911", width="stretch", key="primeguard_sample_carmichael"):
         st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
         st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
         st.session_state["carmichael_select"] = 8911
