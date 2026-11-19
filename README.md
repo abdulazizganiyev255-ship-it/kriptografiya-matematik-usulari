@@ -30,6 +30,12 @@ Xatolik chegaralari nazariy yuqori chegaralardir; tajribada kuzatilgan foiz yoki
 
 `561 = 3 × 11 × 17` — murakkab son. `a = 2` uchun Fermat sharti ham, Solovay–Strassenning **aynan shu bitta raundi** ham bajariladi. `a = 5` uchun Solovay–Strassen murakkablik guvohini topadi. Demak, «testdan o'tdi» natijasi bilan «isbotlangan tub» tushunchalarini aralashtirib bo'lmaydi.
 
+## React + FastAPI interfeys (ixtiyoriy v2)
+
+Asosiy Python algoritmlarini o'zgartirmasdan, alohida **React + TypeScript + Vite** interfeys va **FastAPI** adapter ham ishlab chiqilgan. Vizual maketning ikki asosiy ish maydoni loyiha mavzusiga qat'iy moslashtirilgan: **Sonni tekshirish** va **Algoritmlarni taqqoslash**. Karmaykl/Korselt tajribasi birinchi bo'lim ichida qoladi. RSA oynasi yo'q.
+
+Windows o'rnatish, ikki terminalda ishga tushirish, REST endpointlari, JSON transportdagi butun sonlarning aniqligi va CI nazorati: [React laboratoriya qo'llanmasi](docs/REACT_LAB.md).
+
 ## Ishga tushirish
 
 Python 3.11–3.13 va Windows PowerShell uchun:
