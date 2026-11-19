@@ -64,7 +64,7 @@ def test_benchmark_marks_disagreeing_verdicts(monkeypatch):
     assert prime["Verdict"] == "Mixed"
     assert prime["Verdict_Consistency"] == "Mixed"
     assert prime["Error_Bound"] == "Varies"
-    assert prime["Avg_Rounds_Run"] == pytest.approx((2 + 5 + 1) / 3)
+    assert prime["Avg_Rounds_Run"] == round((2 + 5 + 1) / 3, 2)
     assert prime["Min_Rounds_Run"] == 1
     assert prime["Max_Rounds_Run"] == 5
     assert composite["Verdict"] == "Composite"
