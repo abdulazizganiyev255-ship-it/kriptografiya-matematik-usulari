@@ -33,8 +33,8 @@ Miller–Rabin uchun standart nazariy yuqori chegara har bir mustaqil raundda (1
 1. **Karmaykl tahlili** bo'limini oching.
 2. Ro'yxatdan mashhur sonni tanlang yoki o'zingiz son kiriting.
 3. Tahlil tugmasini bosing.
-4. Fermat testining Karmaykl sonlarida qanday aldanishini, Solovay–Strassen va Miller–Rabin natijalarini ko'ring.
-5. Korselt mezoni va faktorizatsiya tafsilotlarini oching.
+4. Fermat testining Karmaykl sonlarida qanday noto'g'ri xulosa berishi mumkinligini, Solovay–Strassen va Miller–Rabin natijalarini ko'ring.
+5. Korselt mezoni va ko'paytuvchilarga ajratish tafsilotlarini oching.
 
 Faktorizatsiya hisoblash limiti bilan cheklangan. Limit tugasa, dastur noto'g'ri yakuniy xulosa bermasdan tekshiruv to'liq emasligini ko'rsatadi.
 
@@ -46,7 +46,7 @@ Faktorizatsiya hisoblash limiti bilan cheklangan. Limit tugasa, dastur noto'g'ri
 4. Sinovni boshlang.
 5. Grafiklar, jadval va CSV natijalarini ko'ring.
 
-Benchmark har bir tanlangan bit uzunligida tub nomzod va murakkab semiprime nomzodini alohida tekshiradi. Nomzod yaratish va warm-up o'lchovga kiritilmaydi. Jadvalda o'rtacha, median, standart og'ish, minimum va maksimum vaqtlar beriladi. Katta bit uzunliklari va ko'p takrorlashlar ko'proq vaqt talab qiladi. Natijalar kompyuter, Python versiyasi va tizim yuklamasiga bog'liq; ular matematik murakkablik isboti emas.
+Benchmark har bir tanlangan bit uzunligida tub nomzod va murakkab ikki tub son ko'paytmasidan iborat nomzodni alohida tekshiradi. Nomzod yaratish va dastlabki sinov o'lchovga kiritilmaydi. Jadvalda o'rtacha, median, standart og'ish, eng kichik va eng katta vaqtlar beriladi. Katta bit uzunliklari va ko'p takrorlashlar ko'proq vaqt talab qiladi. Natijalar kompyuter, Python versiyasi va tizim yuklamasiga bog'liq; ular matematik murakkablik isboti emas.
 
 ## 5. RSA uchun o'quv parametrlari
 
