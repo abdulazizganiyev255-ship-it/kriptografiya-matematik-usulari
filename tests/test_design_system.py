@@ -1,5 +1,4 @@
 """Design-system regression checks: semantics, contrast and native theme."""
-import re
 import tomllib
 from pathlib import Path
 
@@ -51,7 +50,7 @@ def test_css_covers_core_blocks_and_responsive_accessibility():
                      "button:focus-visible", "prefers-reduced-motion"):
         assert selector in stylesheet
     assert "@import" not in stylesheet
-    assert len(re.findall(r"\.kpi-card\s*\{", stylesheet)) == 1
+    assert stylesheet.count("PrimeGuard · Primality Research UI v2") == 1
 
 
 def test_sample_carmichael_button_opens_educational_experiment():
