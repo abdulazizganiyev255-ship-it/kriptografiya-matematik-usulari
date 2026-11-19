@@ -1,105 +1,62 @@
 # PrimeGuard — foydalanuvchi qo'llanmasi
 
-## 1. Dasturni ishga tushirish
+## 1. Ishga tushirish
 
-Windows PowerShell'da loyiha papkasiga kiring va quyidagini bajaring:
+Windows PowerShell'da:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\start_primeguard.ps1
+cd "$HOME\Projects\PrimeGuard"
+& "$HOME\PrimeGuardVenv\Scripts\python.exe" -m pip install -r requirements.txt
+& "$HOME\PrimeGuardVenv\Scripts\python.exe" -m pytest -q
+& "$HOME\PrimeGuardVenv\Scripts\python.exe" -m streamlit run app.py
 ```
 
-Skript virtual muhit yaratadi, kutubxonalarni o'rnatadi, testlarni bajaradi va Streamlit dasturini ishga tushiradi. Testlar yiqilsa, dastur avtomatik ravishda ishga tushmaydi.
+Brauzer: `http://localhost:8501`.
 
-## 2. Sonni tekshirish
+## 2. Sonni tekshirish — asosiy sahifa
 
-1. **Sonni tekshirish** sahifasini oching.
-2. Tekshirmoqchi bo'lgan natural sonni kiriting. Raqamlar orasida bo'sh joy yoki pastki chiziq ishlatish mumkin.
-3. Chap paneldagi **Raundlar soni (k)** qiymatini tanlang.
-4. **Sonni tekshirish** tugmasini bosing.
-5. Fermat, Solovay–Strassen va Miller–Rabin natijalarini yonma-yon ko'ring.
-6. Har bir algoritmning tekshiruv bosqichlarini ochib, tanlangan asos va hisoblangan qiymatlarni o'rganing.
-7. Natijani CSV yoki JSON formatida yuklab oling.
+1. Sonni `n` maydoniga kiriting (2 dan boshlab; ko'pi bilan 2048 ta raqam).
+2. Chap panelda raundlar sonini (`k`) belgilang.
+3. **Sonni tekshirish** tugmasini bosing.
+4. Dastur Fermat, Solovay–Strassen va Miller–Rabin xulosasini, bajarilgan raundlar sonini, guvohni va vaqtni ko'rsatadi.
+5. **Algoritm qanday ishlaydi?** qismida algoritm, bajarilgan raund va ketma-ket matematik qadamlarni tanlang. Har bir qoldiq asl logdagi tasodifiy asos bilan mustaqil qayta hisoblanadi.
+6. Raundlar jadvali va JSON hisoboti yordamida natijalarni saqlang.
 
-### Natijalarni qanday tushunish kerak?
+**«Aniq murakkab»** — murakkablik guvohi topildi yoki bo'luvchi orqali aniqlandi.
+**«Ehtimoliy tub»** — raundlar o'tildi, lekin tublik isbotlanmadi.
+**«Aniq tub»** — kichik tub sonlar elagi yoki `n < 2^64` uchun deterministik etalon tekshirdi.
 
-- **Aniq tub:** kichik tub sonlar jadvali yoki n < 2⁶⁴ bo'lsa deterministik Miller–Rabin etaloni bilan tasdiqlangan.
-- **Ehtimoliy tub:** algoritm tanlangan raundlarda murakkablik guvohini topmagan. Bu matematik isbot emas.
-- **Aniq murakkab:** kamida bitta algoritm murakkablik guvohini topgan yoki son kichik bo'luvchi bilan aniqlangan.
+`0` va `1` tub ham, murakkab ham emas; dastur `n ≥ 2` chegarasini tushuntiradi. Bo'sh, manfiy va harfli kiritishlar tegishli xabar bilan rad etiladi.
 
-Miller–Rabin uchun standart nazariy yuqori chegara har bir mustaqil raundda (1/4), demak k raund uchun (4^{-k}). Solovay–Strassen uchun (2^{-k}). Fermat testida Karmaykl sonlari sabab universal foydali chegara mavjud emas.
+## 3. Fermat testining cheklovi: Karmaykl tajribasi
 
-## 3. Karmaykl tahlili
+**Sonni tekshirish** sahifasining pastida **Karmaykl tajribasini ochish** tugmasini yoqing. U alohida asosiy bo'lim emas, balki asosiy tublik testlariga didaktik namoyishdir.
 
-1. **Karmaykl tahlili** bo'limini oching.
-2. Ro'yxatdan mashhur sonni tanlang yoki o'zingiz son kiriting.
-3. Tahlil tugmasini bosing.
-4. Fermat testining Karmaykl sonlarida qanday noto'g'ri xulosa berishi mumkinligini, Solovay–Strassen va Miller–Rabin natijalarini ko'ring.
-5. Korselt mezoni va ko'paytuvchilarga ajratish tafsilotlarini oching.
+1. `561` yoki `8911` ni tanlang (yoki `1 000 000` dan oshmaydigan boshqa son kiriting).
+2. **Karmaykl sonini tahlil qilish** tugmasini bosing.
+3. Uch algoritm natijalarini va Korselt mezonini ko'ring.
+4. Interaktiv matematik navigator orqali bitta raunddagi asosni, daraja qoldig'ini va guvohni tekshiring.
 
-Faktorizatsiya hisoblash limiti bilan cheklangan. Limit tugasa, dastur noto'g'ri yakuniy xulosa bermasdan tekshiruv to'liq emasligini ko'rsatadi.
+`561 = 3 × 11 × 17`. Har bir o'zaro tub asos uchun Fermat tengligi bajariladi. Solovay–Strassen esa **ayrim asoslarda ham** o'tishi mumkin: `a=2` — sinovdan o'tadi; `a=5` — murakkablik guvohi. Hech bir ehtimoliy testning bitta raundi barcha murakkab sonlarni aniqlashi shart emas.
 
-## 4. Algoritmlar tezligini taqqoslash
+Tajriba hajmi qasddan cheklangan. Katta sonlarni asosiy son tekshiruviga kiriting.
 
-1. **Tezlik taqqoslash** bo'limiga o'ting.
-2. Son uzunliklarini tanlang. Dastlab 64–512 bit bilan boshlash tavsiya etiladi.
-3. Raundlar va takrorlashlar sonini belgilang.
-4. Sinovni boshlang.
-5. Grafiklar, jadval va CSV natijalarini ko'ring.
+## 4. Algoritmlarni taqqoslash — ikkinchi sahifa
 
-Benchmark har bir tanlangan bit uzunligida tub nomzod va murakkab ikki tub son ko'paytmasidan iborat nomzodni alohida tekshiradi. Nomzod yaratish va dastlabki sinov o'lchovga kiritilmaydi. Jadvalda o'rtacha, median, standart og'ish, eng kichik va eng katta vaqtlar beriladi. Katta bit uzunliklari va ko'p takrorlashlar ko'proq vaqt talab qiladi. Natijalar kompyuter, Python versiyasi va tizim yuklamasiga bog'liq; ular matematik murakkablik isboti emas.
+1. **Algoritmlarni taqqoslash** bo'limini oching.
+2. Avval `64, 128, 256` bitni sinab ko'ring.
+3. Raundlar soni va takrorlashlarni tanlang. Standart **10** ta takrorlash; 10+ tavsiya etiladi.
+4. Grafikda tub va murakkab nomzodlarni alohida ko'ring.
+5. Jadvaldan median, o'rtacha vaqt, standart og'ish, bajarilgan raundlar va natijalar izchilligini ko'ring; CSV eksport qiling.
 
-## 5. RSA uchun o'quv parametrlari
+Nomzodlar uch algoritm uchun bir xil. Dastlabki sinov va nomzod generatsiyasi vaqtga kiritilmaydi. Murakkab sonlarda guvoh erta topilishi mumkin; shuning uchun vaqtlar har xil. Natijalar kompyuter holatiga bog'liq va nazariy tezlik isboti emas.
 
-1. **RSA parametrlari** bo'limiga o'ting.
-2. N modulining maqsadli bit uzunligini tanlang.
-3. Miller–Rabin raundlari sonini belgilang.
-4. p, q, N va φ(N) qiymatlarini yarating.
-5. JSON hisobotini yuklab oling.
+## 5. Universitet himoyasi
 
-**Muhim:** bu o'quv moduli. U to'liq RSA kalit juftligini, e va d eksponentlarini yaratmaydi va ishlab chiqarish muhitida foydalanish uchun mo'ljallanmagan. p va q ham ehtimoliy tub son sifatida tekshiriladi.
+- Sonni tekshirish: `17` va `21` orqali tub/murakkab farqini tushuntiring.
+- Matematik qadamlar: Miller–Rabin kvadratlash zanjiri va oldingi/log qoldiqni ko'rsating.
+- Karmaykl: `561` yordamida Fermat testining noto'g'ri musbat xulosasi mumkinligini tushuntiring.
+- Taqqoslash: 64/128 bit va 10 takrorlash, median va erta to'xtashlarni izohlang.
+- Xulosa: «Ehtimoliy tub» qat'iy matematik isbot emasligini ta'kidlang.
 
-## 6. Tavsiya etilgan namoyish ssenariysi
-
-Universitet himoyasida quyidagi tartibdan foydalanish mumkin:
-
-1. 127-bit Mersenne tub sonini tekshirish.
-2. 8911 Karmaykl sonini tahlil qilish.
-3. Uch algoritmning vaqtini 64, 128, 256 va 512 bitda taqqoslash.
-4. RSA o'quv modulida 1024 yoki 2048 bitli N parametrlarini yaratish.
-5. CSV/JSON hisobotini ko'rsatish.
-
-## 7. Cheklovlar
-
-- Ehtimoliy tublik testlari katta sonlar uchun matematik isbot o'rnini bosmaydi.
-- Deterministik Miller–Rabin etaloni faqat (n < 2^{64}) uchun kafolatlangan.
-- Benchmark natijalari apparat va tizim sharoitlariga bog'liq.
-- Loyiha akademik prototip bo'lib, sertifikatlangan kriptografik kutubxona emas.
-
-
-## Interfeysni o'qish va grafiklarni boshqarish
-
-- **Sonni tekshirish:** yakuniy xulosa avval, Fermat, Solovay–Strassen va Miller–Rabin kartalari keyin ko'rsatiladi. Ehtimoliy tub natija matematik isbot emas.
-- **Karmaykl tahlili:** mezon va formulalar o'qilishi uchun HTML matematika belgilari bilan ko'rsatiladi.
-- **Tezlik taqqoslash:** sinovdan keyin “Tub nomzod” va “Murakkab (semiprime)” filtrini almashtirish mumkin. Har bir tur uchun chiziqli grafik yoki ustunli taqqoslash ko'rinishi mavjud. Filtrni o'zgartirganda avvalgi o'lchovlar saqlanadi.
-- **Natijalar jadvali:** foydalanuvchiga o'zbekcha ustun nomlari ko'rsatiladi; CSV eksportda esa takrorlanadigan akademik tahlil uchun asl texnik ustunlar va barcha metrikalar qoladi.
-- **Raundlar soni:** chap panelda tanlanadi. Tayyor misollar darhol shu sozlamadan keyin joylashgan.
-
-**Texnik talab:** interfeys Streamlit 1.58 yoki yangiroq versiyadagi `width="stretch"` parametridan foydalanadi. Pandas `DataFrame.rename(..., inplace=True)` ogohlantirishi bo'lmasligi kerak.
-
-
-## Qadam-baqadam interaktiv matematik laboratoriya
-
-"Sonni tekshirish" yoki "Karmaykl tahlili" bo'limida tekshiruvni bajaring. Natijalar kartalari ostida **"Algoritm qanday ishlaydi?"** bo'limi paydo bo'ladi:
-
-1. Algoritmni tanlang: **Fermat**, **Solovay–Strassen** yoki **Miller–Rabin**.
-2. Haqiqatan bajarilgan raundlardan birini tanlang. Erta to'xtagan algoritmning bajarilmagan raundlari ko'rsatilmaydi.
-3. **Oldingi qadam** / **Keyingi qadam** tugmalari bilan formulani, hisoblangan qiymatni va izohni birma-bir ko'ring. Progress ko'rsatkichi qadamlar sonini bildiradi.
-4. **Barcha qadamlar jadvali**ni ochib, tanlangan raundni tez ko'zdan kechiring.
-
-**Matematik tekshiruv:** interfeys yangi tasodifiy asos yaratmaydi; avvalgi algoritmning `RoundLog` jurnalidagi aynan `a` asosidan foydalanadi. Oraliq hisoblashlar mustaqil qayta hisoblanib, yakuniy qiymat va raund holati asl jurnal bilan solishtiriladi. Mos kelmasa, ogohlantirish chiqadi.
-
-**Fermat:** EKUB, `a^(n-1) mod n` va `= 1` mezoni. **Solovay–Strassen:** EKUB, Yakobi belgisi, daraja qoldig'i, Eyler–Yakobi taqqoslashi. **Miller–Rabin:** `n-1=2^s*d`, boshlang'ich qoldiq va ketma-ket kvadratlashlar.
-
-Karmaykl misolida Fermatning sinovdan o'tishi son tub ekanini isbotlamaydi. Dastlabki elak tekshiruvni tugatsa, raund jurnali bo'lmasligi mumkin va navigator buni aniq tushuntiradi. Juda uzun Miller–Rabin kvadratlash zanjiri uchun birinchi 128 ta qadam ko'rsatiladi; to'liq hisoblash yakuniy holat uchun bajariladi.
-
-Navigatsiya vaqtida avvalgi test natijalari saqlanadi. Boshqa son yoki `k` qiymatini kiritganingizda yangi hisoblash uchun tegishli **tekshirish** yoki **tahlil** tugmasini qayta bosing.
+**Cheklov:** dastur tublik tekshiruvlari uchun o'quv prototipi; RSA kalit generatori yoki kriptografik ishlab chiqarish vositasi sifatida taqdim etilmaydi.
