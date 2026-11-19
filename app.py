@@ -554,7 +554,7 @@ with tab1:
             )
 
         if st.button(
-            "▶ Karmaykl sonini tahlil qilish",
+            "Karmaykl sonini tahlil qilish",
             type="primary",
             width="stretch",
             key="primeguard_start_carmichael",
@@ -597,7 +597,7 @@ with tab1:
                     "Yangi parametrlarni qo'llash uchun tahlil tugmasini qayta bosing."
                 )
 
-            st.markdown(f"### 🔬 n = {n_carm} Sonini Yonma-Yon Qiyoslash")
+            st.markdown(f"### {n_carm} soni — algoritmlar natijasi")
 
             col_c1, col_c2, col_c3 = st.columns(3)
 
@@ -607,8 +607,8 @@ with tab1:
                 is_fermat_fooled = fermat_passed and carm_report.get("is_carmichael") is True
                 card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
                 badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
-                title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
-                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
+                title_status = "FERMATNING CHEKLOVI" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
+                fermat_summary = "Fermat sharti bajarildi, ammo son murakkab" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style}">
@@ -641,14 +641,14 @@ with tab1:
                 ss_passed = c_ss["is_prime"]
                 card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
                 badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
-                title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
+                title_ss = "EHTIMOLIY TUB" if ss_passed else "ANIQ MURAKKAB"
                 ss_summary = "Murakkablikni aniqladi" if not ss_passed else "Eyler–Yakobi sinovidan o'tdi"
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style_ss}">
                     <div class="kpi-algo-name">
-                        <span>Solovay-Strassen</span>
-                        <span class="cyber-badge cyber-badge-green">Euler Mezoni</span>
+                        <span>Solovay–Strassen</span>
+                        <span class="cyber-badge cyber-badge-green">Eyler–Yakobi mezoni</span>
                     </div>
                     <div class="kpi-status-badge {badge_style_ss}">
                         {title_ss}
@@ -675,12 +675,12 @@ with tab1:
                 mr_passed = c_mr["is_prime"]
                 card_style_mr = "kpi-card-prime" if mr_passed else "kpi-card-composite"
                 badge_style_mr = "kpi-status-prime" if mr_passed else "kpi-status-composite"
-                title_mr = "EHTIMOLIY TUB" if mr_passed else "✅ ANIQ MURAKKAB"
+                title_mr = "EHTIMOLIY TUB" if mr_passed else "ANIQ MURAKKAB"
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style_mr}">
                     <div class="kpi-algo-name">
-                        <span>Miller-Rabin Strong</span>
+                        <span>Miller–Rabin</span>
                         <span class="cyber-badge cyber-badge-green">Kuchli tublik testi</span>
                     </div>
                     <div class="kpi-status-badge {badge_style_mr}">
@@ -697,7 +697,7 @@ with tab1:
                         <span class="kpi-metric-val">{c_mr['execution_time_ms']:.4f} ms</span>
                     </div>
                     <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Kuchli Guvoh:</span>
+                        <span class="kpi-metric-label">Murakkablik guvohi:</span>
                         <span class="kpi-metric-val" style="color: #FF8898;">{c_mr['witness'] if c_mr['witness'] else '—'}</span>
                     </div>
                 </div>
@@ -714,7 +714,7 @@ with tab1:
             )
 
             # Chuqur Matematik Tahlil (Korselt Mezoni)
-            st.markdown("### 📐 Korselt mezoni bo'yicha matematik tekshiruv")
+            st.markdown("### Korselt mezoni bo'yicha tekshiruv")
 
             factors_list = carm_report.get("factors", [])
             factorization_complete = carm_report.get("factorization_complete", False)
@@ -817,7 +817,7 @@ with tab3:
             help="Kamida 10 ta takrorlash tavsiya etiladi. Median natijaga asoslaning."
         )
 
-    if st.button("▶ Tezlik sinovini boshlash", type="primary", width="stretch"):
+    if st.button("Tezlik sinovini boshlash", type="primary", width="stretch"):
         if not chosen_bits:
             st.warning("Iltimos, kamida bitta bit uzunligini tanlang.")
         else:
@@ -838,7 +838,7 @@ with tab3:
     df_bench = st.session_state.get("primeguard_benchmark_data")
     if df_bench is not None:
         saved_bits, saved_k, saved_trials = st.session_state["primeguard_benchmark_config"]
-        st.markdown("### 📈 Grafik tahlillar")
+        st.markdown("### Grafik tahlillar")
         st.caption(
             f"Oxirgi sinov: {', '.join(map(str, saved_bits))} bit · "
             f"{saved_k} raund · {saved_trials} takrorlash. "
@@ -857,9 +857,9 @@ with tab3:
         )
         filtered = df_bench.loc[df_bench["Candidate_Type"] == candidate_type].copy()
         palette = {
-            "Fermat": "#5BD6C8",
-            "Solovay-Strassen": "#F2BD65",
-            "Miller-Rabin": "#55D6A4",
+            "Fermat": "#69D6C5",
+            "Solovay-Strassen": "#F3C77B",
+            "Miller-Rabin": "#75D9AF",
         }
         axis_labels = {
             "Bit_Length": "Bit uzunligi",
@@ -878,7 +878,7 @@ with tab3:
             )
             trend_fig.update_layout(
                 height=440, margin=dict(l=38, r=22, t=55, b=45),
-                paper_bgcolor="#0B1020", plot_bgcolor="#121D32",
+                paper_bgcolor="#0B1220", plot_bgcolor="#131F32",
                 font=dict(family="Segoe UI, sans-serif", size=13),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02,
                             xanchor="left", x=0),
@@ -895,7 +895,7 @@ with tab3:
             )
             comparison_fig.update_layout(
                 height=440, margin=dict(l=38, r=22, t=55, b=45),
-                paper_bgcolor="#0B1020", plot_bgcolor="#121D32",
+                paper_bgcolor="#0B1220", plot_bgcolor="#131F32",
                 font=dict(family="Segoe UI, sans-serif", size=13),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02,
                             xanchor="left", x=0),
@@ -905,7 +905,7 @@ with tab3:
                 comparison_fig, width="stretch", config={"displaylogo": False}
             )
 
-        st.markdown("### 📋 Natijalar jadvali")
+        st.markdown("### Natijalar jadvali")
         visible_columns = {
             "Bit_Length": "Bit",
             "Candidate_Type": "Nomzod turi",
@@ -936,7 +936,7 @@ with tab3:
             "CSV faylda barcha asl texnik ustunlar saqlanadi."
         )
         st.download_button(
-            label="⬇ To'liq benchmark natijalarini CSV formatida yuklab olish",
+            label="Benchmark jadvalini CSV formatida yuklab olish",
             data=df_bench.to_csv(index=False).encode("utf-8-sig"),
             file_name="primeguard_benchmark_results.csv",
             mime="text/csv",
