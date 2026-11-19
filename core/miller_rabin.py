@@ -157,7 +157,7 @@ def miller_rabin_test(
 
             if x == n - 1:
                 composite_witness = False
-                note = f"Kvadratga oshirishning r={r}-bosqichida x = {x} ≡ n-1 (mod {n}) ga erishildi"
+                note = f"Kvadratlashning r={r}-bosqichida x = {x} ≡ n-1 (mod {n}) ga erishildi"
                 logs.append(
                     RoundLog(
                         round_idx=round_idx,
@@ -172,7 +172,7 @@ def miller_rabin_test(
 
             if x == 1:
                 # Non-trivial square root of 1 modulo n
-                note = f"1 ning no-trivial kvadrat ildizi topildi: x ≡ 1 (mod {n}), n murakkab son"
+                note = f"1 ning trivial bo'lmagan kvadrat ildizi topildi: x ≡ 1 (mod {n}), n murakkab son"
                 logs.append(
                     RoundLog(
                         round_idx=round_idx,
