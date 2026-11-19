@@ -162,7 +162,7 @@ def solovay_strassen_test(
         val_str = f"{mod_exp} vs {j_mod} (J={j})"
 
         if mod_exp != j_mod:
-            note = f"Eyler-Yakobi guvohi: {a}^(({n}-1)/2) ≡ {mod_exp} != ({a}/{n}) ≡ {j} (mod {n})"
+            note = f"Eyler–Yakobi bo'yicha murakkablik guvohi: {a}^(({n}-1)/2) ≡ {mod_exp} != ({a}/{n}) ≡ {j} (mod {n})"
             logs.append(
                 RoundLog(
                     round_idx=round_idx,
@@ -188,7 +188,7 @@ def solovay_strassen_test(
                 logs=logs,
             )
 
-        note = f"Solovay-Strassen shartini bajardi: {a}^(({n}-1)/2) ≡ ({a}/{n}) ≡ {j} (mod {n})"
+        note = f"Solovay–Strassen sinovidan o'tdi: {a}^(({n}-1)/2) ≡ ({a}/{n}) ≡ {j} (mod {n})"
         logs.append(
             RoundLog(
                 round_idx=round_idx,
