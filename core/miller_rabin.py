@@ -1,8 +1,8 @@
-import secrets
 import time
 
 from core.models import PrimalityResult, RoundLog
 from core.number_theory import check_small_primes, gcd
+from core.witness import draw_witness, validate_inputs
 
 
 def miller_rabin_test(
@@ -17,8 +17,7 @@ def miller_rabin_test(
     or a^(d * 2^r) == n - 1 (mod n) for some 0 <= r < s.
     Error bound: <= (1/4)^k.
     """
-    if k < 1:
-        raise ValueError("Raundlar soni k >= 1 bo'lishi kerak")
+    validate_inputs(n, k)
 
     t0 = time.perf_counter()
     bit_length = n.bit_length() if n > 0 else 0
@@ -110,27 +109,33 @@ def miller_rabin_test(
         s += 1
 
     logs: list[RoundLog] = []
-    seen_a: set[int] = set()
-    num_possible = n - 3
-
     for round_idx in range(1, k + 1):
-        attempts = 0
-        while attempts < 100:
-            a = secrets.randbelow(num_possible) + 2
-            if coprime_only and gcd(a, n) != 1:
-                attempts += 1
-                continue
-            if len(seen_a) < num_possible and a in seen_a:
-                attempts += 1
-                continue
-            break
-        else:
-            a = secrets.randbelow(num_possible) + 2
-            if coprime_only:
-                while gcd(a, n) != 1:
-                    a = secrets.randbelow(num_possible) + 2
+        a = draw_witness(n, coprime_only=coprime_only)
 
-        seen_a.add(a)
+        factor = gcd(a, n)
+        if factor > 1:
+            logs.append(RoundLog(
+                round_idx=round_idx,
+                witness_a=a,
+                expression=f"gcd({a}, {n})",
+                computed_value=str(factor),
+                passed=False,
+                note=f"EKUB({a}, {n}) = {factor} > 1: murakkablik guvohi topildi",
+            ))
+            elapsed = (time.perf_counter() - t0) * 1000.0
+            return PrimalityResult(
+                algorithm="Miller-Rabin",
+                n=n,
+                bit_length=bit_length,
+                is_prime=False,
+                verdict="Composite",
+                rounds_requested=k,
+                rounds_run=round_idx,
+                error_bound="0",
+                elapsed_ms=round(elapsed, 4),
+                pre_filtered=False,
+                logs=logs,
+            )
 
         x = pow(a, d, n)
         expr_init = f"{a}^{d} mod {n}"
@@ -152,6 +157,7 @@ def miller_rabin_test(
 
         composite_witness = True
         for r in range(1, s):
+            previous_x = x
             x = pow(x, 2, n)
             expr_sq = f"{a}^({d}*2^{r}) mod {n}"
 
@@ -172,7 +178,7 @@ def miller_rabin_test(
 
             if x == 1:
                 # Non-trivial square root of 1 modulo n
-                note = f"1 ning trivial bo'lmagan kvadrat ildizi topildi: x ≡ 1 (mod {n}), n murakkab son"
+                note = f"1 ning trivial bo‘lmagan kvadrat ildizi: {previous_x}² ≡ 1 (mod {n}), n murakkab son"
                 logs.append(
                     RoundLog(
                         round_idx=round_idx,

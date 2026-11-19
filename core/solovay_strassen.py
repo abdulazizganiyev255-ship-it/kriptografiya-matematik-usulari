@@ -1,8 +1,8 @@
-import secrets
 import time
 
 from core.models import PrimalityResult, RoundLog
 from core.number_theory import check_small_primes, gcd, jacobi_symbol
+from core.witness import draw_witness, validate_inputs
 
 
 def solovay_strassen_test(
@@ -16,8 +16,7 @@ def solovay_strassen_test(
     Checks whether a^((n-1)/2) == (a / n) (mod n) for k random bases a in [2, n-2].
     Error bound: <= (1/2)^k.
     """
-    if k < 1:
-        raise ValueError("Raundlar soni k >= 1 bo'lishi kerak")
+    validate_inputs(n, k)
 
     t0 = time.perf_counter()
     bit_length = n.bit_length() if n > 0 else 0
@@ -102,27 +101,8 @@ def solovay_strassen_test(
             )
 
     logs: list[RoundLog] = []
-    seen_a: set[int] = set()
-    num_possible = n - 3
-
     for round_idx in range(1, k + 1):
-        attempts = 0
-        while attempts < 100:
-            a = secrets.randbelow(num_possible) + 2
-            if coprime_only and gcd(a, n) != 1:
-                attempts += 1
-                continue
-            if len(seen_a) < num_possible and a in seen_a:
-                attempts += 1
-                continue
-            break
-        else:
-            a = secrets.randbelow(num_possible) + 2
-            if coprime_only:
-                while gcd(a, n) != 1:
-                    a = secrets.randbelow(num_possible) + 2
-
-        seen_a.add(a)
+        a = draw_witness(n, coprime_only=coprime_only)
 
         # Check gcd
         g = gcd(a, n)
