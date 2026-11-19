@@ -1,4 +1,10 @@
 """Contract tests against the unmodified PrimeGuard mathematical core."""
+import pytest
+
+# The existing Streamlit-only CI intentionally does not install FastAPI.
+# A separate React/API workflow installs and executes these contract tests.
+pytest.importorskip("fastapi")
+pytest.importorskip("httpx")
 from fastapi.testclient import TestClient
 
 from api.main import app
