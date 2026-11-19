@@ -132,33 +132,6 @@ with st.sidebar:
         help="Ehtimoliy tublik testlarida ishlatiladigan tasodifiy asoslar soni."
     )
 
-    # Jonli Nazariy xatolik chegarasi Hisob-kitobi
-    err_ss = 2 ** (-global_k)
-    err_mr = 4 ** (-global_k)
-
-    st.markdown(f"""
-    <div class="cyber-card" style="padding: 1rem; margin: 1rem 0; border-color: rgba(0, 245, 212, 0.3);">
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #00F5D4; font-weight: 700; margin-bottom: 0.5rem;">
-            📊 NAZARIY XATOLIK CHEGARASI
-        </div>
-        <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD5E1;">
-            <b>Fermat:</b> universal xatolik chegarasi yo'q (Karmaykl sonlari sababli).<br>
-            <b>Solovay–Strassen:</b><br>
-            <span style="font-family: 'JetBrains Mono', monospace; color: #F59E0B;">
-                2<sup>-{global_k}</sup> ≈ {err_ss:.2e}
-            </span>
-        </div>
-        <div style="font-size: 0.82rem; color: #CBD5E1;">
-            <b>Miller-Rabin Strong:</b><br>
-            <span style="font-family: 'JetBrains Mono', monospace; color: #10B981;">
-                4<sup>-{global_k}</sup> ≈ {err_mr:.2e}
-            </span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown("---")
-
     # Tezkor Namuna Tugmalari
     st.markdown("### ⚡ Tayyor misollar")
     st.caption("Bir marta bosish orqali sinov sonini yuklang:")
@@ -194,6 +167,33 @@ with st.sidebar:
         st.rerun()
 
     st.markdown("---")
+    # Jonli Nazariy xatolik chegarasi Hisob-kitobi
+    err_ss = 2 ** (-global_k)
+    err_mr = 4 ** (-global_k)
+
+    st.markdown(f"""
+    <div class="cyber-card" style="padding: 1rem; margin: 1rem 0; border-color: rgba(0, 245, 212, 0.3);">
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #00F5D4; font-weight: 700; margin-bottom: 0.5rem;">
+            📊 NAZARIY XATOLIK CHEGARASI
+        </div>
+        <div style="font-size: 0.82rem; margin-bottom: 0.4rem; color: #CBD5E1;">
+            <b>Fermat:</b> universal xatolik chegarasi yo'q (Karmaykl sonlari sababli).<br>
+            <b>Solovay–Strassen:</b><br>
+            <span style="font-family: 'JetBrains Mono', monospace; color: #F59E0B;">
+                2<sup>-{global_k}</sup> ≈ {err_ss:.2e}
+            </span>
+        </div>
+        <div style="font-size: 0.82rem; color: #CBD5E1;">
+            <b>Miller-Rabin Strong:</b><br>
+            <span style="font-family: 'JetBrains Mono', monospace; color: #10B981;">
+                4<sup>-{global_k}</sup> ≈ {err_mr:.2e}
+            </span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+
     st.markdown("""
     <div style="font-size: 0.75rem; color: #64748B; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
         Akademik dasturiy prototip<br>
@@ -840,6 +840,15 @@ with tab3:
         friendly_table = df_bench[list(visible_columns)].rename(
             columns=visible_columns
         )
+        friendly_table["Xulosa"] = friendly_table["Xulosa"].replace({
+            "Probably Prime": "Ehtimoliy tub",
+            "Prime": "Aniq tub",
+            "Composite": "Murakkab",
+            "Mixed": "Turlicha",
+        })
+        friendly_table["Xulosalar mosligi"] = friendly_table[
+            "Xulosalar mosligi"
+        ].replace({"Consistent": "Mos", "Mixed": "Turlicha"})
         st.dataframe(friendly_table, hide_index=True, width="stretch", height=420)
         st.caption(
             "Murakkab sonlarda algoritm guvoh topishi bilan to'xtaydi. "
