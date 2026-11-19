@@ -56,7 +56,7 @@ def test_css_covers_core_blocks_and_responsive_accessibility():
 def test_sample_carmichael_button_opens_educational_experiment():
     app = AppTest.from_file(str(ROOT / "app.py"), default_timeout=25).run()
     assert not app.exception
-    app.button("Karmaykl soni: 8911").click().run()
+    app.button(key="primeguard_sample_carmichael").click().run()
     assert not app.exception
     assert app.session_state["primeguard_show_carmichael"] is True
     assert app.session_state["tab1_text_area"] == "8911"
