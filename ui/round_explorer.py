@@ -1,5 +1,6 @@
 """Interactive explanation of an already executed primality-test round."""
 from collections.abc import Mapping
+from hashlib import sha256
 
 import streamlit as st
 
@@ -40,10 +41,13 @@ def render_round_explorer(
         return
 
     round_numbers = [log.round_idx for log in logs]
+    # A fresh widget identity prevents stale selections when switching from
+    # a 20-round run to a new result that stopped after just one round.
+    run_key = sha256(f"{n}:{result['rounds']}:{algorithm}:{logs[0].witness_a}".encode()).hexdigest()[:12]
     round_number = st.select_slider(
         "Raundni tanlang",
         options=round_numbers,
-        key=f"{namespace}_round",
+        key=f"{namespace}_round_{run_key}",
     )
     record = next(log for log in logs if log.round_idx == round_number)
     trace = build_round_trace(algorithm, n, record)
