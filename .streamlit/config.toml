@@ -1,0 +1,17 @@
+# Native Streamlit theme — consistent with assets/style.css.
+# Keep widget state and alert colors owned by Streamlit where possible.
+[theme]
+base = "dark"
+primaryColor = "#69D6C5"
+backgroundColor = "#0B1220"
+secondaryBackgroundColor = "#131F32"
+textColor = "#F2F6FA"
+borderColor = "#304258"
+codeBackgroundColor = "#18273D"
+showWidgetBorder = true
+
+[theme.sidebar]
+backgroundColor = "#0E192A"
+secondaryBackgroundColor = "#131F32"
+textColor = "#F2F6FA"
+primaryColor = "#69D6C5"

@@ -51,9 +51,10 @@ def render_round_explorer(
     # A fresh widget identity prevents stale selections when switching from
     # a 20-round run to a new result that stopped after just one round.
     run_key = sha256(f"{n}:{result['rounds']}:{algorithm}:{logs[0].witness_a}".encode()).hexdigest()[:12]
-    round_number = st.select_slider(
+    round_number = st.selectbox(
         "Raundni tanlang",
         options=round_numbers,
+        format_func=lambda number: f"{number}-raund",
         key=f"{namespace}_round_{run_key}",
     )
     record = next(log for log in logs if log.round_idx == round_number)
@@ -67,7 +68,7 @@ def render_round_explorer(
 
     context_key = f"{namespace}_trace_context"
     step_key = f"{namespace}_trace_step"
-    context = (n, algorithm, round_number)
+    context = (n, algorithm, round_number, record.witness_a, record.computed_value)
     if st.session_state.get(context_key) != context:
         st.session_state[context_key] = context
         st.session_state[step_key] = 0
@@ -98,18 +99,19 @@ def render_round_explorer(
         )
 
     step = trace.steps[position]
-    st.progress((position + 1) / len(trace.steps))
-    st.markdown(
-        f"**{position + 1}/{len(trace.steps)} — {step.title}**"
-    )
-    st.latex(step.formula)
-    st.code(step.value, language="text")
-    if step.status == "fail":
-        st.error(step.explanation)
-    elif step.status == "pass":
-        st.success(step.explanation)
-    else:
-        st.info(step.explanation)
+    with st.container(border=True):
+        st.progress((position + 1) / len(trace.steps))
+        st.markdown(
+            f"**Qadam {position + 1}/{len(trace.steps)} — {step.title}**"
+        )
+        st.latex(step.formula)
+        st.code(step.value, language="text")
+        if step.status == "fail":
+            st.error(step.explanation)
+        elif step.status == "pass":
+            st.success(step.explanation)
+        else:
+            st.markdown(step.explanation)
 
     if not trace.matches_log:
         st.error(
@@ -129,7 +131,9 @@ def render_round_explorer(
                     "Qadam": index,
                     "Nomi": item.title,
                     "Natija": item.value,
-                    "Holat": item.status,
+                    "Holat": {"pass": "Mos", "fail": "Guvoh", "info": "Hisob"}.get(
+                        item.status, item.status
+                    ),
                 }
                 for index, item in enumerate(trace.steps, 1)
             ],
