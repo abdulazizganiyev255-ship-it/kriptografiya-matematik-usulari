@@ -1,304 +1,83 @@
-# 🛡️ PrimeGuard — Tub sonlar laboratoriyasi
-### Fermat, Solovay–Strassen va Miller–Rabin algoritmlari laboratoriyasi
+# PrimeGuard — ehtimollikka asoslangan tublikni tekshirish
 
-**Foydalanuvchi qo'llanmasi:** [Dasturni ishlatish bo'yicha yo'riqnoma](docs/USER_GUIDE.md) · [Kod tuzilmasi](docs/CODE_GUIDE.md) · [Akademik tekshiruv](docs/ACADEMIC_VALIDATION.md)
+**Loyiha mavzusi:** «Sonlarni tublikka tekshiruvchi ehtimollikka asoslangan algoritmlarning kompleks dasturiy ta'minotini ishlab chiqish».
 
----
+PrimeGuard — katta natural sonlarning tubligini ehtimoliy algoritmlar yordamida tekshiradigan, har bir sinovning matematik asosini izohlaydigan va algoritmlarning hisoblash vaqtini bir xil sharoitda taqqoslaydigan **o'quv dasturi**.
 
-## 📌 Loyiha pasporti
+**Muhim:** bu loyiha RSA kalit yaratish tizimi, shifrlash dasturi yoki sertifikatlangan kriptografik kutubxona emas. `analytics/prime_generator.py` ichidagi tub nomzod generatsiyasi benchmark uchun ishlatiladi; tarixiy `generate_rsa_pair` yordamchi funksiyasi asosiy interfeysda namoyish etilmaydi.
 
-* **Loyiha nomi:** `PrimeGuard`
-* **Versiya:** `1.1.0 (Academic Prototype)`
-* **Yo'nalish:** Kriptografiyaning matematik usullari / Kiberxavfsizlik
-* **Standartlar:** FIPS 186-5, RFC 8017 va ISO/IEC 18031 hujjatlari nazariy taqqoslash manbalari sifatida ko'rib chiqiladi; ushbu loyiha hozircha ularga muvofiqlik sertifikatiga ega emas.
-* **Ishlash rejimi:** Lokal Streamlit prototipi; to'liq air-gapped ishlash alohida tekshirilishi kerak.
-* **Mas'uliyat zonasi:** 
-  * **Matematik yadro:** uchta ehtimoliy tublik algoritmi va yordamchi sonlar nazariyasi funksiyalari (`core/`).
-  * **Analitika:** Karmaykl sonlari, benchmark va tub son generatori (`analytics/`).
-  * **Interfeys:** Streamlit dashboard (`app.py`) va CSS dizayni (`assets/style.css` (Midnight Lab interfeysi)).
-  * **Tekshiruv:** avtomatik testlar (`tests/`) va GitHub Actions.
+## Asosiy imkoniyatlar
 
----
-
-## Loyiha maqsadi va vazifalari
-
-**Maqsad:** sonlarning tubligini ehtimollikka asoslangan algoritmlar yordamida tekshiruvchi, hisoblash jarayonini ko'rsatuvchi va algoritmlar natijalarini taqqoslovchi kompleks dasturiy ta'minot ishlab chiqish.
-
-**Asosiy vazifalar:**
-1. Fermat, Solovay–Strassen va Miller–Rabin algoritmlarining matematik asoslarini o'rganish.
-2. Uch algoritmni Python tilida alohida modullarda amalga oshirish.
-3. Foydalanuvchiga son va test raundlari sonini tanlash imkonini beruvchi interfeys yaratish.
-4. Har bir raundning tasodifiy asosi, hisoblangan qiymati va natijasini ko'rsatish.
-5. Karmaykl sonlari orqali Fermat testining cheklovini namoyish etish.
-6. Algoritmlarning bajarilish vaqtini bir xil sharoitda o'lchash va taqqoslash.
-7. Natijalarni avtomatik testlar va deterministik etalon bilan tekshirish.
-
-**Loyiha natijasi:** foydalanuvchi son kiritadi, algoritmlarni ishga tushiradi, har bir algoritmning xulosasi va bajarilish jarayonini ko'radi, tajriba natijalarini jadval, CSV va JSON ko'rinishida saqlaydi. 64-bit diapazonida deterministik Miller–Rabin etaloni ham umumiy xulosani mustaqil tekshiradi.
-
-**Ilmiy cheklov:** probabilistik test barcha raundlardan o'tgan sonni avtomatik ravishda isbotlangan tub son deb hisoblamaydi. Natija "ehtimoliy tub" deb ko'rsatiladi. Ushbu loyihada alohida deterministik etalon faqat n < 2^64 diapazoni uchun mavjud.
-
----
-
-## Natija atamalari
-
-| Dasturdagi xulosa | Ma'nosi |
+| Bo'lim | Nima bajaradi? |
 |---|---|
-| **Composite** / Murakkab | Murakkablik guvohi topildi; son aniq murakkab |
-| **Probably Prime** / Ehtimoliy tub | Tanlangan raundlardan o'tdi; bu isbot emas |
-| **Prime** / Aniq tub | Kichik tub sonlar jadvali yoki deterministik etalon bilan tekshirildi |
+| **1. Sonni tekshirish** | Natural son `n` va raundlar soni `k` ni qabul qiladi. Fermat, Solovay–Strassen va Miller–Rabin natijalarini, bajarilgan raundlar sonini, murakkablik guvohini, nazariy xatolik chegarasini va vaqtni ko'rsatadi. |
+| **1-bo'lim ichidagi ixtiyoriy Karmaykl tajribasi** | `561` va boshqa kichik sonlar yordamida Fermat sinovining chegarasini va Korselt mezonini tushuntiradi; alohida asosiy sahifa emas. |
+| **2. Algoritmlarni taqqoslash** | Aynan bir xil tub va murakkab son nomzodlarida uchta testning vaqtini o'lchaydi, median va tarqalishni ko'rsatadi, CSV natijasini beradi. |
 
-## 🏛️ Tizim arxitekturasi
+Matematik navigator avvalgi tekshiruvning haqiqiy `RoundLog` yozuvidan foydalanadi: algoritm, raund va hisoblash qadamini tanlash mumkin. Interfeys qayta chizilganda yangi tasodifiy asos tanlanmaydi. Son tekshiruvining natijasi JSON formatida ham saqlanadi.
 
-Loyiha qat'iy uch qatlamli (Three-Tier Modular Architecture) tamoyiliga asoslangan. Bu yondashuv kodni kengaytirish, testlash va tushuntirishni osonlashtiradi:
+### Algoritmlar va natijaning ma'nosi
 
-```mermaid
-flowchart TD
-    subgraph UI ["🖥️ Taqdimot Qatlami (Presentation Layer)"]
-        APP["app.py (Streamlit Dashboard)"]
-        CSS["assets/style.css (Midnight Lab UI)"]
-        APP --- CSS
-    end
+1. **Fermat:** `a^(n-1) ≡ 1 (mod n)` mezoni. Ushbu mezonning bajarilishi tub son ekanini isbotlamaydi. Karmaykl sonlari barcha o'zaro tub asoslarda bu shartni bajaradi; universal `2^-k` xatolik chegarasi yo'q.
+2. **Solovay–Strassen:** Yakobi belgisini `a^((n-1)/2) mod n` bilan solishtiradi. Mustaqil tasodifiy asoslarda noto'g'ri musbat xulosa ehtimoli yuqori chegarasi `2^-k`. **Bitta raund murakkab sonni aniqlamasligi mumkin**, shu jumladan Karmaykl sonlarida.
+3. **Miller–Rabin:** `n-1 = 2^s * d` ajratish va ketma-ket kvadratlash orqali kuchli guvohlarni izlaydi. Mustaqil raundlarda noto'g'ri musbat xulosa yuqori chegarasi `4^-k`.
 
-    subgraph Analytics ["📊 Analitika Qatlami (Analytics Layer)"]
-        CARM["analytics/carmichael.py"]
-        BENCH["analytics/benchmark.py"]
-        PRIMEGEN["analytics/prime_generator.py"]
-    end
+**«Murakkab»** — sonning murakkabligi guvoh bilan yoki dastlabki bo'linish tekshiruvida aniqlandi. **«Ehtimoliy tub»** — belgilangan raundlardan o'tdi, ammo bu matematik isbot emas. **«Aniq tub»** — dastlabki kichik tub sonlar ro'yxati yoki `n < 2^64` diapazonidagi alohida deterministik etalon tasdiqlagan holat.
 
-    subgraph Core ["⚙️ Matematik Yadro (Core Layer)"]
-        MODELS["core/models.py (PrimalityResult, RoundLog)"]
-        FERMAT["core/fermat.py (Fermat Test)"]
-        SS["core/solovay_strassen.py (Solovay-Strassen Test)"]
-        MR["core/miller_rabin.py (Miller-Rabin Strong Test)"]
-    end
+Xatolik chegaralari nazariy yuqori chegaralardir; tajribada kuzatilgan foiz yoki har bir sinovning sertifikati emas. Tasodifiy asoslar `secrets` orqali mustaqil tanlanadi.
 
-    APP --> MODELS
-    APP --> FERMAT
-    APP --> SS
-    APP --> MR
-    APP --> CARM
-    APP --> BENCH
-    APP --> PRIMEGEN
-    
-    CARM --> FERMAT
-    CARM --> MR
-    PRIMEGEN --> MR
-    BENCH --> FERMAT
-    BENCH --> SS
-    BENCH --> MR
-```
+### Karmaykl soni bilan ilmiy misol
 
----
+`561 = 3 × 11 × 17` — murakkab son. `a = 2` uchun Fermat sharti ham, Solovay–Strassenning **aynan shu bitta raundi** ham bajariladi. `a = 5` uchun Solovay–Strassen murakkablik guvohini topadi. Demak, «testdan o'tdi» natijasi bilan «isbotlangan tub» tushunchalarini aralashtirib bo'lmaydi.
 
-## 📐 Matematik nazariya va algoritmlar
+## Ishga tushirish
 
-Asimmetrik kriptografiyada (RSA, Diffie-Hellman, DSA, ElGamal) xavfsizlikning fundamental kafolati — yirik (512, 1024, 2048, 4096 bitli) tub sonlarni ishonchli va tezkor aniqlashga tayanadi. Deterministik usullar (masalan, AKS algoritmi) hisoblash nuqtai nazaridan sekin bo'lganligi bois, amaliyotda **probabilistik (Monte-Karlo tipidagi) tublik testlari** qo'llaniladi.
-
----
-
-### 1. Fermatning kichik teoremasi va Fermat testi
-
-Pyer de Fermat (1640) tomonidan shakllantirilgan teoremaga ko'ra:
-Agar $p$ tub son bo'lib, $\gcd(a, p) = 1$ bo'lsa:
-
-$$a^{p-1} \equiv 1 \pmod p$$
-
-#### Algoritm mantig'i:
-1. Tekshiriluvchi toq $n$ soni uchun tasodifiy $a \in [2, n - 2]$ asosi tanlanadi.
-2. Agar $\gcd(a, n) > 1$ bo'lsa, son aniq murakkab deb topiladi.
-3. Agar $a^{n-1} \not\equiv 1 \pmod n$ bo'lsa, $a$ soni $n$ ning **Fermat guvohi (Fermat witness)** hisoblanadi va $n$ ning murakkabligi qat'iy isbotlanadi.
-4. Agar $a^{n-1} \equiv 1 \pmod n$ bo'lsa, son ehtimoliy tub deb hisoblanadi.
-
-Karmaykl sonlari bundan mustasno bo'lgan murakkab sonlar uchun, mustaqil va bir tekis tasodifiy asoslar tanlanganda, $k$ raund uchun klassik yuqori chegara:
-
-$$P(\text{Xatolik}) \le \left(\frac{1}{2}\right)^k = 2^{-k}$$
-
-#### ⚠️ Karmaykl sonlari va Korselt mezoni
-Fermat testining halokatli kamchiligi mavjud: **Karmaykl sonlari**. Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan *barcha* $a$ asoslar uchun Fermat tengligini soxta qanoatlantiradi.
-
-**Korselt mezoni (1899):** Musbat toq murakkab son $n$ faqat va faqat quyidagi shartlar bajarilgandagina Karmaykl soni bo'ladi:
-1. $n$ kvadratlardan xoli (square-free), ya'ni uning kanonik yoyilmasida hech bir tub son darajasi 1 dan oshmaydi: 
-   $$n = p_1 p_2 \dots p_r \quad (\forall i \ne j, \, p_i \ne p_j)$$
-2. Har bir $p_i$ tub bo'luvchisi uchun quyidagi bo'linish sharti bajariladi:
-   $$(p_i - 1) \mid (n - 1) \quad (\forall i \in \{1, 2, \dots, r\})$$
-
-*Klassik Misollar:*
-* $561 = 3 \times 11 \times 17$ (Eng kichik Karmaykl soni: $2 \mid 560$, $10 \mid 560$, $16 \mid 560$).
-* $8911 = 7 \times 19 \times 67$ ($6 \mid 8910$, $18 \mid 8910$, $66 \mid 8910$).
-
-Fermat testi Karmaykl sonlariga qarshi ojiz bo'lib, $\gcd(a, n) = 1$ bo'lgan har qanday asosda aldanadi.
-
----
-
-### 2. Solovay–Strassen testi va Eyler mezoni
-
-Robert Solovay va Volker Strassen (1977) Fermat testining cheklovlarini yengish uchun Eyler kriteriyasi va Yakobi belgisiga asoslangan testni taklif etishdi.
-
-Eyler teoremasiga ko'ra, agar $p$ toq tub son bo'lsa:
-
-$$a^{\frac{p-1}{2}} \equiv \left(\frac{a}{p}\right) \pmod p$$
-
-Bu yerda $\left(\frac{a}{p}\right)$ — Lejandr belgisi (umumiy holda toq $n$ uchun Yakobi belgisi):
-
-$$\left(\frac{a}{n}\right) \in \{-1, 0, 1\}$$
-
-#### Algoritm mantig'i:
-1. Tasodifiy $a \in [2, n - 2]$ tanlanadi.
-2. Yakobi belgisi $J = \left(\frac{a}{n}\right)$ hisoblanadi ($O(\log^2 n)$).
-3. Modul bo'yicha daraja $V = a^{\frac{n-1}{2}} \pmod n$ hisoblanadi.
-4. Agar $J = 0$ yoki $V \not\equiv J \pmod n$ bo'lsa, $a$ soni **Eyler guvohi (Euler witness)** bo'lib, $n$ ning murakkabligi 100% isbotlanadi.
-
-#### Xatolik ehtimoli:
-Solovay-Strassen testi Karmaykl sonlarida aldanmaydi. Har qanday toq murakkab son $n$ uchun Eyler yolg'onchilari guruhi $\mathbb{Z}_n^*$ ning qism guruhi bo'lib, uning tartibi ko'pi bilan $\frac{\varphi(n)}{2}$ ga teng:
-
-$$P(\text{Xatolik}) \le \left(\frac{1}{2}\right)^k = 2^{-k}$$
-
----
-
-### 3. Miller–Rabin kuchli ehtimoliy tublik testi
-
-Gari Miller (1976) va Maykl Rabin (1980) tomonidan ishlab chiqilgan ushbu algoritm zamonaviy kiberxavfsizlik va kriptotizimlarning (OpenSSL, GnuPG, TLS/SSL) sanoat standarti hisoblanadi.
-
-Test asosida tub sonlar maydonida 1 ning kvadrat ildizlari faqat $\pm 1$ bo'lishi mumkinligi haqidagi algebraik fakt yotadi:
-
-$$x^2 \equiv 1 \pmod p \implies (x - 1)(x + 1) \equiv 0 \pmod p \implies x \equiv \pm 1 \pmod p$$
-
-Agar $n$ murakkab son bo'lsa, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha $x^2 \equiv 1 \pmod n$ kongruensiyasi $\pm 1$ dan tashqari trivial bo'lmagan kvadrat ildizlarga ega bo'ladi.
-
-#### Algoritm mantig'i:
-1. $n - 1$ soni 2 ning darajasi va toq songa dekompozitsiya qilinadi:
-   $$n - 1 = 2^s \cdot d \quad (d \text{ toq}, \, s \ge 1)$$
-2. Tasodifiy $a \in [2, n - 2]$ tanlanadi.
-3. Dastlabki qiymat hisoblanadi: $x_0 = a^d \pmod n$.
-4. Agar $x_0 \equiv 1 \pmod n$ yoki $x_0 \equiv n - 1 \pmod n$ bo'lsa, $n$ bu raundda tublik sinovidan o'tadi.
-5. Aks holda, $r = 1, 2, \dots, s-1$ uchun ketma-ket kvadratlash amalga oshiriladi:
-   $$x_r = x_{r-1}^2 \pmod n$$
-   * Agar biror qadamda $x_r \equiv n - 1 \equiv -1 \pmod n$ bo'lsa, $n$ sinovdan muvaffaqiyatli o'tadi.
-   * Agar $x_r \equiv 1 \pmod n$ bo'lib, undan oldingi $x_{r-1} \not\equiv \pm 1 \pmod n$ bo'lsa, 1 ning trivial bo'lmagan kvadrat ildizi topiladi va $n$ **ANIQ MURAKKAB** deb topiladi.
-6. Agar $s-1$ ta qadamda ham $-1$ ga erishilmasa, $a$ — **Kuchli Murakkablik Guvohi (Strong Witness)** bo'ladi.
-
-#### Monier–Rabin teoremasi va xatolik chegarasi:
-Har qanday toq murakkab $n$ soni uchun kuchli soxta guvohlar (strong liars) soni eng ko'pi bilan:
-
-$$|L_n| \le \frac{1}{4}\varphi(n) < \frac{n - 1}{4}$$
-
-Shu sababli, $k$ ta mustaqil raund o'tkazilganda murakkab sonni tub deb tasniflashning nazariy eng yuqori xatolik chegarasi:
-
-$$P(\text{Xatolik}) \le \left(\frac{1}{4}\right)^k = 4^{-k} = 2^{-2k}$$
-
-| Raundlar soni ($k$) | Xatolik ehtimoli ($4^{-k}$) | Ishonchlilik darajasi ($1 - 4^{-k}$) |
-| :---: | :---: | :---: |
-| 10 | $\approx 9.53 \times 10^{-7}$ | $99.99990\%$ |
-| 20 | $\approx 9.09 \times 10^{-13}$ | $99.9999999999\%$ |
-| 40 | $\approx 8.27 \times 10^{-25}$ | $1 - 10^{-24}$ (nazariy yuqori chegara) |
-| 64 | $\approx 2.93 \times 10^{-39}$ | Juda kichik nazariy yuqori chegara |
-
----
-
-## 📊 Algoritmlarning hisoblash murakkabligi (Big-O)
-
-$n$ nomzod sonining bit uzunligi $b = \lfloor \log_2 n \rfloor + 1$, $k$ — audit raundlari soni bo'lsin:
-
-| Algoritm | Vaqt Murakkabligi (Klassik) | Vaqt Murakkabligi (FFT / Schönhage) | Xotira Sarfi | Xatolik ehtimoli | Karmaykl Tuzog'iga Zaiflik |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Kichik Fermat** | $O(k \cdot b^3)$ | $O(k \cdot b^2 \log b \log \log b)$ | $O(b)$ | $\le 2^{-k}$ *(Karmaykldan tashqari)* | 🚨 **O'ta Zaif** (Tuzoqqa tushadi) |
-| **Solovay-Strassen** | $O(k \cdot b^3)$ | $O(k \cdot b^2 \log b \log \log b)$ | $O(b)$ | $\le 2^{-k}$ | ✅ **Xavfsiz** (Karmayklni fosh qiladi) |
-| **Miller-Rabin Strong** | $O(k \cdot b^3)$ | $O(k \cdot b^2 \log b \log \log b)$ | $O(b)$ | $\le 4^{-k}$ | 🛡️ **Eng Xavfsiz** (Optimal kripto-standart) |
-| **AKS (Deterministik)** | $\tilde{O}(b^6)$ | $\tilde{O}(b^6)$ | $O(b^3)$ | $0$ (100% deterministik) | ✅ **Xavfsiz** (Biroq amaliyot uchun juda sekin) |
-| **Baillie-PSW** | $O(b^3)$ | $O(b^2 \log b \log \log b)$ | $O(b)$ | Ma'lum kontr-misol yo'q ($< 2^{64}$) | 🛡️ **Kombinatsiyalashgan Standart** |
-
----
-
-## Kodni o'rganish
-
-Papka va fayllarning sodda izohi uchun [CODE_GUIDE.md](docs/CODE_GUIDE.md) faylini o'qing. Matematik validatsiya va test metodikasi [ACADEMIC_VALIDATION.md](docs/ACADEMIC_VALIDATION.md) faylida berilgan.
-
----
-
-## 🚀 O'rnatish va Ishga Tushirish
-
-### 1. Tizim talablari
-* **Python:** `3.10` yoki undan yuqori (tavsiya etiladi: `3.11` / `3.12` / `3.13`).
-* **Operatsion Tizim:** Windows 10/11, Ubuntu 20.04+, macOS Sonoma+.
-
-### 2. Virtual muhitni yaratish va faollashtirish
-Loyiha papkasiga kiring va virtual muhitni ishga tushiring:
-
-```bash
-# Windows (PowerShell):
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-
-# Linux / macOS (Bash):
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 3. Kutubxonalarni o'rnatish
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-*(Kutubxonalar tarkibi: `streamlit`, `plotly`, `pandas`, `pytest`)*
-
-### 4. Dastur interfeysini ishga tushirish
-```bash
-streamlit run app.py
-```
-Buyruq bajarilgach, standart brauzeringizda `http://localhost:8501` manzili avtomatik ravishda ochiladi.
-
-### 5. Matematik yadro testlarini o'tkazish
-```bash
-pytest tests/ -v
-```
-
----
-
-## 🛡️ Kiberxavfsizlik va Kriptografik Tavsiyalar
-
-1. **CSPRNG Entropiyasi:** Kriptografik tub sonlarni generatsiya qilishda standart psevdotasodifiy generatorlar (`random` moduli) mutlaqo taqiqlanadi! `PrimeGuard Suite` tizimida faqat apparat darajasidagi OS entropiyasiga asoslangan `secrets` moduli (`os.urandom`) qo'llaniladi.
-2. **Kichik Tub Sonlar Elagi (Trial Division Pre-filter):** Katta bitli sonlarni to'g'ridan-to'g'ri Miller-Rabin testiga berish hisoblash resurslarini isrof qiladi. Nomzod son avval dastlabki tub sonlarga ($3, 5, 7, 11, \dots, 1000$) bo'linishga tekshiriladi. Bosh sonlar teoremasiga ko'ra, bu qadam nomzodlarning $\approx 80\%$ ini darhol rad etib, generatsiya tezligini 4-5 baravarga oshiradi.
-3. **Fermat Faktorizatsiya Hujumidan Himoya:** RSA kalit juftligini shakllantirishda generatsiya qilingan $p$ va $q$ tub sonlari bir-biriga juda yaqin bo'lmasligi shart:
-   $$|p - q| > 2^{\frac{b}{2} - 100}$$
-   Aks holda, tajovuzkor Fermat faktorizatsiyasi usuli orqali $N = p \cdot q$ modulini bir necha daqiqada omillarga ajratib tashlashi mumkin.
-
----
-
-## 👥 Loyiha Jamoasi va Mualliflik
-
-* **Agent A:** Mathematical Core & Performance Analytics Specialist
-* **Agent B:** Cyber-Security Frontend Architect & Technical Documentation Writer
-* **Kafedra:** Axborot Xavfsizligi va Kriptografiya Kafedrasi
-* **Litsenziya:** MIT Academic License 2026
-
-
-## Windows 10/11 — tez ishga tushirish
-
-**Muhim:** PowerShell ochilganda `C:\Windows\System32` ichida turmang. Avval loyihani foydalanuvchi papkasiga klonlang:
+Python 3.11–3.13 va Windows PowerShell uchun:
 
 ```powershell
-New-Item -ItemType Directory -Force "$HOME\Projects" | Out-Null
-Set-Location "$HOME\Projects"
-git clone -b academic/math-core-corrections https://github.com/abdulazizganiyev255-ship-it/kriptografiya-matematik-usulari.git PrimeGuard
-Set-Location .\PrimeGuard
+cd "$HOME\Projects\PrimeGuard"
+& "$HOME\PrimeGuardVenv\Scripts\python.exe" -m pip install -r requirements.txt
+& "$HOME\PrimeGuardVenv\Scripts\python.exe" -m pytest -q
+& "$HOME\PrimeGuardVenv\Scripts\python.exe" -m streamlit run app.py
 ```
 
-Keyin bitta buyruq bilan muhitni tayyorlang, kutubxonalarni o'rnating, testlarni bajaring va dasturni ishga tushiring:
+Brauzer: `http://localhost:8501`.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\start_primeguard.ps1
+Agar boshqa tizimda birinchi marta o'rnatayotgan bo'lsangiz, virtual muhitni yaratib, `python -m pip install -r requirements.txt` va `python -m streamlit run app.py` dan foydalaning.
+
+## Sinov va qabul mezonlari
+
+- `2`, `17`, `104729` kabi tub sonlar va `4`, `21`, `91` kabi murakkab sonlar uchun mantiqan to'g'ri natija.
+- `0`, `1`, manfiy, bo'sh va harfli kiritishlar uchun tushunarli domen cheklovi.
+- `561` misolida Fermat cheklovi va Solovay–Strassenning asosga bog'liq xulosasi to'g'ri tushuntiriladi.
+- Miller–Rabin jurnali haqiqiy hisoblangan modular qoldiqni ifodalaydi.
+- Bir xil nomzodlarda takroriy vaqt o'lchovlari, median, tarqalish, erta to'xtashlar va CSV.
+- Matematik natijalar asosiy navigatsiyadagi **ikkita** sahifada. RSA oynasi yo'q.
+- Avtomatik testlar va Windows'da brauzer orqali tekshiruv o'tkaziladi.
+
+## Loyiha tuzilmasi
+
+```text
+app.py                      # ikki sahifali Streamlit interfeys
+core/fermat.py              # Fermat testi
+core/solovay_strassen.py    # Solovay–Strassen testi
+core/miller_rabin.py        # Miller–Rabin testi
+core/witness.py             # tasodifiy asoslarni tanlash
+core/number_theory.py       # EKUB, Yakobi belgisi, deterministik 64-bit etalon
+analytics/round_explainer.py # matematik raund izohi
+analytics/carmichael.py     # yordamchi Karmaykl / Korselt tajribasi
+analytics/benchmark.py      # taqqoslovchi vaqt o'lchovi
+analytics/prime_generator.py # benchmark nomzodlarini yaratish
+ui/round_explorer.py        # interaktiv matematik navigator
+tests/                      # avtomatik testlar
+docs/                       # foydalanuvchi va himoya qo'llanmalari
 ```
 
-Skript virtual muhitni loyiha ichidagi `.venv` papkasida yaratadi. Global Python paketlarini o'zgartirmaydi. Testlardan biri yiqilsa, Streamlit ishga tushirilmaydi va xato terminalda ko'rsatiladi.
+## Akademik manbalar
 
-Brauzer manzili: http://localhost:8501
+- G. L. Miller, *Riemann's Hypothesis and Tests for Primality*, Journal of Computer and System Sciences 13(3), 1976.
+- R. Solovay va V. Strassen, *A Fast Monte-Carlo Test for Primality*, SIAM Journal on Computing 6(1), 1977.
+- M. O. Rabin, *Probabilistic Algorithm for Testing Primality*, Journal of Number Theory 12(1), 1980.
+- Korselt mezoni, 1899 — Karmaykl sonlarini xarakterlash.
 
-**Qo'lda ishga tushirish (ixtiyoriy):**
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m streamlit run app.py
-```
+Qolgan cheklovlar va tekshiruv protokoli: [Akademik validatsiya](docs/ACADEMIC_VALIDATION.md), [Foydalanuvchi qo'llanmasi](docs/USER_GUIDE.md), [Himoya va Windows sinovi](docs/DEFENSE_AND_SMOKE_TEST.md).

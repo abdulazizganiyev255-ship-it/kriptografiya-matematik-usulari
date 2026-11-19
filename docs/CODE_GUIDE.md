@@ -1,7 +1,7 @@
 # PrimeGuard kod tuzilmasi — sodda qo'llanma
 
 ## Loyihaning vazifasi
-PrimeGuard butun sonning tub yoki murakkab ekanini uchta ehtimoliy algoritm bilan tekshiradi va natijalarni taqqoslaydi.
+PrimeGuard 2 dan boshlangan natural sonlarning tubligini uchta ehtimoliy algoritm bilan tekshiradi, raund natijalarini tushuntiradi va algoritmlarning bajarilish vaqtini taqqoslaydi. Bosh menyuda ikki bo'lim bor; Karmaykl sonlari birinchi bo'lim ichidagi o'quv tajribasidir.
 
 ## Papkalar nima qiladi?
 
@@ -10,14 +10,17 @@ PrimeGuard/
 ├── app.py                    # Dasturni ishga tushiradigan Streamlit oynasi
 ├── core/                     # Asosiy matematik algoritmlar
 │   ├── models.py              # Natija va raund loglari
+│   ├── witness.py             # Mustaqil tasodifiy asoslar (secrets)
 │   ├── number_theory.py       # EKUB, Yakobi belgisi, elak va etalon test
 │   ├── fermat.py              # Fermat tublik testi
 │   ├── solovay_strassen.py    # Solovay–Strassen tublik testi
 │   └── miller_rabin.py        # Miller–Rabin tublik testi
 ├── analytics/                # Qo'shimcha tahlil va tajribalar
 │   ├── carmichael.py          # Karmaykl sonlari tahlili
+│   ├── round_explainer.py     # Logdagi asoslarga mos qadam-baqadam hisob
 │   ├── benchmark.py           # Algoritmlar tezligini solishtirish
 │   └── prime_generator.py     # Ehtimoliy tub son yaratish
+├── ui/round_explorer.py       # Interaktiv raund navigatori
 ├── tests/                    # Avtomatik testlar
 ├── assets/style.css           # Interfeys dizayni
 ├── docs/                     # Akademik va kod bo'yicha hujjatlar
@@ -27,7 +30,7 @@ PrimeGuard/
 
 ## Dastur qanday ishlaydi?
 1. Foydalanuvchi `app.py` oynasiga tekshiriladigan `n` sonini kiritadi.
-2. `app.py` tanlangan algoritmni chaqiradi.
+2. `app.py` uchala ehtimoliy algoritmni bir xil son uchun chaqiradi.
 3. Algoritm avval sonning chegarasi, juftligi va kichik tub bo'luvchilarini tekshiradi.
 4. Keyin algoritm o'z formulasini modul bo'yicha hisoblaydi.
 5. Har bir urinish `RoundLog` obyektiga yoziladi.
@@ -63,3 +66,5 @@ Testlar: `pytest -q`
 
 ## Himoyada aytish uchun qisqa izoh
 "PrimeGuard sonlarning tubligini tekshiruvchi dasturiy tizim. Unda Fermat, Solovay–Strassen va Miller–Rabin algoritmlari ishlatiladi. Foydalanuvchi son va raundlar sonini kiritadi, dastur algoritmlarning hisoblash jarayonini, xulosasini va vaqtini ko'rsatadi. Algoritmlar natijalari avtomatik testlar va 64-bit diapazondagi deterministik etalon bilan tekshiriladi. Katta sonlarda ehtimoliy tub xulosasi aniq matematik isbotdan farqli ko'rsatiladi."
+## Loyiha chegarasi
+Interfeysda **faqat sonni tekshirish** va **algoritmlarni taqqoslash** sahifalari bor. Karmaykl tahlili sonni tekshirish ichidagi ixtiyoriy o'quv misolidir. `analytics/prime_generator.py` benchmark uchun tub nomzod yaratadi; tarixiy RSA yordamchi funksiyasi interfeysda mavjud emas va topshiriq natijasi sifatida taqdim qilinmaydi.

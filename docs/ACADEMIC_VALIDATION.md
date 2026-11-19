@@ -58,8 +58,9 @@ Ushbu loyiha o'quv va ilmiy tajriba prototipidir. U ishlab chiqarish kriptografi
 
 Asosiy son tekshirish oynasi `n < 2^64` bo'lganda `is_prime_deterministic_64` etalonini yakuniy xulosaga qo'shadi. `n >= 2^64` bo'lganda etalon ishlatilmaydi va natija ehtimoliy tub sifatida ehtiyotkor ko'rsatiladi. Benchmarkda esa bir xil bit uzunligidagi tub nomzod va semiprime uch algoritmda alohida tekshiriladi; warm-up hamda nomzod yaratish vaqti o'lchovga kiritilmaydi.
 
-## RSA o'quv generatori: resurs chegaralari
-- Bir tub son nomzodi: 2–4096 bit; RSA moduli: 16–8192 bit. Bu chegaralar laboratoriya resurslarini boshqarish uchun belgilangan, xavfsizlik kafolati emas.
-- `max_attempts`: 1–1 000 000; `max_pair_attempts`: 1–10 000; Miller–Rabin raundlari: 1–4096.
-- `theoretical_expected_tests` faqat toq tasodifiy nomzodlar uchun tub sonlar teoremasiga asoslangan taxmin. Modulning aniq bit uzunligini topish, `p != q` va masofa filtrlari sabab qo'shimcha urinishlar alohida hisoblanadi.
-- `p` va `q` ehtimoliy tub sonlardir; modul to'liq RSA maxfiy/ochiq kalit juftligi ham, sertifikatlangan kalit materiali ham emas.
+## Mavzu chegarasi va namoyish mezonlari
+Asosiy natija — ehtimoliy tublik tekshiruvi, haqiqiy raundlar, matematik guvohlar va algoritmlarning vaqt jihatdan taqqoslanishi. RSA kalit juftligini yaratish ushbu mavzu bo'yicha namoyish qilinmaydi.
+
+Miller–Rabin jurnalidagi daraja ifodasi oxirgi qoldiq bilan mos bo'lishi shart. Misollar: `n=21,a=2` uchun `2^10 mod 21=16`; `n=15,a=2` uchun `2^7 mod 15=8`. Solovay–Strassen `n=561,a=2` da sinovdan o'tishi, `a=5` da murakkablikni aniqlashi mumkin. Bu holatlar deterministik regressiya testlari bilan qayd etiladi.
+
+Benchmark tavsiya etilgan standart takrorlash soni **10**; bu statistikaning mutlaq ishonchliligini isbotlamaydi. Median, tarqalish, sinov to'xtagan raund va muhit cheklovlari izohlanadi.
