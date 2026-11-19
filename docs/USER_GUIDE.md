@@ -74,3 +74,14 @@ Universitet himoyasida quyidagi tartibdan foydalanish mumkin:
 - Deterministik Miller–Rabin etaloni faqat (n < 2^{64}) uchun kafolatlangan.
 - Benchmark natijalari apparat va tizim sharoitlariga bog'liq.
 - Loyiha akademik prototip bo'lib, sertifikatlangan kriptografik kutubxona emas.
+
+
+## Interfeysni o'qish va grafiklarni boshqarish
+
+- **Sonni tekshirish:** yakuniy xulosa avval, Fermat, Solovay–Strassen va Miller–Rabin kartalari keyin ko'rsatiladi. Ehtimoliy tub natija matematik isbot emas.
+- **Karmaykl tahlili:** mezon va formulalar o'qilishi uchun HTML matematika belgilari bilan ko'rsatiladi.
+- **Tezlik taqqoslash:** sinovdan keyin “Tub nomzod” va “Murakkab (semiprime)” filtrini almashtirish mumkin. Har bir tur uchun chiziqli grafik yoki ustunli taqqoslash ko'rinishi mavjud. Filtrni o'zgartirganda avvalgi o'lchovlar saqlanadi.
+- **Natijalar jadvali:** foydalanuvchiga o'zbekcha ustun nomlari ko'rsatiladi; CSV eksportda esa takrorlanadigan akademik tahlil uchun asl texnik ustunlar va barcha metrikalar qoladi.
+- **Raundlar soni:** chap panelda tanlanadi. Tayyor misollar darhol shu sozlamadan keyin joylashgan.
+
+**Texnik talab:** interfeys Streamlit 1.58 yoki yangiroq versiyadagi `width="stretch"` parametridan foydalanadi. Pandas `DataFrame.rename(..., inplace=True)` ogohlantirishi bo'lmasligi kerak.

@@ -132,6 +132,41 @@ with st.sidebar:
         help="Ehtimoliy tublik testlarida ishlatiladigan tasodifiy asoslar soni."
     )
 
+    # Tezkor Namuna Tugmalari
+    st.markdown("### ⚡ Tayyor misollar")
+    st.caption("Bir marta bosish orqali sinov sonini yuklang:")
+
+    SAMPLE_MERSENNE = "170141183460469231731687303715884105727"  # 2^127 - 1
+    SAMPLE_CARMICHAEL = "8911"  # 7 * 19 * 67
+    SAMPLE_512_PRIME = (
+        "134078079299425970995740249982058461274793658205923933777235614437217"
+        "640300735469768018742981669034276900318581864860508537538828119465699"
+        "46433649006083527"
+    )
+    SAMPLE_COMPOSITE = "340282366920938463463374607431768211455"  # 2^128 - 1
+
+    if st.button("127-bit tub son", width="stretch"):
+        st.session_state["input_candidate"] = SAMPLE_MERSENNE
+        st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
+        st.rerun()
+
+    if st.button("Karmaykl soni: 8911", width="stretch"):
+        st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
+        st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
+        st.session_state["carmichael_select"] = 8911
+        st.rerun()
+
+    if st.button("512-bit tub son", width="stretch"):
+        st.session_state["input_candidate"] = SAMPLE_512_PRIME
+        st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
+        st.rerun()
+
+    if st.button("128-bit murakkab son", width="stretch"):
+        st.session_state["input_candidate"] = SAMPLE_COMPOSITE
+        st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
+        st.rerun()
+
+    st.markdown("---")
     # Jonli Nazariy xatolik chegarasi Hisob-kitobi
     err_ss = 2 ** (-global_k)
     err_mr = 4 ** (-global_k)
@@ -159,41 +194,6 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Tezkor Namuna Tugmalari
-    st.markdown("### ⚡ Tayyor misollar")
-    st.caption("Bir marta bosish orqali sinov sonini yuklang:")
-
-    SAMPLE_MERSENNE = "170141183460469231731687303715884105727"  # 2^127 - 1
-    SAMPLE_CARMICHAEL = "8911"  # 7 * 19 * 67
-    SAMPLE_512_PRIME = (
-        "134078079299425970995740249982058461274793658205923933777235614437217"
-        "640300735469768018742981669034276900318581864860508537538828119465699"
-        "46433649006083527"
-    )
-    SAMPLE_COMPOSITE = "340282366920938463463374607431768211455"  # 2^128 - 1
-
-    if st.button("127-bit tub son", use_container_width=True):
-        st.session_state["input_candidate"] = SAMPLE_MERSENNE
-        st.session_state["tab1_text_area"] = SAMPLE_MERSENNE
-        st.rerun()
-
-    if st.button("Karmaykl soni: 8911", use_container_width=True):
-        st.session_state["input_candidate"] = SAMPLE_CARMICHAEL
-        st.session_state["tab1_text_area"] = SAMPLE_CARMICHAEL
-        st.session_state["carmichael_select"] = 8911
-        st.rerun()
-
-    if st.button("512-bit tub son", use_container_width=True):
-        st.session_state["input_candidate"] = SAMPLE_512_PRIME
-        st.session_state["tab1_text_area"] = SAMPLE_512_PRIME
-        st.rerun()
-
-    if st.button("128-bit murakkab son", use_container_width=True):
-        st.session_state["input_candidate"] = SAMPLE_COMPOSITE
-        st.session_state["tab1_text_area"] = SAMPLE_COMPOSITE
-        st.rerun()
-
-    st.markdown("---")
     st.markdown("""
     <div style="font-size: 0.75rem; color: #64748B; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
         Akademik dasturiy prototip<br>
@@ -234,8 +234,8 @@ with tab1:
             Sonni tekshirish laboratoriyasi
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            Istalgan o'lchamdagi katta natural sonni kiriting. Tizim bir vaqtning o'zida uchta mustaqil
-            probabilistik algoritm (<b>Kichik Fermat</b>, <b>Solovay-Strassen</b> va <b>Miller-Rabin Strong</b>)
+            2 dan boshlab, ko'pi bilan 2048 ta raqamli natural son kiriting. Tizim uchta
+            ehtimoliy tublik algoritmi (<b>Kichik Fermat</b>, <b>Solovay-Strassen</b> va <b>Miller-Rabin Strong</b>)
             yordamida har bir algoritm bo'yicha tekshiruv o'tkazadi.
         </div>
     </div>
@@ -253,7 +253,7 @@ with tab1:
 
     col_btn, col_info = st.columns([1, 3])
     with col_btn:
-        start_audit = st.button("▶ Sonni tekshirish", use_container_width=True, type="primary")
+        start_audit = st.button("▶ Sonni tekshirish", width="stretch", type="primary")
 
     if start_audit:
         val, msg, alert_type = validate_number_input(raw_candidate)
@@ -297,6 +297,21 @@ with tab1:
                 <span class="cyber-badge cyber-badge-cyan">Raundlar: {global_k}</span>
             </div>
             """, unsafe_allow_html=True)
+
+            # Mustaqil deterministik etalon faqat 64-bit diapazonida kafolatlangan.
+            audit_results = [res_f, res_ss, res_mr]
+            deterministic_reference = (
+                is_prime_deterministic_64(val) if val < (1 << 64) else None
+            )
+            if any(not result["is_prime"] for result in audit_results):
+                st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
+            elif deterministic_reference is True:
+                st.success("Yakuniy xulosa: SON ANIQ TUB. n < 2⁶⁴ uchun deterministik Miller–Rabin etaloni bilan tasdiqlandi.")
+            elif deterministic_reference is False:
+                st.error("Yakuniy xulosa: SON MURAKKAB. 64-bit deterministik etalon murakkablikni tasdiqladi.")
+            else:
+                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
+
 
             # 3 ta Neon KPI Kartochka
             col1, col2, col3 = st.columns(3)
@@ -344,20 +359,6 @@ with tab1:
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
-
-            # Mustaqil deterministik etalon faqat 64-bit diapazonida kafolatlangan.
-            audit_results = [res_f, res_ss, res_mr]
-            deterministic_reference = (
-                is_prime_deterministic_64(val) if val < (1 << 64) else None
-            )
-            if any(not result["is_prime"] for result in audit_results):
-                st.error("Yakuniy xulosa: SON MURAKKAB. Kamida bitta algoritm murakkablik guvohini topdi.")
-            elif deterministic_reference is True:
-                st.success("Yakuniy xulosa: SON ANIQ TUB. n < 2⁶⁴ uchun deterministik Miller–Rabin etaloni bilan tasdiqlandi.")
-            elif deterministic_reference is False:
-                st.error("Yakuniy xulosa: SON MURAKKAB. 64-bit deterministik etalon murakkablikni tasdiqladi.")
-            else:
-                st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
 
             # Raundlar bo'yicha tekshiruv jurnali
             st.markdown("### 📋 Tekshiruv bosqichlari")
@@ -413,7 +414,7 @@ with tab1:
                             })
 
                         df_logs = pd.DataFrame(table_rows)
-                        st.dataframe(df_logs, use_container_width=True, height=220)
+                        st.dataframe(df_logs, width="stretch", height=220)
 
             # CSV Yuklab olish
             if all_csv_rows:
@@ -424,7 +425,7 @@ with tab1:
                     data=csv_data,
                     file_name=f"primeguard_audit_log_{val.bit_length()}bit.csv",
                     mime="text/csv",
-                    use_container_width=True
+                    width="stretch"
                 )
 
             # To'liq natijani JSON ko'rinishida saqlash
@@ -471,7 +472,7 @@ with tab1:
                 data=json.dumps(audit_json, ensure_ascii=False, indent=2).encode("utf-8"),
                 file_name=f"primeguard_report_{bit_len}bit.json",
                 mime="application/json",
-                use_container_width=True,
+                width="stretch",
             )
 
 
@@ -486,9 +487,9 @@ with tab2:
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
             <b>Karmaykl sonlari</b> — Fermat testining cheklovini ko'rsatuvchi o'ziga xos murakkab sonlardir.
-            Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan <i>barcha</i> \( a \) asoslar uchun
-            \( a^{n-1} \equiv 1 \pmod n \) tenglikni bajaradi. Quyidagi laboratoriyada Fermat testining aldanishini
-            va zamonaviy algoritmlarning uni qanday fosh etishini tekshiring.
+            Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan <i>barcha</i> <em>a</em> asoslar uchun
+            <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> tenglikni bajaradi. Quyidagi laboratoriyada Fermat testining aldanishini
+            va boshqa algoritmlar murakkablikni qanday aniqlashini tekshiring.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -512,7 +513,7 @@ with tab2:
             help="Bo'sh qoldirsangiz, chapdagi tanlangan son tahlil qilinadi."
         )
 
-    if st.button("▶ Karmaykl sonini tahlil qilish", type="primary", use_container_width=True):
+    if st.button("▶ Karmaykl sonini tahlil qilish", type="primary", width="stretch"):
         target_str = custom_carm.strip() if custom_carm.strip() else str(carm_selected)
         n_carm, err_m, a_type = validate_number_input(target_str)
 
@@ -663,11 +664,11 @@ with tab2:
                     {n_carm} = {factors_str}
                 </div>
                 <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
-                    <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son \( n \) faqat va faqat quyidagi shartlar
+                    <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son <em>n</em> faqat va faqat quyidagi shartlar
                     bajarilgandagina Karmaykl soni bo'ladi:
                     <ol style="margin-top: 0.4rem;">
-                        <li>\( n \) kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
-                        <li>\( n \) ning har bir \( p \) tub bo'luvchisi uchun \( (p - 1) \mid (n - 1) \) bo'linish sharti qanoatlantiriladi.</li>
+                        <li><em>n</em> kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
+                        <li><em>n</em> ning har bir <em>p</em> tub bo'luvchisi uchun <code>(p − 1) | (n − 1)</code> bo'linish sharti qanoatlantiriladi.</li>
                     </ol>
                 </div>
             </div>
@@ -684,10 +685,10 @@ with tab2:
                     Miller–Rabin murakkablikni qanday aniqlaydi?
                 </div>
                 <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
-                    Karmaykl sonlarida \( a^{n-1} \equiv 1 \pmod n \) bo'lsa-da, Miller-Rabin testi \( n-1 = 2^s \cdot d \)
+                    Karmaykl sonlarida <code>a<sup>n−1</sup> ≡ 1 (mod n)</code> bo'lsa-da, Miller-Rabin testi <code>n − 1 = 2<sup>s</sup> · d</code>
                     dekompozitsiyasini amalga oshirib, ketma-ket kvadratlash jarayonida <b>1 ning trivial bo'lmagan kvadrat ildizlarini</b>
                     tekshiradi. Modul murakkab son bo'lganligi sababli, Xitoy Qoldiqlar Teoremasi (CRT) bo'yicha
-                    \( x^2 \equiv 1 \pmod n \) tenglama kamida \( 2^r \ge 8 \) ta yechimga ega bo'ladi (\( \pm 1 \) dan tashqari yechimlar).
+                    <code>x<sup>2</sup> ≡ 1 (mod n)</code> tenglama kamida <code>2<sup>r</sup> ≥ 8</code> ta yechimga ega bo'ladi (<code>±1</code> dan tashqari yechimlar).
                     Miller-Rabin bunday yechimni uchratgan zahoti sonning murakkabligini 100% aniqlik bilan isbotlaydi.
                 </div>
             </div>
@@ -705,8 +706,8 @@ with tab3:
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
             Bir xil bit uzunligidagi tub va murakkab semiprime nomzodlarda uch algoritmning
-            bajarilish vaqtini empirik taqqoslash. Warm-up va nomzod yaratish vaqti o'lchovdan
-            chiqariladi; median, o'rtacha va tarqalish ko'rsatkichlari alohida beriladi.
+            bajarilish vaqtini amaliy tajribada taqqoslash. Nomzod yaratish va dastlabki sinov
+            vaqtga kiritilmaydi; median va boshqa statistik ko'rsatkichlar alohida beriladi.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -740,100 +741,127 @@ with tab3:
             help="Har bir algoritmning o'lchovi necha marta takrorlanishini belgilaydi."
         )
 
-    if st.button("▶ Tezlik sinovini boshlash", type="primary", use_container_width=True):
+    if st.button("▶ Tezlik sinovini boshlash", type="primary", width="stretch"):
         if not chosen_bits:
             st.warning("Iltimos, kamida bitta bit uzunligini tanlang.")
         else:
             with st.spinner("Benchmark o'lchovlari bajarilmoqda..."):
-                sorted_bits = sorted(chosen_bits)
-                raw_bench = run_benchmark(sorted_bits, int(bench_rounds), trials=int(bench_trials))
-
-                if isinstance(raw_bench, pd.DataFrame):
-                    df_bench = raw_bench
-                elif isinstance(raw_bench, list):
-                    df_bench = pd.DataFrame(raw_bench)
-                elif isinstance(raw_bench, dict):
-                    df_bench = pd.DataFrame(raw_bench)
+                try:
+                    measured = run_benchmark(
+                        sorted(chosen_bits), int(bench_rounds), trials=int(bench_trials)
+                    )
+                except (ValueError, RuntimeError) as exc:
+                    st.error(f"Tezlik sinovini bajarib bo'lmadi: {exc}")
                 else:
-                    df_bench = pd.DataFrame()
+                    st.session_state["primeguard_benchmark_data"] = measured
+                    st.session_state["primeguard_benchmark_config"] = (
+                        tuple(sorted(chosen_bits)), int(bench_rounds), int(bench_trials)
+                    )
 
-                # Normalize column names if needed
-                col_map = {
-                    "Bit_Length": "bit_length", "bits": "bit_length", "Bit Length": "bit_length",
-                    "Candidate_Type": "candidate_type", "Algorithm": "algorithm", "algo": "algorithm", "Algoritm": "algorithm",
-                    "Median_Time_ms": "execution_time_ms", "Avg_Time_ms": "average_time_ms",
-                    "Std_Dev_ms": "std_dev_ms", "Min_Time_ms": "min_time_ms", "Max_Time_ms": "max_time_ms",
-                    "time": "execution_time_ms", "time_ms": "execution_time_ms", "Vaqt (ms)": "execution_time_ms"
-                }
-                df_bench.rename(columns=col_map, inplace=True)
+    # Persist benchmark output across Streamlit reruns (e.g., switching chart filters).
+    df_bench = st.session_state.get("primeguard_benchmark_data")
+    if df_bench is not None:
+        saved_bits, saved_k, saved_trials = st.session_state["primeguard_benchmark_config"]
+        st.markdown("### 📈 Grafik tahlillar")
+        st.caption(
+            f"Oxirgi sinov: {', '.join(map(str, saved_bits))} bit · "
+            f"{saved_k} raund · {saved_trials} takrorlash. "
+            "Bu haqiqiy o'lchovlar, matematik tezlik kafolati emas."
+        )
 
-            st.markdown("### 📈 Grafik tahlillar")
+        candidate_type = st.radio(
+            "Taqqoslanadigan nomzod turi",
+            options=("Tub nomzod", "Murakkab (semiprime)"),
+            horizontal=True,
+            key="primeguard_benchmark_candidate_type",
+        )
+        filtered = df_bench.loc[df_bench["Candidate_Type"] == candidate_type].copy()
+        palette = {
+            "Fermat": "#5BD6C8",
+            "Solovay-Strassen": "#F2BD65",
+            "Miller-Rabin": "#55D6A4",
+        }
+        axis_labels = {
+            "Bit_Length": "Bit uzunligi",
+            "Median_Time_ms": "Median vaqt (ms)",
+            "Algorithm": "Algoritm",
+        }
+        trend_tab, comparison_tab = st.tabs(
+            ["Vaqt tendensiyasi", "Algoritmlarni taqqoslash"]
+        )
 
-            col_g1, col_g2 = st.columns(2)
-
-            color_map = {
-                "Fermat": "#00F5D4",
-                "Solovay-Strassen": "#F59E0B",
-                "Miller-Rabin": "#10B981"
-            }
-
-            # 1. Line Chart
-            with col_g1:
-                fig_line = px.line(
-                    df_bench,
-                    x="bit_length",
-                    y="execution_time_ms",
-                    color="algorithm",
-                    markers=True,
-                    line_dash="candidate_type",
-                    title="Tub va murakkab nomzodlarda median vaqt",
-                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Median vaqt (ms)", "algorithm": "Algoritm", "candidate_type": "Nomzod turi"},
-                    template="plotly_dark",
-                    color_discrete_map=color_map
-                )
-                fig_line.update_layout(
-                    paper_bgcolor="#0B0F19",
-                    plot_bgcolor="rgba(17, 24, 39, 0.7)",
-                    font_family="JetBrains Mono, monospace",
-                    title_font_color="#00F5D4",
-                    hovermode="x unified"
-                )
-                st.plotly_chart(fig_line, use_container_width=True)
-
-            # 2. Grouped Bar Chart
-            with col_g2:
-                fig_bar = px.bar(
-                    df_bench,
-                    x="bit_length",
-                    y="execution_time_ms",
-                    color="algorithm",
-                    barmode="group",
-                    facet_col="candidate_type",
-                    title="Algoritmlararo median vaqt taqqoslashi",
-                    labels={"bit_length": "Bit Uzunligi (bits)", "execution_time_ms": "Median vaqt (ms)", "algorithm": "Algoritm", "candidate_type": "Nomzod turi"},
-                    template="plotly_dark",
-                    color_discrete_map=color_map
-                )
-                fig_bar.update_layout(
-                    paper_bgcolor="#0B0F19",
-                    plot_bgcolor="rgba(17, 24, 39, 0.7)",
-                    font_family="JetBrains Mono, monospace",
-                    title_font_color="#00F5D4"
-                )
-                st.plotly_chart(fig_bar, use_container_width=True)
-
-            # Jadval va CSV eksport
-            st.markdown("### 📋 Natijalar jadvali")
-            st.dataframe(df_bench, use_container_width=True)
-
-            csv_bench_data = df_bench.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="⬇ Tezlik natijalarini CSV formatida yuklab olish",
-                data=csv_bench_data,
-                file_name="primeguard_benchmark_results.csv",
-                mime="text/csv",
-                use_container_width=True
+        with trend_tab:
+            trend_fig = px.line(
+                filtered, x="Bit_Length", y="Median_Time_ms",
+                color="Algorithm", markers=True, labels=axis_labels,
+                template="plotly_dark", color_discrete_map=palette,
             )
+            trend_fig.update_layout(
+                height=440, margin=dict(l=38, r=22, t=55, b=45),
+                paper_bgcolor="#0B1020", plot_bgcolor="#121D32",
+                font=dict(family="Segoe UI, sans-serif", size=13),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                            xanchor="left", x=0),
+                hovermode="x unified",
+            )
+            trend_fig.update_xaxes(type="category")
+            st.plotly_chart(trend_fig, width="stretch", config={"displaylogo": False})
+
+        with comparison_tab:
+            comparison_fig = px.bar(
+                filtered, x="Bit_Length", y="Median_Time_ms",
+                color="Algorithm", barmode="group", labels=axis_labels,
+                template="plotly_dark", color_discrete_map=palette,
+            )
+            comparison_fig.update_layout(
+                height=440, margin=dict(l=38, r=22, t=55, b=45),
+                paper_bgcolor="#0B1020", plot_bgcolor="#121D32",
+                font=dict(family="Segoe UI, sans-serif", size=13),
+                legend=dict(orientation="h", yanchor="bottom", y=1.02,
+                            xanchor="left", x=0),
+            )
+            comparison_fig.update_xaxes(type="category")
+            st.plotly_chart(
+                comparison_fig, width="stretch", config={"displaylogo": False}
+            )
+
+        st.markdown("### 📋 Natijalar jadvali")
+        visible_columns = {
+            "Bit_Length": "Bit",
+            "Candidate_Type": "Nomzod turi",
+            "Algorithm": "Algoritm",
+            "Median_Time_ms": "Median (ms)",
+            "Avg_Time_ms": "O'rtacha (ms)",
+            "Std_Dev_ms": "Standart og'ish",
+            "Avg_Rounds_Run": "O'rtacha raund",
+            "Verdict": "Xulosa",
+            "Verdict_Consistency": "Xulosalar mosligi",
+        }
+        friendly_table = df_bench[list(visible_columns)].rename(
+            columns=visible_columns
+        )
+        friendly_table["Xulosa"] = friendly_table["Xulosa"].replace({
+            "Probably Prime": "Ehtimoliy tub",
+            "Prime": "Aniq tub",
+            "Composite": "Murakkab",
+            "Mixed": "Turlicha",
+        })
+        friendly_table["Xulosalar mosligi"] = friendly_table[
+            "Xulosalar mosligi"
+        ].replace({"Consistent": "Mos", "Mixed": "Turlicha"})
+        st.dataframe(friendly_table, hide_index=True, width="stretch", height=420)
+        st.caption(
+            "Murakkab sonlarda algoritm guvoh topishi bilan to'xtaydi. "
+            "Shu sabab bajarilgan raundlar va vaqt natijalari farqlanishi mumkin. "
+            "CSV faylda barcha asl texnik ustunlar saqlanadi."
+        )
+        st.download_button(
+            label="⬇ To'liq benchmark natijalarini CSV formatida yuklab olish",
+            data=df_bench.to_csv(index=False).encode("utf-8-sig"),
+            file_name="primeguard_benchmark_results.csv",
+            mime="text/csv",
+            width="stretch",
+        )
 
 
 # ==============================================================================
@@ -843,11 +871,11 @@ with tab4:
     st.markdown(r"""
     <div class="cyber-card">
         <div style="font-weight: 700; font-size: 1.15rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            RSA uchun tub parametrlar generatori (qo'shimcha modul)
+            RSA uchun o'quv parametrlarini yaratish
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            O'quv tajribasi uchun <b>Miller–Rabin</b> yordamida ikkita ehtimoliy tub son \(p, q\),
-            modul \(N\) va Eyler funksiyasi \(\phi(N)\) hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Tub sonlar teoremasi
+            O'quv tajribasi uchun <b>Miller–Rabin</b> yordamida ikkita ehtimoliy tub son <em>p, q</em>,
+            modul <em>N</em> va Eyler funksiyasi <em>φ(N)</em> hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Tub sonlar teoremasi
             (PNT) bo'yicha nazariy kutilgan sinovlar soni bilan amaliy nomzodlar statistikasi taqqoslanadi.
         </div>
     </div>
@@ -874,7 +902,7 @@ with tab4:
             help="Raundlar soni oshgani sari Miller–Rabin testining nazariy xatolik chegarasi kamayadi."
         )
 
-    if st.button("▶ RSA uchun p va q ni yaratish", type="primary", use_container_width=True):
+    if st.button("▶ RSA uchun p va q ni yaratish", type="primary", width="stretch"):
         with st.spinner(f"{rsa_bit_choice}-bit RSA moduli uchun tub sonlar yaratilmoqda..."):
             try:
                 # key_bits — N modulining maqsadli bit uzunligi.
@@ -932,11 +960,11 @@ with tab4:
         with col_m4:
             st.markdown(f"""
             <div class="kpi-card kpi-card-prime">
-                <div class="kpi-metric-label">Nazariy xatolik chegarasi</div>
+                <div class="kpi-metric-label">Har bir tublik testi uchun chegara</div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: #10B981; margin: 0.3rem 0;">
                     ≤ 4⁻{rsa_security_k}
                 </div>
-                <div style="font-size: 0.75rem; color: #10B981;">Nazariy xatolik chegarasi</div>
+                <div style="font-size: 0.75rem; color: #94A3B8;">p va q alohida tekshiriladi; bu RSA xavfsizligi kafolati emas</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -953,7 +981,7 @@ with tab4:
             <div class="cyber-alert-content">
                 <div class="cyber-alert-title">Tub sonlar orasidagi masofa (o'quv ko'rsatkichi)</div>
                 <div class="cyber-alert-msg">
-                    |p - q| masofasi: <b>{diff_bits} bit</b>. 
+                    |p − q| ayirmasining bit uzunligi: <b>{diff_bits} bit</b>. 
                     {f"Masofa oddiy Fermat faktorizatsiyasi uchun yaqinlik chegarasidan yuqori (|p - q| > 2^{fermat_distance_threshold}). Bu ko'rsatkichning o'zi RSA xavfsizligini kafolatlamaydi." if is_fermat_safe else "Diqqat: p va q juda yaqin bo'lishi mumkin; bu o'quv tekshiruvini qayta ko'rib chiqing."}
                 </div>
             </div>
@@ -1023,7 +1051,7 @@ with tab4:
             data=json_bytes,
             file_name=f"primeguard_rsa_{n_mod.bit_length()}bit_keys.json",
             mime="application/json",
-            use_container_width=True
+            width="stretch"
         )
 
 # ==============================================================================
