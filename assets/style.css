@@ -566,3 +566,68 @@ hr { border-color: var(--border-neon) !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+
+/* UX audit pass: readable comparison cards across 3-column Streamlit layouts. */
+.kpi-card {
+  min-height: 244px;
+  padding: 1.15rem 1.25rem;
+}
+.kpi-algo-name {
+  min-height: 3.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: .3rem .6rem;
+  font-weight: 700;
+  font-size: .84rem;
+  line-height: 1.4;
+  letter-spacing: .018em;
+}
+.kpi-algo-name > span:not(:first-child):not(.cyber-badge) {
+  font-family: "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  font-size: .73rem !important;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+}
+.kpi-status-badge {
+  font-size: clamp(.88rem, 1vw, 1.04rem);
+  letter-spacing: .018em;
+  line-height: 1.45;
+  white-space: normal;
+}
+.kpi-metric-row {
+  display: grid;
+  grid-template-columns: minmax(0, 44%) minmax(0, 56%);
+  align-items: start;
+  gap: .45rem;
+}
+.kpi-metric-label {
+  line-height: 1.48;
+  overflow-wrap: anywhere;
+}
+.kpi-metric-val {
+  text-align: right;
+  line-height: 1.48;
+  font-size: .82rem;
+  overflow-wrap: anywhere;
+}
+/* Math inside HTML callouts must be rendered HTML, not raw LaTeX delimiters. */
+.cyber-card code {
+  font-size: .93em;
+  padding: .12rem .28rem;
+  border: 1px solid rgba(91,214,200,.15);
+  border-radius: 5px;
+  background: rgba(91,214,200,.07);
+  white-space: normal;
+}
+@media (max-width: 1080px) {
+  .kpi-card { min-height: 0; }
+  .kpi-metric-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .15rem;
+  }
+  .kpi-metric-val { text-align: left; }
+}
