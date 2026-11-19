@@ -21,6 +21,7 @@ def contrast_ratio(foreground: str, background: str) -> float:
 def test_native_theme_has_matched_palette():
     theme = tomllib.loads((ROOT / ".streamlit" / "config.toml").read_text(encoding="utf-8"))
     assert theme["theme"]["base"] == "dark"
+    assert theme["client"]["toolbarMode"] == "viewer"
     assert theme["theme"]["primaryColor"] == "#69D6C5"
     assert theme["theme"]["backgroundColor"] == "#0B1220"
     assert theme["theme"]["secondaryBackgroundColor"] == "#131F32"
