@@ -210,7 +210,7 @@ def miller_rabin_test(
                 RoundLog(
                     round_idx=round_idx,
                     witness_a=a,
-                    expression=f"{a}^(2^{s}*{d}) zanjiri",
+                    expression=f"{a}^({d}*2^{s-1}) mod {n}",
                     computed_value=str(x),
                     passed=False,
                     note=note,
