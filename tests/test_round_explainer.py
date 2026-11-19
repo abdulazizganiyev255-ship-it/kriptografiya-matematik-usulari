@@ -96,3 +96,22 @@ def test_streamlit_reuses_sampled_bases_after_navigation():
     app.button(key="primeguard_audit_previous").click().run()
     assert not app.exception
     assert app.session_state["primeguard_audit_trace_step"] == 0
+
+
+def test_carmichael_navigator_persists_original_witnesses():
+    app_path = Path(__file__).resolve().parents[1] / "app.py"
+    app = AppTest.from_file(str(app_path), default_timeout=30).run()
+    app.button(key="primeguard_start_carmichael").click().run()
+    assert not app.exception
+    saved = app.session_state["primeguard_last_carmichael"]
+    assert saved["report"]["is_carmichael"] is True
+    witnesses = [
+        round_log.witness_a for round_log in saved["fermat"]["logs"]
+    ]
+    assert witnesses
+
+    app.button(key="primeguard_carmichael_next").click().run()
+    assert not app.exception
+    after = app.session_state["primeguard_last_carmichael"]
+    assert [round_log.witness_a for round_log in after["fermat"]["logs"]] == witnesses
+    assert app.session_state["primeguard_carmichael_trace_step"] == 1
