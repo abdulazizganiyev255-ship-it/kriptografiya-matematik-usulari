@@ -40,5 +40,7 @@ jobs:
           node-version: "22"
       - name: Install frontend dependencies
         run: npm install --no-audit --no-fund
+      - name: Test input and result presentation
+        run: npm test
       - name: Type-check and production build
         run: npm run build
