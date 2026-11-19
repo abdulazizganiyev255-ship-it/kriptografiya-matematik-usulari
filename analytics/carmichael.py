@@ -48,11 +48,11 @@ def check_korselt_criterion(n: int, max_steps: int = 1_000_000) -> dict:
     factors, complete = factorize_distinct(n, max_steps=max_steps)
     factor_values = [p for p, _ in factors]
     if not complete:
-        return {"is_carmichael": None, "complete": False, "factors": factor_values, "factor_powers": factors, "details": ["Faktorizatsiya limitiga yetildi; Korselt mezoni to'liq tekshirilmadi."]}
+        return {"is_carmichael": None, "complete": False, "factors": factor_values, "factor_powers": factors, "details": ["Ko'paytuvchilarga ajratish chegarasiga yetildi; Korselt mezoni to'liq tekshirilmadi."]}
     is_composite = len(factors) >= 2
     square_free = all(power == 1 for _, power in factors)
     square_free_label = "ha" if square_free else "yo'q"
-    details = [f"Square-free: {square_free_label}"]
+    details = [f"Kvadratlardan xoli: {square_free_label}"]
     divisibility_ok = True
     for p, _ in factors:
         divides = (n - 1) % (p - 1) == 0

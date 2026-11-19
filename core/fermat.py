@@ -128,7 +128,7 @@ def fermat_test(
         expr = f"{a}^({n}-1) mod {n}"
 
         if val != 1:
-            note = f"Fermat guvohi (witness) topildi: {a}^({n}-1) ≡ {val} != 1 (mod {n})"
+            note = f"Fermat bo'yicha murakkablik guvohi topildi: {a}^({n}-1) ≡ {val} != 1 (mod {n})"
             logs.append(
                 RoundLog(
                     round_idx=round_idx,

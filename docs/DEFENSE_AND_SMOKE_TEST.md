@@ -1,6 +1,6 @@
 # PrimeGuard: 5 daqiqalik himoya va Windows tekshiruvi
 
-## 1. Windows smoke-test (PowerShell)
+## 1. Windows vizual tekshiruvi (PowerShell)
 
 Loyiha papkasida:
 ```powershell
@@ -10,15 +10,15 @@ Skript Python virtual muhitini yaratadi (Python 3.11, keyin 3.x, keyin python), 
 
 Brauzer: http://localhost:8501
 
-### Vizual smoke-test ro'yxati
-- [ ] Barcha to'rtta tab ochiladi: Sonni tekshirish, Karmaykl tahlili, Tezlik taqqoslash, RSA parametrlari.
+### Vizual tekshiruv ro'yxati
+- [ ] Barcha to'rtta bo'lim ochiladi: Sonni tekshirish, Karmaykl tahlili, Tezlik taqqoslash, RSA parametrlari.
 - [ ] 17 kiritilganda aniq tub; 21 kiritilganda murakkab ko'rsatiladi.
 - [ ] 561 Karmaykl tahlilida faktorlari 3, 11, 17 va Korselt mezoni ko'rinadi.
 - [ ] 64/128 bit, 3 takrorlash benchmarki grafik va jadval beradi.
 - [ ] RSA 65 bit modul yaratadi, N.bit_length() = 65, N = p*q, phi = (p-1)*(q-1).
 - [ ] CSV/JSON yuklab olish ishlaydi.
 - [ ] Noto'g'ri kiritishlarda tushunarli xabar chiqadi, interfeys yiqilmaydi.
-- [ ] Terminalda traceback yo'q; oynalar kichik ekran va oddiy zoomda o'qiladi.
+- [ ] Terminalda Python xatolari yo'q; oynalar kichik ekran va oddiy zoomda o'qiladi.
 
 ## 2. Tasodifiy bo'lmagan Karmaykl namoyishi
 
@@ -50,4 +50,4 @@ Brauzer: http://localhost:8501
 - **Benchmark adolatlimi?** Bir xil nomzodlar qo'llanadi, lekin har bir algoritmning erta to'xtashi va tasodifiy asoslari sabab natija tajriba sharoitiga bog'liq.
 
 ## Topshirish mezoni
-Barcha avtomatik testlar o'tishi, Windows UI smoke-test bandlari tasdiqlanishi, Karmaykl deterministik demo xatosiz bajarilishi va 5 daqiqalik himoya mashq qilinishi kerak.
+Barcha avtomatik testlar o'tishi, Windows interfeysini tekshirish bandlari tasdiqlanishi, Karmaykl deterministik demo xatosiz bajarilishi va 5 daqiqalik himoya mashq qilinishi kerak.

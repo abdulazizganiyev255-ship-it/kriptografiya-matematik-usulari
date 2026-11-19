@@ -63,15 +63,15 @@ def validate_number_input(raw_str: str) -> Tuple[Optional[int], Optional[str], s
     """
     clean_str = raw_str.strip().replace(" ", "").replace("_", "")
     if not clean_str:
-        return None, "Kiritish maydoni bo'sh. Iltimos, tekshiruv uchun natural son kiriting.", "error"
+        return None, "Kiritish maydoni bo'sh. Tekshirish uchun natural son kiriting.", "error"
 
     if len(clean_str.lstrip("-")) > 2048:
-        return None, "Kiritilgan son juda uzun (maksimal 2048 ta raqam). Hisoblash resurslarini himoya qilish uchun qisqaroq son kiriting.", "error"
+        return None, "Kiritilgan son juda uzun. Ko'pi bilan 2048 ta raqam kiriting.", "error"
 
     if not clean_str.isascii() or not clean_str.isdigit():
         if clean_str.startswith("-"):
             return None, "Manfiy sonlar kiritilishi mumkin emas. Kriptografik tublik faqat natural sonlar (n ≥ 2) uchun aniqlanadi.", "error"
-        return None, "Kiritilgan satrda begona belgilar yoki harflar mavjud. Faqat natural son (raqamlar) kiriting.", "error"
+        return None, "Kiritilgan qiymatda harf yoki ruxsat etilmagan belgi bor. Faqat natural son kiriting.", "error"
 
     val = int(clean_str)
     if val < 2:
@@ -129,7 +129,7 @@ with st.sidebar:
         max_value=64,
         value=20,
         step=1,
-        help="Probabilistik testlarda tanlanadigan mustaqil tasodifiy asoslar soni."
+        help="Ehtimoliy tublik testlarida ishlatiladigan tasodifiy asoslar soni."
     )
 
     # Jonli Nazariy xatolik chegarasi Hisob-kitobi
@@ -302,9 +302,9 @@ with tab1:
             col1, col2, col3 = st.columns(3)
 
             cards_data = [
-                ("Fermat Testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k modul darajaga oshirish"),
+                ("Fermat testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k marta modul bo'yicha darajaga oshirish"),
                 ("Solovay–Strassen", res_ss, f"≤ 2⁻{global_k}", "k raund + Yakobi belgisi"),
-                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "k kuchli tublik raundi")
+                ("Miller–Rabin", res_mr, f"≤ 4⁻{global_k}", "k ta kuchli tublik raundi")
             ]
 
             for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
@@ -339,7 +339,7 @@ with tab1:
                         <div class="kpi-metric-row">
                             <span class="kpi-metric-label">Guvoh (Witness):</span>
                             <span class="kpi-metric-val" style="font-size: 0.8rem; color: {'#F43F5E' if r_data['witness'] else '#10B981'};">
-                                {f"a = {r_data['witness']}" if r_data['witness'] else "Topilmadi (Tublik)"}
+                                {f"a = {r_data['witness']}" if r_data['witness'] else "Topilmadi"}
                             </span>
                         </div>
                     </div>
@@ -359,7 +359,7 @@ with tab1:
             else:
                 st.info("Yakuniy xulosa: SON EHTIMOLIY TUB. Uchala test ham guvoh topmadi; n ≥ 2⁶⁴ bo'lgani uchun ushbu dasturda deterministik etalon qo'llanmaydi.")
 
-            # Raundma-raund audit jurnali
+            # Raundlar bo'yicha tekshiruv jurnali
             st.markdown("### 📋 Tekshiruv bosqichlari")
 
             tab_log_f, tab_log_ss, tab_log_mr = st.tabs([
@@ -376,7 +376,7 @@ with tab1:
                 with tab_target:
                     logs_list = r_data["logs"]
                     if not logs_list:
-                        st.info("Maxsus holat (n ≤ 3 yoki juft son) tufayli probaviy raundlar o'tkazilmadi.")
+                        st.info("Maxsus holat (n ≤ 3 yoki juft son) tufayli ehtimoliy test raundlari o'tkazilmadi.")
                     else:
                         table_rows = []
                         for idx, item in enumerate(logs_list, 1):
@@ -393,7 +393,7 @@ with tab1:
                             else:
                                 details = note or "Muvaffaqiyatli tekshirildi"
 
-                            status_str = "O'tdi (Tublikka mos)" if res_bool else "Yiqildi (Murakkablik guvohi)"
+                            status_str = "O'tdi (Tublikka mos)" if res_bool else "O'tmadi (murakkablik guvohi)"
 
                             table_rows.append({
                                 "Bosqich": r_num,
@@ -482,12 +482,12 @@ with tab2:
     st.markdown(r"""
     <div class="cyber-card" style="border-color: rgba(245, 158, 11, 0.4);">
         <div style="font-weight: 700; font-size: 1.15rem; color: #F59E0B; margin-bottom: 0.4rem;">
-            ⚠️ Karmaykl Sonlari (Universal Psevdotublar) va Korselt Mezoni
+            ⚠️ Karmaykl sonlari va Korselt mezoni
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
-            <b>Karmaykl sonlari</b> — Kichik Fermat teoremasining jiddiy zaifligini fosh qiluvchi g'ayritabiiy murakkab sonlardir.
+            <b>Karmaykl sonlari</b> — Fermat testining cheklovini ko'rsatuvchi o'ziga xos murakkab sonlardir.
             Ular murakkab son bo'lishiga qaramay, o'zlari bilan o'zaro tub bo'lgan <i>barcha</i> \( a \) asoslar uchun
-            \( a^{n-1} \equiv 1 \pmod n \) tenglikni soxta qanoatlantiradi. Quyidagi laboratoriyada Fermat testining aldanishini
+            \( a^{n-1} \equiv 1 \pmod n \) tenglikni bajaradi. Quyidagi laboratoriyada Fermat testining aldanishini
             va zamonaviy algoritmlarning uni qanday fosh etishini tekshiring.
         </div>
     </div>
@@ -527,7 +527,7 @@ with tab2:
             </div>
             """, unsafe_allow_html=True)
         else:
-            with st.spinner("Karmaykl va Korselt tahlili o'tkazilmoqda..."):
+            with st.spinner("Karmaykl soni Korselt mezoni bo'yicha tekshirilmoqda..."):
                 carm_report = analyze_carmichael(n_carm, global_k)
                 c_f = safe_extract_result(carm_report["fermat"])
                 c_ss = safe_extract_result(carm_report["solovay_strassen"])
@@ -544,12 +544,12 @@ with tab2:
                 card_style = "kpi-card-warning" if is_fermat_fooled else ("kpi-card-prime" if fermat_passed else "kpi-card-composite")
                 badge_style = "kpi-status-warning" if is_fermat_fooled else ("kpi-status-prime" if fermat_passed else "kpi-status-composite")
                 title_status = "🚨 KARMAYKL TUZOG'I" if is_fermat_fooled else ("EHTIMOLIY TUB" if fermat_passed else "ANIQ MURAKKAB")
-                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda testdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
+                fermat_summary = "Karmaykl sonida Fermat aldandi" if is_fermat_fooled else ("Bu raundlarda sinovdan o'tdi; bu isbot emas" if fermat_passed else "Fermat guvohi topildi")
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style}">
                     <div class="kpi-algo-name">
-                        <span>Fermat Testi</span>
+                        <span>Fermat testi</span>
                         <span class="cyber-badge cyber-badge-amber">Zaif</span>
                     </div>
                     <div class="kpi-status-badge {badge_style}">
@@ -566,7 +566,7 @@ with tab2:
                         <span class="kpi-metric-val">{c_f['execution_time_ms']:.4f} ms</span>
                     </div>
                     <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Fosh etuvchi asos:</span>
+                        <span class="kpi-metric-label">Murakkablik guvohi (a):</span>
                         <span class="kpi-metric-val">{c_f['witness'] if c_f['witness'] else 'Mavjud emas'}</span>
                     </div>
                 </div>
@@ -578,7 +578,7 @@ with tab2:
                 card_style_ss = "kpi-card-prime" if ss_passed else "kpi-card-composite"
                 badge_style_ss = "kpi-status-prime" if ss_passed else "kpi-status-composite"
                 title_ss = "EHTIMOLIY TUB" if ss_passed else "✅ ANIQ MURAKKAB"
-                ss_summary = "Karmayklni fosh qildi" if not ss_passed else "Euler yolg'onchisi"
+                ss_summary = "Murakkablikni aniqladi" if not ss_passed else "Eyler–Yakobi sinovidan o'tdi"
 
                 st.markdown(f"""
                 <div class="kpi-card {card_style_ss}">
@@ -600,7 +600,7 @@ with tab2:
                         <span class="kpi-metric-val">{c_ss['execution_time_ms']:.4f} ms</span>
                     </div>
                     <div class="kpi-metric-row">
-                        <span class="kpi-metric-label">Euler Guvohi:</span>
+                        <span class="kpi-metric-label">Eyler–Yakobi guvohi:</span>
                         <span class="kpi-metric-val" style="color: #F43F5E;">{c_ss['witness'] if c_ss['witness'] else '—'}</span>
                     </div>
                 </div>
@@ -617,7 +617,7 @@ with tab2:
                 <div class="kpi-card {card_style_mr}">
                     <div class="kpi-algo-name">
                         <span>Miller-Rabin Strong</span>
-                        <span class="cyber-badge cyber-badge-green">Kripto Standart</span>
+                        <span class="cyber-badge cyber-badge-green">Kuchli tublik testi</span>
                     </div>
                     <div class="kpi-status-badge {badge_style_mr}">
                         {title_mr}
@@ -625,7 +625,7 @@ with tab2:
                     <div class="kpi-metric-row">
                         <span class="kpi-metric-label">Xulosa:</span>
                         <span class="kpi-metric-val" style="color: #10B981;">
-                            {'Tuzoqqa tushmaydi' if not mr_passed else 'Tub deb topildi'}
+                            {'Murakkablik aniqlandi' if not mr_passed else 'Ehtimoliy tub'}
                         </span>
                     </div>
                     <div class="kpi-metric-row">
@@ -640,7 +640,7 @@ with tab2:
                 """, unsafe_allow_html=True)
 
             # Chuqur Matematik Tahlil (Korselt Mezoni)
-            st.markdown("### 📐 Korselt Mezoni va Matematik Fosh Qilish")
+            st.markdown("### 📐 Korselt mezoni bo'yicha matematik tekshiruv")
 
             factors_list = carm_report.get("factors", [])
             factorization_complete = carm_report.get("factorization_complete", False)
@@ -657,13 +657,13 @@ with tab2:
             st.markdown(rf"""
             <div class="cyber-card">
                 <div style="font-weight: 700; color: #00F5D4; font-size: 1rem; margin-bottom: 0.6rem;">
-                    Tub Ko'paytuvchilarga Ajralish:
+                    Tub ko'paytuvchilarga ajratish:
                 </div>
                 <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; color: #F1F5F9; margin-bottom: 1rem;">
                     {n_carm} = {factors_str}
                 </div>
                 <div style="font-size: 0.92rem; color: #CBD5E1; line-height: 1.6;">
-                    <b>Korselt Teoremasi (1899-yil):</b> Musbat murakkab toq son \( n \) faqat va faqat quyidagi shartlar
+                    <b>Korselt mezoni (1899-yil):</b> Musbat murakkab toq son \( n \) faqat va faqat quyidagi shartlar
                     bajarilgandagina Karmaykl soni bo'ladi:
                     <ol style="margin-top: 0.4rem;">
                         <li>\( n \) kvadratlardan xoli (square-free), ya'ni har bir tub bo'luvchi darajasi 1 ga teng.</li>
@@ -674,14 +674,14 @@ with tab2:
             """, unsafe_allow_html=True)
 
             if "korselt_details" in carm_report:
-                with st.expander("🔍 Bo'linish Shartlarini Raundma-raund Tekshirish:"):
+                with st.expander("🔍 Bo'linish shartlarini tekshirish:"):
                     for detail_line in carm_report["korselt_details"]:
                         st.markdown(f"- `{detail_line}`")
 
             st.markdown(r"""
             <div class="cyber-card" style="border-color: rgba(16, 185, 129, 0.3);">
                 <div style="font-weight: 700; color: #10B981; font-size: 0.98rem; margin-bottom: 0.4rem;">
-                    Nima Uchun Miller-Rabin Bu Tuzoqqa Tushmaydi?
+                    Miller–Rabin murakkablikni qanday aniqlaydi?
                 </div>
                 <div style="font-size: 0.9rem; color: #94A3B8; line-height: 1.6;">
                     Karmaykl sonlarida \( a^{n-1} \equiv 1 \pmod n \) bo'lsa-da, Miller-Rabin testi \( n-1 = 2^s \cdot d \)
@@ -701,7 +701,7 @@ with tab3:
     st.markdown("""
     <div class="cyber-card">
         <div style="font-weight: 700; font-size: 1.15rem; color: #00F5D4; margin-bottom: 0.4rem;">
-            Algoritmlar Samaradorligi va Tezlik Benchmarki
+            Algoritmlar samaradorligi va bajarilish vaqti
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
             Bir xil bit uzunligidagi tub va murakkab semiprime nomzodlarda uch algoritmning
@@ -767,7 +767,7 @@ with tab3:
                 }
                 df_bench.rename(columns=col_map, inplace=True)
 
-            st.markdown("### 📈 Grafik Tahlillar")
+            st.markdown("### 📈 Grafik tahlillar")
 
             col_g1, col_g2 = st.columns(2)
 
@@ -823,7 +823,7 @@ with tab3:
                 st.plotly_chart(fig_bar, use_container_width=True)
 
             # Jadval va CSV eksport
-            st.markdown("### 📋 Natijalar Jadvali")
+            st.markdown("### 📋 Natijalar jadvali")
             st.dataframe(df_bench, use_container_width=True)
 
             csv_bench_data = df_bench.to_csv(index=False).encode('utf-8')
@@ -847,7 +847,7 @@ with tab4:
         </div>
         <div style="font-size: 0.92rem; color: #94A3B8; line-height: 1.5;">
             O'quv tajribasi uchun <b>Miller–Rabin</b> yordamida ikkita ehtimoliy tub son \(p, q\),
-            modul \(N\) va Eyler funksiyasi \(\phi(N)\) hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Bosh sonlar teoremasi
+            modul \(N\) va Eyler funksiyasi \(\phi(N)\) hisoblanadi. Bu modul to'liq RSA kalit juftligini yaratmaydi. Tub sonlar teoremasi
             (PNT) bo'yicha nazariy kutilgan sinovlar soni bilan amaliy nomzodlar statistikasi taqqoslanadi.
         </div>
     </div>
@@ -961,30 +961,30 @@ with tab4:
         """, unsafe_allow_html=True)
 
         # Kalitlar ko'rinishi
-        st.markdown("#### 🔑 Generatsiya Qilingan Kriptografik Parametrlar:")
+        st.markdown("#### 🔑 Yaratilgan kriptografik parametrlar:")
 
-        with st.expander(f"📌 Birinchi Tub Son (p) — {p.bit_length()} bit", expanded=False):
-            st.markdown("**O'nlik (Decimal):**")
+        with st.expander(f"📌 Birinchi ehtimoliy tub son (p) — {p.bit_length()} bit", expanded=False):
+            st.markdown("**O'nlik sanoq tizimida:**")
             st.code(str(p), language="text")
-            st.markdown("**O'n oltilik (Hexadecimal):**")
+            st.markdown("**O'n oltilik sanoq tizimida:**")
             st.code(hex(p), language="text")
 
-        with st.expander(f"📌 Ikkinchi Tub Son (q) — {q.bit_length()} bit", expanded=False):
-            st.markdown("**O'nlik (Decimal):**")
+        with st.expander(f"📌 Ikkinchi ehtimoliy tub son (q) — {q.bit_length()} bit", expanded=False):
+            st.markdown("**O'nlik sanoq tizimida:**")
             st.code(str(q), language="text")
-            st.markdown("**O'n oltilik (Hexadecimal):**")
+            st.markdown("**O'n oltilik sanoq tizimida:**")
             st.code(hex(q), language="text")
 
         with st.expander(f"🛡️ RSA Moduli (N = p × q) — {n_mod.bit_length()} bit", expanded=True):
-            st.markdown("**O'nlik (Decimal):**")
+            st.markdown("**O'nlik sanoq tizimida:**")
             st.code(str(n_mod), language="text")
-            st.markdown("**O'n oltilik (Hexadecimal):**")
+            st.markdown("**O'n oltilik sanoq tizimida:**")
             st.code(hex(n_mod), language="text")
 
         with st.expander(f"📐 Eyler Funksiyasi φ(N) = (p-1)(q-1) — {phi_n.bit_length()} bit", expanded=False):
-            st.markdown("**O'nlik (Decimal):**")
+            st.markdown("**O'nlik sanoq tizimida:**")
             st.code(str(phi_n), language="text")
-            st.markdown("**O'n oltilik (Hexadecimal):**")
+            st.markdown("**O'n oltilik sanoq tizimida:**")
             st.code(hex(phi_n), language="text")
 
         # JSON Eksport
@@ -1032,7 +1032,7 @@ with tab4:
 st.markdown("---")
 st.markdown("""
 <div style="text-align: center; color: #64748B; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; padding: 1rem 0;">
-    PrimeGuard v1.1 • Kriptografiya matematik usullari • Akademik laboratoriya<br>
+    PrimeGuard v1.1 • Kriptografiyaning matematik usullari • Akademik laboratoriya<br>
     Akademik prototip • Algoritmlar va testlar bo'yicha mustaqil validatsiya talab etiladi
 </div>
 """, unsafe_allow_html=True)

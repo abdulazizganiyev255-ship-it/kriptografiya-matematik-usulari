@@ -24,15 +24,15 @@ Bu chegaralar mustaqil va tegishli taqsimotdan tanlangan asoslar shartida qo'lla
 ## Test matritsasi
 1. Chegaralar: `-1, 0, 1, 2, 3, 4, 5`.
 2. Kichik tub va murakkab sonlar.
-3. Carmichael sonlari: `561, 1105, 1729, 2465, 2821, 6601`.
-4. Kuchli psevdotublar va deterministik bazalarga qarshi ma'lum kompozitlar.
+3. Karmaykl sonlari: `561, 1105, 1729, 2465, 2821, 6601`.
+4. Kuchli psevdotublar va deterministik bazalarga qarshi ma'lum murakkab sonlar.
 5. `2**61 - 1` kabi katta tub sonlar.
 6. `2**64` chegarasidan tashqari qiymatlar.
-7. Kichik diapazonda mustaqil trial-division oracle bilan to'liq solishtirish.
+7. Kichik diapazonda mustaqil bo'lish orqali mustaqil tekshiruvchi algoritm bilan to'liq solishtirish.
 
 ## Benchmark metodologiyasi
-- Har bir bit uzunligi uchun aynan shu tub nomzod va aynan shu semiprime nomzod uch algoritmda tekshiriladi.
-- Nomzodlarni yaratish va bitta warm-up chaqiruvi o'lchangan vaqtga kiritilmaydi.
+- Har bir bit uzunligi uchun aynan shu tub nomzod va aynan shu ikki tub son ko'paytmasidan iborat nomzod uch algoritmda tekshiriladi.
+- Nomzodlarni yaratish va bitta dastlabki sinov chaqiruvi o'lchangan vaqtga kiritilmaydi.
 - Har bir algoritm uchun takroriy o'lchovlar olinadi; o'rtacha, median, standart og'ish, minimum va maksimum qayd etiladi.
 - Tub va murakkab nomzodlar natijalari alohida ko'rsatiladi; turli turdagi nomzodlarning vaqtlarini bitta guruhga aralashtirib talqin qilinmaydi.
 - Benchmark natijalari apparat, Python versiyasi va tizim yuklamasiga bog'liq; ular asimptotik murakkablik isboti emas.
