@@ -101,6 +101,8 @@ def test_streamlit_reuses_sampled_bases_after_navigation():
 def test_carmichael_navigator_persists_original_witnesses():
     app_path = Path(__file__).resolve().parents[1] / "app.py"
     app = AppTest.from_file(str(app_path), default_timeout=30).run()
+    app.toggle(key="primeguard_show_carmichael").set_value(True).run()
+    assert not app.exception
     app.button(key="primeguard_start_carmichael").click().run()
     assert not app.exception
     saved = app.session_state["primeguard_last_carmichael"]
