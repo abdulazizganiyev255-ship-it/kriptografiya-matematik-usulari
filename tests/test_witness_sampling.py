@@ -53,5 +53,8 @@ def test_gcd_witness_is_composite(algorithm, monkeypatch):
 def test_carmichael_base_two(monkeypatch):
     monkeypatch.setattr(witness.secrets, "randbelow", lambda upper: 0)
     assert fermat_test(561, k=1, skip_prefilter=True, coprime_only=True).verdict == "Probably Prime"
+    # Base 2 is an Euler liar for 561; base 5 is a valid SS witness.
+    monkeypatch.setattr(witness.secrets, "randbelow", lambda upper: 3)
     assert solovay_strassen_test(561, k=1, skip_prefilter=True, coprime_only=True).verdict == "Composite"
+    monkeypatch.setattr(witness.secrets, "randbelow", lambda upper: 0)
     assert miller_rabin_test(561, k=1, skip_prefilter=True, coprime_only=True).verdict == "Composite"
