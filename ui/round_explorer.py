@@ -7,6 +7,13 @@ import streamlit as st
 from analytics.round_explainer import ALGORITHMS, build_round_trace
 
 
+
+def _move_step(step_key: str, delta: int, count: int) -> None:
+    """Update navigation state before Streamlit rerenders button disabled states."""
+    position = int(st.session_state.get(step_key, 0))
+    st.session_state[step_key] = max(0, min(count - 1, position + delta))
+
+
 def render_round_explorer(
     n: int,
     results: Mapping[str, dict],
@@ -72,23 +79,23 @@ def render_round_explorer(
 
     previous_col, next_col = st.columns(2)
     with previous_col:
-        if st.button(
+        st.button(
             "◀ Oldingi qadam",
             disabled=position == 0,
             width="stretch",
             key=f"{namespace}_previous",
-        ):
-            position -= 1
-            st.session_state[step_key] = position
+            on_click=_move_step,
+            args=(step_key, -1, len(trace.steps)),
+        )
     with next_col:
-        if st.button(
+        st.button(
             "Keyingi qadam ▶",
             disabled=position >= len(trace.steps) - 1,
             width="stretch",
             key=f"{namespace}_next",
-        ):
-            position += 1
-            st.session_state[step_key] = position
+            on_click=_move_step,
+            args=(step_key, 1, len(trace.steps)),
+        )
 
     step = trace.steps[position]
     st.progress((position + 1) / len(trace.steps))
