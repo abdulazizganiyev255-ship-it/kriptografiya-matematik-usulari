@@ -4,11 +4,18 @@ import time
 
 from core.miller_rabin import miller_rabin_test
 from core.number_theory import SMALL_PRIMES
+from core.witness import MAX_ROUNDS
+
+# Bounded academic workloads (the app's largest RSA modulus is 4096 bits).
+MAX_GENERATOR_BITS = 4096
+MAX_RSA_MODULUS_BITS = 8192
+MAX_GENERATION_ATTEMPTS = 1_000_000
+MAX_PAIR_ATTEMPTS = 10_000
 
 
 def _validate_rounds(k: int) -> None:
-    if not isinstance(k, int) or isinstance(k, bool) or k < 1:
-        raise ValueError("Miller–Rabin raundlari k >= 1 butun son bo'lishi kerak")
+    if not isinstance(k, int) or isinstance(k, bool) or not 1 <= k <= MAX_ROUNDS:
+        raise ValueError(f"Miller–Rabin raundlari 1 dan {MAX_ROUNDS} gacha butun son bo'lishi kerak")
 
 
 def generate_prime(bits: int, k: int = 40, max_attempts: int = 1_000_000) -> tuple[int, int, float]:
@@ -19,9 +26,11 @@ def generate_prime(bits: int, k: int = 40, max_attempts: int = 1_000_000) -> tup
     """
     if not isinstance(bits, int) or isinstance(bits, bool) or bits < 2:
         raise ValueError("Tub son yaratish uchun bits >= 2 butun son bo'lishi kerak")
+    if bits > MAX_GENERATOR_BITS:
+        raise ValueError(f"bits qiymati {MAX_GENERATOR_BITS} dan oshmasligi kerak")
     _validate_rounds(k)
-    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
-        raise ValueError("max_attempts kamida 1 bo'lishi kerak")
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or not 1 <= max_attempts <= MAX_GENERATION_ATTEMPTS:
+        raise ValueError(f"max_attempts 1 dan {MAX_GENERATION_ATTEMPTS} gacha bo'lishi kerak")
 
     started = time.perf_counter()
     if bits == 2:
@@ -59,9 +68,11 @@ def generate_rsa_pair(key_bits: int = 1024, k: int = 40, max_pair_attempts: int 
     """
     if not isinstance(key_bits, int) or isinstance(key_bits, bool) or key_bits < 16:
         raise ValueError("RSA modul uzunligi key_bits >= 16 butun son bo'lishi kerak")
+    if key_bits > MAX_RSA_MODULUS_BITS:
+        raise ValueError(f"key_bits qiymati {MAX_RSA_MODULUS_BITS} dan oshmasligi kerak")
     _validate_rounds(k)
-    if not isinstance(max_pair_attempts, int) or isinstance(max_pair_attempts, bool) or max_pair_attempts < 1:
-        raise ValueError("max_pair_attempts kamida 1 bo'lishi kerak")
+    if not isinstance(max_pair_attempts, int) or isinstance(max_pair_attempts, bool) or not 1 <= max_pair_attempts <= MAX_PAIR_ATTEMPTS:
+        raise ValueError(f"max_pair_attempts 1 dan {MAX_PAIR_ATTEMPTS} gacha bo'lishi kerak")
 
     started = time.perf_counter()
     p_bits = key_bits // 2
@@ -89,6 +100,8 @@ def generate_rsa_pair(key_bits: int = 1024, k: int = 40, max_pair_attempts: int 
 
         phi = (p - 1) * (q - 1)
         elapsed_ms = round((time.perf_counter() - started) * 1000.0, 3)
+        # Prime-number-theorem baseline for uniformly drawn *odd* candidates.
+        # Excludes extra retries caused by equal p/q, distance and N-bit rules.
         expected_candidates = round((p_bits + q_bits) * math.log(2) / 2.0, 2)
 
         return {
