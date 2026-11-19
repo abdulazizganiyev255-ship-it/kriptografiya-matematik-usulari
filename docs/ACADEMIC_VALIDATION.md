@@ -34,6 +34,9 @@ Bu chegaralar mustaqil va tegishli taqsimotdan tanlangan asoslar shartida qo'lla
 - Har bir bit uzunligi uchun aynan shu tub nomzod va aynan shu ikki tub son ko'paytmasidan iborat nomzod uch algoritmda tekshiriladi.
 - Nomzodlarni yaratish va bitta dastlabki sinov chaqiruvi o'lchangan vaqtga kiritilmaydi.
 - Har bir algoritm uchun takroriy o'lchovlar olinadi; o'rtacha, median, standart og'ish, minimum va maksimum qayd etiladi.
+- Har bir takrorlashdagi xulosa alohida qayd etiladi. Natijalar farqlansa, umumiy xulosa `Mixed` bo'ladi; faqat oxirgi takrorlash xulosasi yakuniy natija sifatida berilmaydi.
+- `Avg_Rounds_Run`, `Min_Rounds_Run` va `Max_Rounds_Run` metrikalari erta to'xtagan tekshiruvlarni izohlash uchun saqlanadi.
+- `Error_Bound` ustuni nazariy yuqori chegarani bildirish uchun ishlatiladi; turli takrorlashlarda qiymat o'zgarsa `Varies` chiqadi. Bu ustunni kuzatilgan empirik xatolik ehtimoli deb talqin qilib bo'lmaydi.
 - Tub va murakkab nomzodlar natijalari alohida ko'rsatiladi; turli turdagi nomzodlarning vaqtlarini bitta guruhga aralashtirib talqin qilinmaydi.
 - Benchmark natijalari apparat, Python versiyasi va tizim yuklamasiga bog'liq; ular asimptotik murakkablik isboti emas.
 - Karmaykl sonlari alohida tajriba bo'lib qoladi; ularni tasodifiy semiprime to'plamining o'rniga qo'ymaslik kerak.
@@ -54,3 +57,9 @@ Ushbu loyiha o'quv va ilmiy tajriba prototipidir. U ishlab chiqarish kriptografi
 ## Ilovadagi deterministik yakuniy tekshiruv
 
 Asosiy son tekshirish oynasi `n < 2^64` bo'lganda `is_prime_deterministic_64` etalonini yakuniy xulosaga qo'shadi. `n >= 2^64` bo'lganda etalon ishlatilmaydi va natija ehtimoliy tub sifatida ehtiyotkor ko'rsatiladi. Benchmarkda esa bir xil bit uzunligidagi tub nomzod va semiprime uch algoritmda alohida tekshiriladi; warm-up hamda nomzod yaratish vaqti o'lchovga kiritilmaydi.
+
+## RSA o'quv generatori: resurs chegaralari
+- Bir tub son nomzodi: 2–4096 bit; RSA moduli: 16–8192 bit. Bu chegaralar laboratoriya resurslarini boshqarish uchun belgilangan, xavfsizlik kafolati emas.
+- `max_attempts`: 1–1 000 000; `max_pair_attempts`: 1–10 000; Miller–Rabin raundlari: 1–4096.
+- `theoretical_expected_tests` faqat toq tasodifiy nomzodlar uchun tub sonlar teoremasiga asoslangan taxmin. Modulning aniq bit uzunligini topish, `p != q` va masofa filtrlari sabab qo'shimcha urinishlar alohida hisoblanadi.
+- `p` va `q` ehtimoliy tub sonlardir; modul to'liq RSA maxfiy/ochiq kalit juftligi ham, sertifikatlangan kalit materiali ham emas.

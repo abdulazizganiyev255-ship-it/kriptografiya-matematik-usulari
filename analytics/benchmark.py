@@ -39,8 +39,10 @@ def run_benchmark(
     Compare primality-test timing on the same prime and semiprime candidates.
 
     Candidate generation and one warm-up call are excluded from timed samples.
-    Reports mean, median, population standard deviation, min/max and verdict.
-    Timings are empirical and machine/load dependent; they are not complexity proofs.
+    Reports mean, median, population standard deviation, min/max, verdict
+    consistency and actual rounds executed across repetitions. Random witness
+    selection can cause early exits and different verdicts for composite inputs.
+    Timings are empirical and machine/load dependent; not complexity proofs.
     """
     if bit_sizes is None:
         bit_sizes = [64, 128, 256, 512, 1024, 2048]
@@ -67,11 +69,22 @@ def run_benchmark(
                 algorithm(candidate, k=k, skip_prefilter=True)  # warm-up, not timed
 
                 samples: list[float] = []
-                last_result = None
+                verdicts: list[str] = []
+                rounds_run: list[int] = []
+                bounds: list[str] = []
                 for _ in range(trials):
                     started = time.perf_counter()
-                    last_result = algorithm(candidate, k=k, skip_prefilter=True)
+                    result = algorithm(candidate, k=k, skip_prefilter=True)
                     samples.append((time.perf_counter() - started) * 1000.0)
+                    verdicts.append(result.verdict)
+                    rounds_run.append(result.rounds_run)
+                    bounds.append(result.error_bound)
+
+                # A probabilistic test can give different answers across trials.
+                # Never display just the final trial as if it represents all trials.
+                stable_verdict = len(set(verdicts)) == 1
+                verdict = verdicts[0] if stable_verdict else "Mixed"
+                bound = bounds[0] if len(set(bounds)) == 1 else "Varies"
 
                 rows.append({
                     "Bit_Length": bits,
@@ -84,12 +97,17 @@ def run_benchmark(
                     "Std_Dev_ms": round(statistics.pstdev(samples), 4),
                     "Min_Time_ms": round(min(samples), 4),
                     "Max_Time_ms": round(max(samples), 4),
-                    "Verdict": last_result.verdict if last_result else "Unknown",
-                    "Error_Bound": last_result.error_bound if last_result else "N/A",
+                    "Verdict": verdict,
+                    "Error_Bound": bound,
+                    "Verdict_Consistency": "Consistent" if stable_verdict else "Mixed",
+                    "Avg_Rounds_Run": round(statistics.mean(rounds_run), 2),
+                    "Min_Rounds_Run": min(rounds_run),
+                    "Max_Rounds_Run": max(rounds_run),
                 })
 
     return pd.DataFrame(rows, columns=[
         "Bit_Length", "Candidate_Type", "Algorithm", "Trials", "Rounds",
         "Avg_Time_ms", "Median_Time_ms", "Std_Dev_ms", "Min_Time_ms",
         "Max_Time_ms", "Verdict", "Error_Bound",
+        "Verdict_Consistency", "Avg_Rounds_Run", "Min_Rounds_Run", "Max_Rounds_Run",
     ])

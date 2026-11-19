@@ -383,6 +383,7 @@ def test_run_benchmark():
         "Bit_Length", "Candidate_Type", "Algorithm", "Trials", "Rounds",
         "Avg_Time_ms", "Median_Time_ms", "Std_Dev_ms", "Min_Time_ms",
         "Max_Time_ms", "Verdict", "Error_Bound",
+        "Verdict_Consistency", "Avg_Rounds_Run", "Min_Rounds_Run", "Max_Rounds_Run",
     ]
     assert list(df.columns) == expected_cols
     assert len(df) == 6  # 1 bit size * 2 candidate types * 3 algorithms
