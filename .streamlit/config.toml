@@ -1,3 +1,7 @@
+# Show viewer controls only; suppress localhost-only Deploy/developer actions.
+[client]
+toolbarMode = "viewer"
+
 # Native Streamlit theme — consistent with assets/style.css.
 # Keep widget state and alert colors owned by Streamlit where possible.
 [theme]
