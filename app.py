@@ -197,9 +197,9 @@ with st.sidebar:
 
     st.markdown("""
     <div style="font-size: 0.75rem; color: #8C9FB3; font-family: 'JetBrains Mono', monospace; line-height: 1.4;">
-        Akademik dasturiy prototip<br>
-        Tub sonlarni tekshirish va algoritmlarni taqqoslash laboratoriyasi<br>
-        Natijalar mustaqil testlar bilan tekshiriladi
+        Akademik laboratoriya<br>
+        Fermat · Solovay–Strassen · Miller–Rabin<br>
+        Ehtimoliy natija matematik isbot emas
     </div>
     """, unsafe_allow_html=True)
 
@@ -233,9 +233,9 @@ with tab1:
             Sonning tubligini tekshirish
         </div>
         <div style="font-size: 0.92rem; color: #ACBCCD; line-height: 1.5;">
-            2 dan boshlab, ko'pi bilan 2048 ta raqamli natural son kiriting. Tizim uchta
-            ehtimoliy tublik algoritmi (<b>Kichik Fermat</b>, <b>Solovay-Strassen</b> va <b>Miller-Rabin Strong</b>)
-            yordamida har bir algoritm bo'yicha tekshiruv o'tkazadi.
+            Natural sonni kiriting va tekshirishni boshlang. Natijalar <b>Fermat</b>,
+            <b>Solovay–Strassen</b> hamda <b>Miller–Rabin</b> algoritmlari orqali
+            bir xil son uchun hisoblanadi. Ehtimoliy natija matematik isbot emas.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -250,9 +250,14 @@ with tab1:
         key="tab1_text_area"
     )
 
-    col_btn, col_info = st.columns([1, 3])
-    with col_btn:
-        start_audit = st.button("▶ Sonni tekshirish", width="stretch", type="primary", key="primeguard_start_audit")
+    action_col, detail_col = st.columns([1, 2])
+    with action_col:
+        start_audit = st.button(
+            "Sonni tekshirish", width="stretch", type="primary",
+            key="primeguard_start_audit",
+        )
+    with detail_col:
+        st.caption("3 algoritm · mustaqil raundlar · matematik izohli natijalar")
 
     if start_audit:
         candidate, feedback, feedback_type = validate_number_input(raw_candidate)
@@ -325,9 +330,9 @@ with tab1:
         col1, col2, col3 = st.columns(3)
 
         cards_data = [
-            ("Fermat testi", res_f, "Karmaykl sonlarida universal chegara yo'q", "k marta modul bo'yicha darajaga oshirish"),
-            ("Solovay–Strassen", res_ss, f"≤ 2⁻{audit_k}", "k raund + Yakobi belgisi"),
-            ("Miller–Rabin", res_mr, f"≤ 4⁻{audit_k}", "k ta kuchli tublik raundi")
+            ("Fermat testi", res_f, "Universal chegara yo'q", "Fermatning kichik teoremasi"),
+            ("Solovay–Strassen", res_ss, f"≤ 2⁻{audit_k}", "Eyler–Yakobi mezoni"),
+            ("Miller–Rabin", res_mr, f"≤ 4⁻{audit_k}", "Kuchli murakkablik guvohlari")
         ]
 
         for col, (algo_title, r_data, err_bound, complexity) in zip([col1, col2, col3], cards_data):
@@ -776,9 +781,9 @@ with tab3:
             Algoritmlar samaradorligi va bajarilish vaqti
         </div>
         <div style="font-size: 0.92rem; color: #ACBCCD; line-height: 1.5;">
-            Bir xil bit uzunligidagi tub va murakkab semiprime nomzodlarda uch algoritmning
-            bajarilish vaqtini amaliy tajribada taqqoslash. Nomzod yaratish va dastlabki sinov
-            vaqtga kiritilmaydi; median va boshqa statistik ko'rsatkichlar alohida beriladi.
+            Bir xil sonlar ustida uch algoritmning bajarilish vaqtini taqqoslang.
+            Tub son nomzodi va ikki tub son ko'paytmasidan iborat murakkab nomzod
+            alohida ko'rsatiladi. <b>Median vaqt</b> asosiy taqqoslash mezonidir.
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -843,6 +848,10 @@ with tab3:
         candidate_type = st.radio(
             "Taqqoslanadigan nomzod turi",
             options=("Tub nomzod", "Murakkab (semiprime)"),
+            format_func=lambda value: (
+                "Murakkab — ikki tub son ko'paytmasi"
+                if value == "Murakkab (semiprime)" else value
+            ),
             horizontal=True,
             key="primeguard_benchmark_candidate_type",
         )
